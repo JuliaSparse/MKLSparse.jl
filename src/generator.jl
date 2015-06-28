@@ -10,6 +10,7 @@ for (mv, sv, mm, sm, T) in ((:mkl_scscmv_, :mkl_scscsv_, :mkl_scscmm_, :mkl_scsc
                 throw(DimensionMismatch("Matrix with $(A.n) columns multiplied with vector of length $(length(x))"))
             length(y) == (trns == 'T' ? A.n : A.m) ||
                 throw(DimensionMismatch("Vector of length $(A.m) added to vector of length $(length(y))"))
+            @show transa,matdescra,A.m,A.n,α,β
             ccall(($(string(mv)), :libmkl_rt), Void,
                 (Ptr{Uint8}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T},
                  Ptr{Uint8}, Ptr{$T}, Ptr{BlasInt}, Ptr{BlasInt},
