@@ -24,7 +24,6 @@ for w in (:LowerTriangular,:UnitLowerTriangular,:UpperTriangular,:UnitUpperTrian
                                         B::StridedVecOrMat{T}, β::T, C::StridedVecOrMat{T})
             size(A,2) == size(C,1) == size(B,1) || throw(DimensionMismatch())
             size(B,2) == size(C,2) || throw(DimensionMismatch())
-            @show typeof(A),matdescra(A)
             isa(B,AbstractVector) ?
                 cscmv!('N',α,matdescra(A),A.data,B,β,C) :
                 cscmm!('N',α,matdescra(A),A.data,B,β,C)
