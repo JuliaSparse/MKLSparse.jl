@@ -1,5 +1,12 @@
 using MKLSparse
 using Base.Test
 
-# write your own tests here
-@test 1 == 1
+srand(1234321)
+sA = sprand(1000,100,0.01)
+sS = sA'sA
+sTl = tril(sS)
+sTu = triu(sS)
+
+include("./matdescra.jl")
+include("./matmul.jl")
+
