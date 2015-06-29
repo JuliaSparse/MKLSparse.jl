@@ -10,5 +10,6 @@ module MKLSparse
     include("./matdescra.jl")
     include("./generator.jl")
     include("./matmul.jl")
+    include("./DSS/DSS.jl")
 
 end # module
