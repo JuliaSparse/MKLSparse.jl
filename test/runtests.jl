@@ -7,6 +7,7 @@ sS = sA'sA
 sTl = tril(sS)
 sTu = triu(sS)
 
+include("./dss.jl")
 include("./matdescra.jl")
 include("./matmul.jl")
 
