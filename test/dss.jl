@@ -19,9 +19,9 @@ for T in (Float32, Float64, Complex64, Complex128)
         if T == Float32 || T == Complex64
             continue
         end
-        msm = MatrixSymStructure(A1)
-        @test issym(A1) == issym(msm)
-        @test ishermitian(A1) == ishermitian(msm)
+        msm = MatrixSymStructure(A)
+        @test issym(A) == issym(msm)
+        @test ishermitian(A) == ishermitian(msm)
     end
 
     for A in SparseMatrixCSC[A1, A2, A3, A4]
