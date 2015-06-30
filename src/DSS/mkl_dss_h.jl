@@ -102,11 +102,11 @@ const RETURN_STATS = Dict{Int, ASCIIString}(
     -26 => "MKL_DSS_OOC_RW_ERR")
 
 
-type MKL_DSS_Exception <: Exception
+type DSSError <: Exception
     msg::AbstractString
 end
 
 
 macro errcheck(A)
-    :(err = $A;  err == MKL_DSS_SUCCESS || throw(MKL_DSS_Exception(RETURN_STATS[err])))
+    :(err = $A;  err == MKL_DSS_SUCCESS || throw(DSSError(RETURN_STATS[err])))
 end
