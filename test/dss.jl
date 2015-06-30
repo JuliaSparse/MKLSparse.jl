@@ -1,7 +1,9 @@
 srand(1234)
 
-import Base.LinAlg: At_ldiv_B!, Ac_ldiv_B!
+import Base.LinAlg: factorize,
+       A_ldiv_B!, At_ldiv_B!, Ac_ldiv_B!, A_ldiv_B, At_ldiv_B, Ac_ldiv_B
 import MKLSparse.DSS: MatrixSymStructure
+
 for T in (Float32, Float64, Complex64, Complex128)
     n = 5
     A1 = sparse(rand(T, n, n))
@@ -11,23 +13,41 @@ for T in (Float32, Float64, Complex64, Complex128)
     B = rand(T, n, n)
     X = similar(B)
 
-    @test_throws DimensionMismatch A_ldiv_B!(A1, rand(T, n, n+1), X)
-    @test_throws DimensionMismatch A_ldiv_B!(A1, B, rand(T, n, n+1))
-    @test_throws DimensionMismatch A_ldiv_B!(sparse(rand(T, n+1, n+1)), B, X)
-
     for A in SparseMatrixCSC[A1, A2, A3, A4]
         if T == Float32 || T == Complex64
             continue
         end
-        msm = MatrixSymStructure(A1)
-        @test issym(A1) == issym(msm)
-        @test ishermitian(A1) == ishermitian(msm)
+        msm = MatrixSymStructure(A)
+        @test issym(A) == issym(msm)
+        @test ishermitian(A) == ishermitian(msm)
     end
 
     for A in SparseMatrixCSC[A1, A2, A3, A4]
+        F = factorize(A)
+
+        @test_approx_eq A_ldiv_B!(F, B, X) full(A)\B
+        @test_approx_eq At_ldiv_B!(F, B, X) full(A.')\B
+        @test_approx_eq Ac_ldiv_B!(F, B, X) full(A')\B
+
+        @test_approx_eq A_ldiv_B(F, B) full(A)\B
+        @test_approx_eq At_ldiv_B(F, B) full(A.')\B
+        @test_approx_eq Ac_ldiv_B(F, B) full(A')\B
+
         @test_approx_eq A_ldiv_B!(A, B, X) full(A)\B
         @test_approx_eq At_ldiv_B!(A, B, X) full(A.')\B
         @test_approx_eq Ac_ldiv_B!(A, B, X) full(A')\B
+
+        @test_approx_eq A_ldiv_B(A, B) full(A)\B
+        @test_approx_eq At_ldiv_B(A, B) full(A.')\B
+        @test_approx_eq Ac_ldiv_B(A, B) full(A')\B
     end
+
+    @test_throws DimensionMismatch A_ldiv_B!(A1, rand(T, n, n+1), X)
+    @test_throws DimensionMismatch A_ldiv_B!(A1, B, rand(T, n, n+1))
+    @test_throws DimensionMismatch A_ldiv_B!(sparse(rand(T, n+1, n+1)), B, X)
+
+    @test_throws DimensionMismatch A_ldiv_B(A1, rand(T, n+1, n))
+    @test_throws DimensionMismatch A_ldiv_B(sparse(rand(T, n+1, n+1)), B)
+    @test_throws DimensionMismatch A_ldiv_B(sparse(rand(T, n, n+1)), B)
 
 end

@@ -48,6 +48,7 @@ function MatrixSymStructure(A::SparseMatrixCSC)
                     end
                     if val != conj(val2)
                         hermitian = false
+                        chol_candidate = false
                     end
                     tracker[row] += 1
                 end
@@ -58,5 +59,5 @@ function MatrixSymStructure(A::SparseMatrixCSC)
             return MatrixSymStructure(false, false, false)
         end
     end
-    return MatrixSymStructure(symmetric, hermitian, chol_candidate)
+    MatrixSymStructure(symmetric, hermitian, chol_candidate)
 end
