@@ -11,10 +11,7 @@ type DSSFactor{T}
     ftype::ASCIIString
     n::Int
 end
-
-
-show(io::IO, luf::DSSFactor) = print(io, "DSS $luf.ftype Factorization of a $(luf.n)-by-$(luf.n) sparse matrix")
-
+show(io::IO, luf::DSSFactor) = print(io, "DSS $(luf.ftype) Factorization of a $(luf.n)-by-$(luf.n) sparse matrix")
 
 for (mv, ftype, cm_struct, rm_struct) in
     ((:cholfact, "Cholesky", MKL_DSS_HERMITIAN_POSITIVE_DEFINITE, MKL_DSS_POSITIVE_DEFINITE),
