@@ -15,14 +15,13 @@ function MatrixSymStructure(A::SparseMatrixCSC)
     chol_candidate = true
     symmetric = true
 
-    m, n = size(A)
-    if m != n; return false; end
+    n = Base.LinAlg.chksquare(A)
 
     colptr = A.colptr
     rowval = A.rowval
     nzval = A.nzval
     tracker = copy(A.colptr)
-    @inbounds for col = 1:A.n
+    @inbounds for col = 1:n
         for p = tracker[col]:colptr[col+1]-1
             val = nzval[p]
             if val == 0; continue; end # In case of explicit zeros
