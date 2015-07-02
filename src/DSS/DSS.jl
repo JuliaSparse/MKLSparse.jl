@@ -13,15 +13,41 @@ type DSSFactor{T}
 end
 show(io::IO, luf::DSSFactor) = print(io, "DSS $(luf.ftype) Factorization of a $(luf.n)-by-$(luf.n) sparse matrix")
 
+function cholfact{T<:BlasFloat}(A::SparseMatrixCSC{T, BlasInt})
+    chksquare(A)
+    mat_struct = MatrixSymStructure(A)
+    if ischolcand(mat_struct)
+        return _cholfact(A, mat_struct)
+    else
+        throw(ArgumentError(string("matrix must be hermitian and have a positive diagonal",
+                                   " to be a candidate for Cholesky factorization")))
+    end
+end
+
+function ldltfact{T<:BlasFloat}(A::SparseMatrixCSC{T, BlasInt})
+    chksquare(A)
+    mat_struct = MatrixSymStructure(A)
+    if ishermitian(mat_struct)
+        return _ldltfact(A, mat_struct)
+    else
+        throw(ArgumentError("matrix must be symmetric/hermitian to have a LDLT factorization"))
+    end
+end
+
+function lufact{T<:BlasFloat}(A::SparseMatrixCSC{T, BlasInt})
+    chksquare(A)
+    mat_struct = MatrixSymStructure(A)
+    return _lufact(A, mat_struct)
+end
+
 for (mv, ftype, cm_struct, rm_struct) in
-    ((:cholfact, "Cholesky", MKL_DSS_HERMITIAN_POSITIVE_DEFINITE, MKL_DSS_POSITIVE_DEFINITE),
-     (:ldltfact, "LDLT", MKL_DSS_HERMITIAN_INDEFINITE,        MKL_DSS_INDEFINITE),
-     (:lufact,   "LU",   MKL_DSS_INDEFINITE,                  MKL_DSS_INDEFINITE))
-     @eval begin
-        function $(mv){T<:BlasFloat}(A::SparseMatrixCSC{T,BlasInt})
-            n = chksquare(A)
+    ((:_cholfact, "Cholesky", MKL_DSS_HERMITIAN_POSITIVE_DEFINITE, MKL_DSS_POSITIVE_DEFINITE),
+     (:_ldltfact, "LDLT", MKL_DSS_HERMITIAN_INDEFINITE,        MKL_DSS_INDEFINITE),
+     (:_lufact,   "LU",   MKL_DSS_INDEFINITE,                  MKL_DSS_INDEFINITE))
+    @eval begin
+        function $(mv){T<:BlasFloat}(A::SparseMatrixCSC{T, BlasInt}, mat_struct::MatrixSymStructure)
+            n = size(A,1)
             handle = dss_create(T)
-            mat_struct = MatrixSymStructure(A)
             A = transpose(A)
             if issym(mat_struct)
                 opt_struct = (T <: Complex ? MKL_DSS_SYMMETRIC_COMPLEX: MKL_DSS_SYMMETRIC)
@@ -48,17 +74,17 @@ function factorize{T<:BlasFloat}(A::SparseMatrixCSC{T, BlasInt})
     mat_struct = MatrixSymStructure(A)
     if ischolcand(mat_struct)
         try
-            return cholfact(A)
+            return _cholfact(A, mat_struct)
         catch e
             # We should check if the error is actually a pos def error but
             # DSS seems to return the wrong error message. See #2
-            isa(e, MKL_DSS_Exception) || rethrow(e)
+            isa(e, DSSError) || rethrow(e)
         end
     end
     if ishermitian(mat_struct)
-        return ldltfact(A)
+        return _ldltfact(A, mat_struct)
     else
-        return lufact(A)
+        return _lufact(A, mat_struct)
     end
 end
 
