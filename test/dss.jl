@@ -89,7 +89,7 @@ for T in (Float32, Float64, Complex64, Complex128)
     else
         # Will not be pos def
         @test_throws DSSError cholfact(A2)
-        @test_throws DSSError cholfact(A2)
+        @test_throws DSSError cholfact(A3)
     end
 
     if T <: Complex
