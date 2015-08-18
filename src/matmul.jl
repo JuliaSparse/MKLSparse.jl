@@ -1,3 +1,15 @@
+typealias SparseMatrices{T} Union{SparseMatrixCSC{T,BlasInt},
+                                  Symmetric{T,SparseMatrixCSC{T,BlasInt}},
+                                  LowerTriangular{SparseMatrixCSC{T,BlasInt}},
+                                  UnitLowerTriangular{SparseMatrixCSC{T,BlasInt}},
+                                  UpperTriangular{SparseMatrixCSC{T,BlasInt}},
+                                  UnitUpperTriangular{SparseMatrixCSC{T,BlasInt}}}
+
+function Base.(:*){T<:BlasFloat}(A::SparseMatrices{T},
+                                 B::StridedVecOrMat{T})
+    Base.LinAlg.A_mul_B!(A, B)
+end
+
 function Base.LinAlg.A_mul_B!{T<:BlasFloat}(α::T, A::SparseMatrixCSC{T,BlasInt},
                                             B::StridedVecOrMat{T}, β::T, C::StridedVecOrMat{T})
     A.n == size(B, 1) || throw(DimensionMismatch())
@@ -6,6 +18,11 @@ function Base.LinAlg.A_mul_B!{T<:BlasFloat}(α::T, A::SparseMatrixCSC{T,BlasInt}
     isa(B,AbstractVector) ?
         cscmv!('N',α,matdescra(A),A,B,β,C) :
         cscmm!('N',α,matdescra(A),A,B,β,C)
+end
+function Base.LinAlg.A_mul_B!{T<:BlasFloat}(A::SparseMatrixCSC{T,BlasInt}, B::StridedVecOrMat{T})
+    isa(B,AbstractVector) ?
+        Base.LinAlg.A_mul_B!(one(T),A,B,zero(T),zeros(T, size(A,1))) :
+        Base.LinAlg.A_mul_B!(one(T),A,B,zero(T),zeros(T, size(A,1), size(B,2)))
 end
 
 function Base.LinAlg.Ac_mul_B!{T<:BlasFloat}(α::T, A::SparseMatrixCSC{T,BlasInt},
@@ -16,6 +33,12 @@ function Base.LinAlg.Ac_mul_B!{T<:BlasFloat}(α::T, A::SparseMatrixCSC{T,BlasInt
     isa(B,AbstractVector) ?
         cscmv!('T',α,matdescra(A),A,B,β,C) :
         cscmm!('T',α,matdescra(A),A,B,β,C)
+end
+function Base.LinAlg.Ac_mul_B!{T<:BlasFloat}(A::SparseMatrixCSC{T,BlasInt},
+                                             B::StridedVecOrMat{T})
+  isa(B,AbstractVector) ?
+        Base.LinAlg.Ac_mul_B!(one(T),A,B,zero(T),zeros(T, size(A,1))) :
+        Base.LinAlg.Ac_mul_B!(one(T),A,B,zero(T),zeros(T, size(A,1), size(B,2)))
 end
 
 for w in (:LowerTriangular,:UnitLowerTriangular,:UpperTriangular,:UnitUpperTriangular)
@@ -58,7 +81,6 @@ for w in (:LowerTriangular,:UnitLowerTriangular,:UpperTriangular,:UnitUpperTrian
                 cscsv!('T',α,matdescra(A),A.data,B,C) :
                 cscsm!('T',α,matdescra(A),A.data,B,C)
         end
-        
     end
 end
 
@@ -76,4 +98,10 @@ function Base.LinAlg.A_mul_B!{T<:BlasFloat}(C::StridedVecOrMat{T},
                                             B::StridedVecOrMat{T})
     A_mul_B!(one(T),A,B,zero(T),C)
 end
-    
+
+function Base.LinAlg.A_mul_B!{T<:BlasFloat}(A::Symmetric{T,SparseMatrixCSC{T,BlasInt}},
+                                            B::StridedVecOrMat{T})
+    isa(B,AbstractVector) ?
+        Base.LinAlg.A_mul_B!(one(T),A,B,zero(T),zeros(T, size(A,1))) :
+        Base.LinAlg.A_mul_B!(one(T),A,B,zero(T),zeros(T, size(A,1), size(B,2)))
+end

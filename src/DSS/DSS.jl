@@ -1,6 +1,7 @@
 module DSS
 import Base.LinAlg: BlasInt, BlasFloat, chksquare, factorize, show,
-       A_ldiv_B!, At_ldiv_B!, Ac_ldiv_B!, A_ldiv_B, At_ldiv_B, Ac_ldiv_B
+       A_ldiv_B!, At_ldiv_B!, Ac_ldiv_B!, A_ldiv_B, At_ldiv_B, Ac_ldiv_B,
+       cholfact, ldltfact, factorize, \
 
 include("dss_generator.jl")
 include("matstruct.jl")
@@ -142,5 +143,7 @@ for (mv, mv!) in ((:A_ldiv_B,  :A_ldiv_B!),
     end
 end
 
+(\){T}(F::DSSFactor{T}, B::StridedVecOrMat{T}) = A_ldiv_B(F, B)
+(\){T<:BlasFloat}(A::SparseMatrixCSC{T,BlasInt}, B::StridedVecOrMat{T}) = A_ldiv_B(factorize(A), B)
 
 end # module
