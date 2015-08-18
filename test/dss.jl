@@ -1,7 +1,6 @@
 srand(1234)
 
-import Base.LinAlg: factorize,
-       A_ldiv_B!, At_ldiv_B!, Ac_ldiv_B!, A_ldiv_B, At_ldiv_B, Ac_ldiv_B
+import Base.LinAlg: At_ldiv_B!, Ac_ldiv_B!, A_ldiv_B, At_ldiv_B, Ac_ldiv_B
 import MKLSparse.DSS: MatrixSymStructure, DSSError,
                       cholfact, ldltfact, lufact
 
@@ -32,7 +31,7 @@ for T in (Float32, Float64, Complex64, Complex128)
         @test_approx_eq At_ldiv_B(A, B) full(A.')\B
         @test_approx_eq Ac_ldiv_B(A, B) full(A')\B
 
-        for fact in (factorize, lufact, ldltfact, cholfact)
+        for fact in (factorize, MKLSparse.DSS.lufact, ldltfact, cholfact)
             # If factorization succeeds it should give correct answer.
             fact_failed = false
             F = 0.0 # To put F in scope... maybe better way to do this?

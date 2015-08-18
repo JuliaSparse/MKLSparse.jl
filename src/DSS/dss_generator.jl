@@ -23,7 +23,7 @@ function dss_define_structure(handle::Vector{Int}, rowindex::Vector{BlasInt},
 end
 
 function dss_reorder(handle::Vector{Int}, perm::Vector{BlasInt},
-                     opt::Int=MKL_DSS_DEFAULTS)
+                     opt::Int=MKL_DSS_AUTO_ORDER)
     @errcheck ccall(("dss_reorder", :libmkl_rt), BlasInt,
                 (Ptr{Void}, Ptr{BlasInt}, Ptr{BlasInt}),
                 handle, &opt, perm)
