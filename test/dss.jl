@@ -32,7 +32,7 @@ for T in (Float32, Float64, Complex64, Complex128)
         @test_approx_eq At_ldiv_B(A, B) full(A.')\B
         @test_approx_eq Ac_ldiv_B(A, B) full(A')\B
 
-        for fact in (factorize, lufact, ldltfact, cholfact)
+        for fact in (factorize, MKLSparse.lufact, ldltfact, cholfact)
             # If factorization succeeds it should give correct answer.
             fact_failed = false
             F = 0.0 # To put F in scope... maybe better way to do this?

@@ -77,5 +77,4 @@ function cscsm!(transa::Char, α::$T, matdescra::ASCIIString,
     return C
 end
 end
->>>>>>> 7cf19f1... unindented code a bit
 end
