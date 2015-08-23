@@ -1,7 +1,3 @@
-module DSS
-import Base.LinAlg: BlasInt, BlasFloat, chksquare, factorize, show,
-       A_ldiv_B!, At_ldiv_B!, Ac_ldiv_B!, A_ldiv_B, At_ldiv_B, Ac_ldiv_B
-
 include("dss_generator.jl")
 include("matstruct.jl")
 
@@ -42,8 +38,8 @@ end
 
 for (mv, ftype, cm_struct, rm_struct) in
     ((:_cholfact, "Cholesky", MKL_DSS_HERMITIAN_POSITIVE_DEFINITE, MKL_DSS_POSITIVE_DEFINITE),
-     (:_ldltfact, "LDLT", MKL_DSS_HERMITIAN_INDEFINITE,        MKL_DSS_INDEFINITE),
-     (:_lufact,   "LU",   MKL_DSS_INDEFINITE,                  MKL_DSS_INDEFINITE))
+     (:_ldltfact, "LDLT",     MKL_DSS_HERMITIAN_INDEFINITE,        MKL_DSS_INDEFINITE),
+     (:_lufact,   "LU",       MKL_DSS_INDEFINITE,                  MKL_DSS_INDEFINITE))
     @eval begin
         function $(mv){T<:BlasFloat}(A::SparseMatrixCSC{T, BlasInt}, mat_struct::MatrixSymStructure)
             n = size(A,1)
@@ -92,9 +88,9 @@ function free!(F::DSSFactor)
     dss_delete(F.handle)
 end
 
-for mv in ((:A_ldiv_B! ),
-           (:At_ldiv_B!),
-           (:Ac_ldiv_B!))
+for (mv, trans) in ((:A_ldiv_B!,  MKL_DSS_DEFAULTS),
+                    (:At_ldiv_B!, MKL_DSS_TRANSPOSE_SOLVE),
+                    (:Ac_ldiv_B!, MKL_DSS_CONJUGATE_SOLVE))
     @eval begin
         function $(mv){T<:BlasFloat}(A::SparseMatrixCSC{T,BlasInt},
                                      B::StridedVecOrMat{T},
@@ -102,13 +98,7 @@ for mv in ((:A_ldiv_B! ),
             F = factorize(A)
             return $(mv)(F, B, X)
         end
-    end
-end
 
-for (mv, trans) in ((:A_ldiv_B!,  MKL_DSS_DEFAULTS),
-                    (:At_ldiv_B!, MKL_DSS_TRANSPOSE_SOLVE),
-                    (:Ac_ldiv_B!, MKL_DSS_CONJUGATE_SOLVE))
-    @eval begin
         function $(mv){T<:BlasFloat}(F::DSSFactor,
                                      B::StridedVecOrMat{T},
                                      X::StridedVecOrMat{T})
@@ -120,27 +110,17 @@ for (mv, trans) in ((:A_ldiv_B!,  MKL_DSS_DEFAULTS),
     end
 end
 
-
 # Non mutating functions
-for (mv, mv!) in ((:A_ldiv_B,  :A_ldiv_B!),
+for (mv, mv!) in ((:(\),  :A_ldiv_B!),
                   (:At_ldiv_B, :At_ldiv_B!),
                   (:Ac_ldiv_B, :Ac_ldiv_B!))
-    @eval begin
-        function $(mv){T<:BlasFloat}(F::DSSFactor,
-                                     B::StridedVecOrMat{T})
-            X = similar(B)
-            return $(mv!)(F, B, X)
-        end
-    end
-
-   @eval begin
-        function $(mv){T<:BlasFloat}(A::SparseMatrixCSC{T,BlasInt},
-                                     B::StridedVecOrMat{T})
-            X = similar(B)
-            return $(mv!)(A, B, X)
+    for A in (:DSSFactor, :(SparseMatrixCSC{T,BlasInt}))
+        @eval begin
+            function $(mv){T<:BlasFloat}(F::$A,
+                                         B::StridedVecOrMat{T})
+                X = similar(B)
+                return $(mv!)(F, B, X)
+            end
         end
     end
 end
-
-
-end # module

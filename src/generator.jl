@@ -2,27 +2,28 @@ for (mv, sv, mm, sm, T) in ((:mkl_scscmv_, :mkl_scscsv_, :mkl_scscmm_, :mkl_scsc
                             (:mkl_dcscmv_, :mkl_dcscsv_, :mkl_dcscmm_, :mkl_dcscsm_, :Float64),
                             (:mkl_ccscmv_, :mkl_ccscsv_, :mkl_ccscmm_, :mkl_ccscsm_, :Complex64),
                             (:mkl_zcscmv_, :mkl_zcscsv_, :mkl_zcscmm_, :mkl_zcscsm_, :Complex128))
-    @eval begin
-        function cscmv!(transa::Char, α::$T, matdescra::ASCIIString, A::SparseMatrixCSC{$T, BlasInt}, x::StridedVector{$T}, β::$T, y::StridedVector{$T})
-            trns = uppercase(transa)
-            in(trns,['N','T']) || error("uppercase(transa) is '$trns', must be 'N' or 'T'")
-            length(x) == (trns == 'T' ? A.m : A.n) ||
-                throw(DimensionMismatch("Matrix with $(A.n) columns multiplied with vector of length $(length(x))"))
-            length(y) == (trns == 'T' ? A.n : A.m) ||
-                throw(DimensionMismatch("Vector of length $(A.m) added to vector of length $(length(y))"))
-            ccall(($(string(mv)), :libmkl_rt), Void,
-                (Ptr{Uint8}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T},
-                 Ptr{Uint8}, Ptr{$T}, Ptr{BlasInt}, Ptr{BlasInt},
-                 Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ptr{$T}),
-                &transa, &A.m, &A.n, &α,
-                matdescra, A.nzval, A.rowval, pointer(A.colptr, 1),
-                pointer(A.colptr, 2), x, &β, y)
-            return y
-        end
-
-function cscsv!(transa::Char, α::$T, matdescra::ASCIIString,
+@eval begin
+function cscmv!(transa::Char, α::$T, matdescra::ASCIIString,
                 A::SparseMatrixCSC{$T, BlasInt}, x::StridedVector{$T},
-                y::StridedVector{$T})
+                β::$T, y::StridedVector{$T})
+    trns = uppercase(transa)
+    trns == 'N' || trns == 'T' ||
+        throw(ArgumentError("uppercase(transa) is '$trns', must be 'N' or 'T'"))
+    length(x) == (trns == 'T' ? A.m : A.n) ||
+        throw(DimensionMismatch("Matrix with $(A.n) columns multiplied with vector of length $(length(x))"))
+    length(y) == (trns == 'T' ? A.n : A.m) ||
+        throw(DimensionMismatch("Vector of length $(A.m) added to vector of length $(length(y))"))
+    ccall(($(string(mv)), :libmkl_rt), Void,
+        (Ptr{Uint8}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T},
+         Ptr{Uint8}, Ptr{$T}, Ptr{BlasInt}, Ptr{BlasInt},
+         Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ptr{$T}),
+        &transa, &A.m, &A.n, &α,
+        matdescra, A.nzval, A.rowval, pointer(A.colptr, 1),
+        pointer(A.colptr, 2), x, &β, y)
+    return y
+end
+
+function cscsv!(transa::Char, α::$T, matdescra::ASCIIString, A::SparseMatrixCSC{$T, BlasInt}, x::StridedVector{$T}, y::StridedVector{$T})
     A.m == A.n || throw(DimensionMismatch("Matrix must be square"))
     length(x) == A.n || throw(DimensionMismatch("Matrix with $(A.n) columns multiplied with vector of length $(length(x))"))
     length(y) >= A.m || throw(DimensionMismatch("Vector of length $(A.m) assigned to vector of length $(length(y))"))
@@ -36,9 +37,7 @@ function cscsv!(transa::Char, α::$T, matdescra::ASCIIString,
     return y
 end
 
-function cscmm!(transa::Char, α::$T, matdescra::ASCIIString,
-                A::SparseMatrixCSC{$T, BlasInt}, B::StridedMatrix{$T},
-                β::$T, C::StridedMatrix{$T})
+function cscmm!(transa::Char, α::$T, matdescra::ASCIIString, A::SparseMatrixCSC{$T, BlasInt}, B::StridedMatrix{$T}, β::$T, C::StridedMatrix{$T})
     mB, nB = size(B)
     mC, nC = size(C)
     A.n == mB || throw(DimensionMismatch("Matrix with $(A.n) columns multiplied with matrix with $(mB) rows"))
@@ -56,9 +55,7 @@ function cscmm!(transa::Char, α::$T, matdescra::ASCIIString,
     return C
 end
 
-function cscsm!(transa::Char, α::$T, matdescra::ASCIIString,
-                A::SparseMatrixCSC{$T, BlasInt}, B::StridedMatrix{$T},
-                C::StridedMatrix{$T})
+function cscsm!(transa::Char, α::$T, matdescra::ASCIIString, A::SparseMatrixCSC{$T, BlasInt}, B::StridedMatrix{$T}, C::StridedMatrix{$T})
     mB, nB = size(B)
     mC, nC = size(C)
     A.m == A.n || throw(DimensionMismatch("Matrix must be square"))
