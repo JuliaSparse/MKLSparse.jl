@@ -13,4 +13,4 @@ Loading `MKLSparse.jl` will make sparse-dense matrix operation be computed using
 
 After `MKLSparse.jl` is loaded, the methods `factorize`, `lufact`, `cholfact`, `ldltfact` will now instead be computed using MKL. The returned factorization objects can be used to solve equations with backslash just like normally. MKL will also be used if the `A\B` syntax is used and `A` is sparse.
 
-Note, due to an unresolved ambiguity problem you currently need to use `MKLSparse.DSS.lufact` to use the lu factorization.
+Note, due to an unresolved ambiguity problem you currently need to use `MKLSparse.lufact` to use the lu factorization.
