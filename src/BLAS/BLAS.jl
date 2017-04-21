@@ -2,8 +2,6 @@ module BLAS
 
 import Base.LinAlg: checksquare, UnitLowerTriangular, UnitUpperTriangular, BlasInt, BlasFloat
 
-import ..libmkl_rt
-
 # For testing purposes:
 global const __counter = Ref(0)
 
