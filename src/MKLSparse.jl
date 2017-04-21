@@ -1,15 +1,19 @@
+__precompile__()
+
 module MKLSparse
 
-    import Base.LinAlg: BlasFloat, BlasInt, DimensionMismatch,
-                        UnitLowerTriangular, UnitUpperTriangular
 
-    export matdescra
+const depfile = joinpath(@__DIR__, "..", "deps", "deps.jl")
+if isfile(depfile)
+    include(depfile)
+else
+    error("MKLSparse not properly installed. Please run Pkg.build(\"MKLSparse\")")
+end
 
-    _init_() = Base.blas_vendor() == :mkl || error("MKLSparse requires blas_vendor() == :mkl")
+function __init__()
+    ccall((:MKL_Set_Interface_Layer, libmkl_rt), Cint, (Cint,), Base.USE_BLAS64 ? 1 : 0)
+end
 
-    include("./matdescra.jl")
-    include("./generator.jl")
-    include("./matmul.jl")
-    include("./DSS/DSS.jl")
+include(joinpath("BLAS", "BLAS.jl"))
 
 end # module
