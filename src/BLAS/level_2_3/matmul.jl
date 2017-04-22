@@ -7,8 +7,7 @@ _get_data(A::UnitLowerTriangular) = tril(A.data)
 _get_data(A::UnitUpperTriangular) = triu(A.data)
 _get_data(A::Symmetric) = A.data
 
-
-const SparseMatrices{T} = Union{SparseMatrixCSC{T,BlasInt},
+@compat const SparseMatrices{T} = Union{SparseMatrixCSC{T,BlasInt},
                                 Symmetric{T,SparseMatrixCSC{T,BlasInt}},
                                 LowerTriangular{T, SparseMatrixCSC{T,BlasInt}},
                                 UnitLowerTriangular{T, SparseMatrixCSC{T,BlasInt}},
