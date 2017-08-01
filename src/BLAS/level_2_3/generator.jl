@@ -12,9 +12,9 @@ mkl_size(t::Char, M::AbstractVecOrMat) = t == 'N' ? size(M) : reverse(size(M))
 # Checks sizes for the multiplication C <- A * B
 function _check_mat_mult_matvec(C, A, B, tA)
     _size(v::AbstractMatrix) = size(v)
-    _size(v::AbstractVector) = (size(v,1), 1)
-    _str(v::AbstractMatrix) = string("[", size(v,1), ", ", size(v,2), "]")
-    _str(v::AbstractVector) = string("[", size(v,1), "]")
+    _size(v::AbstractVector) = (size(v, 1), 1)
+    _str(v::AbstractMatrix) = string("[", size(v, 1), ", ", size(v, 2), "]")
+    _str(v::AbstractVector) = string("[", size(v, 1), "]")
     mA, nA = mkl_size(tA, A)
     mB, nB = _size(B)
     mC, nC = _size(C)
@@ -33,7 +33,7 @@ for (mv, sv, mm, sm, T) in ((:mkl_scscmv, :mkl_scscsv, :mkl_scscmm, :mkl_scscsm,
                             (:mkl_zcscmv, :mkl_zcscsv, :mkl_zcscmm, :mkl_zcscsm, :Complex128))
 @eval begin
 function cscmv!(transa::Char, α::$T, matdescra::String,
-                A::SparseMatrixCSC{$T, BlasInt}, x::StridedVector{$T},
+                A::SparseMatrixCSC{$T,BlasInt}, x::StridedVector{$T},
                 β::$T, y::StridedVector{$T})
     _check_transa(transa)
     _check_mat_mult_matvec(y, A, x, transa)
@@ -49,7 +49,7 @@ function cscmv!(transa::Char, α::$T, matdescra::String,
 end
 
 function cscmm!(transa::Char, α::$T, matdescra::String,
-                A::SparseMatrixCSC{$T, BlasInt}, B::StridedMatrix{$T},
+                A::SparseMatrixCSC{$T,BlasInt}, B::StridedMatrix{$T},
                 β::$T, C::StridedMatrix{$T})
     _check_transa(transa)
     _check_mat_mult_matvec(C, A, B, transa)
@@ -69,7 +69,7 @@ function cscmm!(transa::Char, α::$T, matdescra::String,
 end
 
 function cscsv!(transa::Char, α::$T, matdescra::String,
-                A::SparseMatrixCSC{$T, BlasInt}, x::StridedVector{$T},
+                A::SparseMatrixCSC{$T,BlasInt}, x::StridedVector{$T},
                 y::StridedVector{$T})
     n = checksquare(A)
     _check_transa(transa)
@@ -86,7 +86,7 @@ function cscsv!(transa::Char, α::$T, matdescra::String,
 end
 
 function cscsm!(transa::Char, α::$T, matdescra::String,
-                A::SparseMatrixCSC{$T, BlasInt}, B::StridedMatrix{$T},
+                A::SparseMatrixCSC{$T,BlasInt}, B::StridedMatrix{$T},
                 C::StridedMatrix{$T})
     mB, nB = size(B)
     mC, nC = size(C)
