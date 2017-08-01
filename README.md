@@ -5,7 +5,8 @@ In order to use `MKLSparse.jl` you need to have MKL installed and the environmen
 
 ### Matrix multiplication
 
-Loading `MKLSparse.jl` will make sparse-dense matrix operations be computed using MKL.
+Loading `MKLSparse.jl` will make sparse-dense matrix operations be computed using MKL. Note that this means that ALL sparse-dense computations in Julia,
+even those in other packages, will automatically use MKL. 
 
 ### Solving linear systems
 

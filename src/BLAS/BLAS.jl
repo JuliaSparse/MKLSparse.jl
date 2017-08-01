@@ -1,7 +1,5 @@
 module BLAS
 
-using Compat
-
 import Base.LinAlg: checksquare, UnitLowerTriangular, UnitUpperTriangular, BlasInt, BlasFloat
 
 # For testing purposes:
