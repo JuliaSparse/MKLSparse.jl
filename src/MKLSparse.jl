@@ -1,5 +1,3 @@
-__precompile__()
-
 module MKLSparse
 
 function __init__()

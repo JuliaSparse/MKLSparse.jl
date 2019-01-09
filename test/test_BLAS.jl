@@ -1,7 +1,7 @@
 module Matdescra
 
 using MKLSparse
-using Base.Test
+using Test
 
 sA = sprand(5, 5, 0.01)
 sS = sA'sA
@@ -24,7 +24,7 @@ import Base.LinAlg: UnitLowerTriangular, UnitUpperTriangular
 
 
 using MKLSparse
-using Base.Test
+using Test
 
 macro test_blas(ex)
     return quote
@@ -57,8 +57,8 @@ end
         b = randn(5,3) + im*randn(5,3)
         c = randn(5) + im*randn(5)
         d = randn(5) + im*randn(5)
-        α = rand(Complex128)
-        β = rand(Complex128)
+        α = rand(ComplexF64)
+        β = rand(ComplexF64)
         @test_blas (maximum(abs.(a*b - Array(a)*b)) < 100*eps())
         @test_blas (maximum(abs.(a'*b - Array(a)'*b)) < 100*eps())
         @test_blas (maximum(abs.(a.'*b - Array(a).'*b)) < 100*eps())
