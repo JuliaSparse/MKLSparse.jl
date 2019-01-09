@@ -7,12 +7,12 @@ _get_data(A::UnitLowerTriangular) = tril(A.data)
 _get_data(A::UnitUpperTriangular) = triu(A.data)
 _get_data(A::Symmetric) = A.data
 
-@compat const SparseMatrices{T} = Union{SparseMatrixCSC{T,BlasInt},
-                                Symmetric{T,SparseMatrixCSC{T,BlasInt}},
-                                LowerTriangular{T, SparseMatrixCSC{T,BlasInt}},
-                                UnitLowerTriangular{T, SparseMatrixCSC{T,BlasInt}},
-                                UpperTriangular{T, SparseMatrixCSC{T,BlasInt}},
-                                UnitUpperTriangular{T, SparseMatrixCSC{T,BlasInt}}}
+const SparseMatrices{T} = Union{SparseMatrixCSC{T,BlasInt},
+                        Symmetric{T,SparseMatrixCSC{T,BlasInt}},
+                        LowerTriangular{T, SparseMatrixCSC{T,BlasInt}},
+                        UnitLowerTriangular{T, SparseMatrixCSC{T,BlasInt}},
+                        UpperTriangular{T, SparseMatrixCSC{T,BlasInt}},
+                        UnitUpperTriangular{T, SparseMatrixCSC{T,BlasInt}}}
 
 for T in [Complex{Float32}, Complex{Float64}, Float32, Float64]
 for mat in (:StridedVector, :StridedMatrix)
