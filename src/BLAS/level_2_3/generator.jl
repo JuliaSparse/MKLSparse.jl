@@ -29,8 +29,8 @@ end
 
 for (mv, sv, mm, sm, T) in ((:mkl_scscmv, :mkl_scscsv, :mkl_scscmm, :mkl_scscsm, :Float32),
                             (:mkl_dcscmv, :mkl_dcscsv, :mkl_dcscmm, :mkl_dcscsm, :Float64),
-                            (:mkl_ccscmv, :mkl_ccscsv, :mkl_ccscmm, :mkl_ccscsm, :Complex64),
-                            (:mkl_zcscmv, :mkl_zcscsv, :mkl_zcscmm, :mkl_zcscsm, :Complex128))
+                            (:mkl_ccscmv, :mkl_ccscsv, :mkl_ccscmm, :mkl_ccscsm, :ComplexF32),
+                            (:mkl_zcscmv, :mkl_zcscsv, :mkl_zcscmm, :mkl_zcscsm, :ComplexF64))
 @eval begin
 function cscmv!(transa::Char, α::$T, matdescra::String,
                 A::SparseMatrixCSC{$T, BlasInt}, x::StridedVector{$T},

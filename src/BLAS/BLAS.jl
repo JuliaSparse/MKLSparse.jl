@@ -1,6 +1,7 @@
 module BLAS
 
-import Base.LinAlg: checksquare, UnitLowerTriangular, UnitUpperTriangular, BlasInt, BlasFloat
+using LinearAlgebra, SparseArrays
+using LinearAlgebra: BlasInt, checksquare
 
 # For testing purposes:
 global const __counter = Ref(0)

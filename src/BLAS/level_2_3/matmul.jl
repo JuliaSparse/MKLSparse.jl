@@ -1,11 +1,14 @@
-import Base: *, A_mul_B!, At_mul_B!, Ac_mul_B!, Ac_mul_B, At_mul_B
-import Base: \, A_ldiv_B!, At_ldiv_B!, Ac_ldiv_B!, Ac_ldiv_B, At_ldiv_B
+import Base: *, \
+import LinearAlgebra: mul!, ldiv!
 
 _get_data(A::LowerTriangular) = tril(A.data)
 _get_data(A::UpperTriangular) = triu(A.data)
 _get_data(A::UnitLowerTriangular) = tril(A.data)
 _get_data(A::UnitUpperTriangular) = triu(A.data)
 _get_data(A::Symmetric) = A.data
+
+_unwrap_adj(x::Union{Adjoint,Transpose}) = parent(x)
+_unwrap_adj(x) = x
 
 const SparseMatrices{T} = Union{SparseMatrixCSC{T,BlasInt},
                         Symmetric{T,SparseMatrixCSC{T,BlasInt}},
@@ -16,62 +19,82 @@ const SparseMatrices{T} = Union{SparseMatrixCSC{T,BlasInt},
 
 for T in [Complex{Float32}, Complex{Float64}, Float32, Float64]
 for mat in (:StridedVector, :StridedMatrix)
-for (trans, F!, F) in (('N', :A_mul_B! , :*),
-                       ('C', :Ac_mul_B!, :Ac_mul_B),
-                       ('T', :At_mul_B!, :At_mul_B))
+for (tchar, ttype) in (('N', :()),
+                       ('C', :Adjoint),
+                       ('T', :Transpose))
+    AT = tchar == 'N' ? :(SparseMatrixCSC{$T,BlasInt}) : :($ttype{$T,SparseMatrixCSC{$T,BlasInt}})
     @eval begin
-        function $F!(α::$T, A::SparseMatrixCSC{$T, BlasInt},
-                       B::$mat{$T}, β::$T, C::$mat{$T})
-            isa(B,AbstractVector) ?
-                cscmv!($trans, α, matdescra(A), A, B, β, C) :
-                cscmm!($trans, α, matdescra(A), A, B, β, C)
+        function mul!(α::$T, adjA::$AT,
+                      B::$mat{$T}, β::$T, C::$mat{$T})
+            A = _unwrap_adj(adjA)
+            if isa(B, AbstractVector)
+                return cscmv!($tchar, α, matdescra(A), A, B, β, C)
+            else
+                return cscmm!($tchar, α, matdescra(A), A, B, β, C)
+            end
         end
 
-        function $F!(C::$mat{$T}, A::SparseMatrices{$T},
-                      B::$mat{$T})
-            $F!(one($T), A, B, zero($T), C)
-        end
+        mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}) = mul!(one($T), adjA, B, zero($T), C)
 
-        function $F(A::SparseMatrices{$T}, B::$mat{$T})
-            isa(B,AbstractVector) ?
-                $F!(zeros($T, mkl_size($trans, A)[1]),            A, B) :
-                $F!(zeros($T, mkl_size($trans, A)[1], size(B,2)), A, B)
+        function (*)(adjA::$AT, B::$mat{$T})
+            A = _unwrap_adj(adjA)
+            if isa(B,AbstractVector)
+                return mul!(zeros($T, mkl_size($tchar, A)[1]),            adjA, B)
+            else
+                return mul!(zeros($T, mkl_size($tchar, A)[1], size(B,2)), adjA, B)
+            end
         end
     end
 
     for w in (:Symmetric, :LowerTriangular, :UnitLowerTriangular, :UpperTriangular, :UnitUpperTriangular)
+        AT = tchar == 'N' ?
+            :($w{$T,SparseMatrixCSC{$T,BlasInt}}) :
+            :($ttype{$T,$w{$T,SparseMatrixCSC{$T,BlasInt}}})
         @eval begin
-            function $F!(α::$T, A::$w{$T, SparseMatrixCSC{$T, BlasInt}},
+            function mul!(α::$T, adjA::$AT,
                          B::$mat{$T}, β::$T, C::$mat{$T})
-                isa(B,AbstractVector) ?
-                    cscmv!($trans, α, matdescra(A), _get_data(A), B, β, C) :
-                    cscmm!($trans, α, matdescra(A), _get_data(A), B, β, C)
+                A = _unwrap_adj(adjA)
+                if isa(B,AbstractVector)
+                    return cscmv!($tchar, α, matdescra(A), _get_data(A), B, β, C)
+                else
+                    return cscmm!($tchar, α, matdescra(A), _get_data(A), B, β, C)
+                end
+            end
+
+            mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}) = mul!(one($T), adjA, B, zero($T), C)
+
+            function (*)(adjA::$AT, B::$mat{$T})
+                A = _unwrap_adj(adjA)
+                if isa(B,AbstractVector)
+                    return mul!(zeros($T, mkl_size($tchar, A)[1]),            adjA, B)
+                else
+                    return mul!(zeros($T, mkl_size($tchar, A)[1], size(B,2)), adjA, B)
+                end
             end
         end
-    end
-end
 
-for (trans, F!, F) in (('N', :A_ldiv_B! , :\),
-                       ('C', :Ac_ldiv_B!, :Ac_ldiv_B),
-                       ('T', :At_ldiv_B!, :At_ldiv_B))
-    for w in (:LowerTriangular, :UnitLowerTriangular, :UpperTriangular, :UnitUpperTriangular)
-        @eval begin
-            function $F!(α::$T, A::$w{$T, SparseMatrixCSC{$T, BlasInt}},
-                           B::$mat{$T}, C::$mat{$T})
-                isa(B,AbstractVector) ?
-                    cscsv!($trans, α, matdescra(A), _get_data(A), B, C) :
-                    cscsm!($trans, α, matdescra(A), _get_data(A), B, C)
-            end
+        if w != :Symmetric
+            @eval begin
+                function ldiv!(α::$T, adjA::$AT,
+                               B::$mat{$T}, C::$mat{$T})
+                    A = _unwrap_adj(adjA)
+                    if isa(B,AbstractVector)
+                        return cscsv!($tchar, α, matdescra(A), _get_data(A), B, C)
+                    else
+                        return cscsm!($tchar, α, matdescra(A), _get_data(A), B, C)
+                    end
+                end
 
-            function $F!(C::$mat{$T}, A::$w{$T, SparseMatrixCSC{$T, BlasInt}},
-                         B::$mat{$T})
-                $F!(one($T), A, B, C)
-            end
+                ldiv!(C::$mat{$T}, A::$AT, B::$mat{$T}) =
+                    ldiv!(one($T), A, B, C)
 
-            function $F(A::$w{$T, SparseMatrixCSC{$T, BlasInt}}, B::$mat{$T})
-                isa(B,AbstractVector) ?
-                    $F!(zeros($T, size(A,1)),            A, B) :
-                    $F!(zeros($T, size(A,1), size(B,2)), A, B)
+                function (\)(A::$AT, B::$mat{$T})
+                    if isa(B,AbstractVector)
+                        return ldiv!(zeros($T, size(A,1)),            A, B)
+                    else
+                        return ldiv!(zeros($T, size(A,1), size(B,2)), A, B)
+                    end
+                end
             end
         end
     end
