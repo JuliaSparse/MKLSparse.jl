@@ -29,8 +29,8 @@ end
 
 for (mv, sv, mm, sm, T) in ((:mkl_scscmv, :mkl_scscsv, :mkl_scscmm, :mkl_scscsm, :Float32),
                             (:mkl_dcscmv, :mkl_dcscsv, :mkl_dcscmm, :mkl_dcscsm, :Float64),
-                            (:mkl_ccscmv, :mkl_ccscsv, :mkl_ccscmm, :mkl_ccscsm, :Complex64),
-                            (:mkl_zcscmv, :mkl_zcscsv, :mkl_zcscmm, :mkl_zcscsm, :Complex128))
+                            (:mkl_ccscmv, :mkl_ccscsv, :mkl_ccscmm, :mkl_ccscsm, :ComplexF32),
+                            (:mkl_zcscmv, :mkl_zcscsv, :mkl_zcscmm, :mkl_zcscsm, :ComplexF64))
 @eval begin
 function cscmv!(transa::Char, α::$T, matdescra::String,
                 A::SparseMatrixCSC{$T, BlasInt}, x::StridedVector{$T},
@@ -38,13 +38,13 @@ function cscmv!(transa::Char, α::$T, matdescra::String,
     _check_transa(transa)
     _check_mat_mult_matvec(y, A, x, transa)
     __counter[] += 1
-    ccall(($(string(mv)), :libmkl_rt), Void,
-        (Ptr{UInt8}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T},
+    ccall(($(string(mv)), :libmkl_rt), Cvoid,
+        (Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt}, Ref{$T},
          Ptr{UInt8}, Ptr{$T}, Ptr{BlasInt}, Ptr{BlasInt},
-         Ptr{BlasInt}, Ptr{$T}, Ptr{$T}, Ptr{$T}),
-        &transa, &A.m, &A.n, &α,
-        matdescra, A.nzval, A.rowval, pointer(A.colptr, 1),
-        pointer(A.colptr, 2), x, &β, y)
+         Ptr{BlasInt}, Ptr{$T}, Ref{$T}, Ptr{$T}),
+        transa, A.m, A.n, α,
+        matdescra, A.nzval, A.rowval, A.colptr,
+        pointer(A.colptr, 2), x, β, y)
     return y
 end
 
@@ -56,15 +56,15 @@ function cscmm!(transa::Char, α::$T, matdescra::String,
     mB, nB = size(B)
     mC, nC = size(C)
     __counter[] += 1
-    ccall(($(string(mm)), :libmkl_rt), Void,
-        (Ptr{UInt8}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{BlasInt},
-         Ptr{$T}, Ptr{UInt8}, Ptr{$T}, Ptr{BlasInt},
-         Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ptr{BlasInt},
-         Ptr{$T}, Ptr{$T}, Ptr{BlasInt}),
-        &transa, &A.m, &nC, &A.n,
-        &α, matdescra, A.nzval, A.rowval,
-        pointer(A.colptr, 1), pointer(A.colptr, 2), B, &mB,
-        &β, C, &mC)
+    ccall(($(string(mm)), :libmkl_rt), Cvoid,
+        (Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt}, Ref{BlasInt},
+         Ref{$T}, Ptr{UInt8}, Ptr{$T}, Ptr{BlasInt},
+         Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ref{BlasInt},
+         Ref{$T}, Ptr{$T}, Ref{BlasInt}),
+        transa, A.m, nC, A.n,
+        α, matdescra, A.nzval, A.rowval,
+        A.colptr, pointer(A.colptr, 2), B, mB,
+        β, C, mC)
     return C
 end
 
@@ -75,12 +75,12 @@ function cscsv!(transa::Char, α::$T, matdescra::String,
     _check_transa(transa)
     _check_mat_mult_matvec(y, A, x, transa)
     __counter[] += 1
-    ccall(($(string(sv)), :libmkl_rt), Void,
-        (Ptr{UInt8}, Ptr{BlasInt}, Ptr{$T}, Ptr{UInt8},
+    ccall(($(string(sv)), :libmkl_rt), Cvoid,
+        (Ref{UInt8}, Ref{BlasInt}, Ref{$T}, Ptr{UInt8},
          Ptr{$T}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{BlasInt},
          Ptr{$T}, Ptr{$T}),
-        &transa, &A.m, &α, matdescra,
-        A.nzval, A.rowval, pointer(A.colptr, 1), pointer(A.colptr, 2),
+        transa, A.m, α, matdescra,
+        A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2),
         x, y)
     return y
 end
@@ -94,15 +94,15 @@ function cscsm!(transa::Char, α::$T, matdescra::String,
     _check_transa(transa)
     _check_mat_mult_matvec(C, A, B, transa)
     __counter[] += 1
-    ccall(($(string(sm)), :libmkl_rt), Void,
-        (Ptr{UInt8}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T},
+    ccall(($(string(sm)), :libmkl_rt), Cvoid,
+        (Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt}, Ref{$T},
          Ptr{UInt8}, Ptr{$T}, Ptr{BlasInt}, Ptr{BlasInt},
-         Ptr{BlasInt}, Ptr{$T}, Ptr{BlasInt}, Ptr{$T},
-         Ptr{BlasInt}),
-        &transa, &A.n, &nC, &α,
-        matdescra, A.nzval, A.rowval, pointer(A.colptr, 1),
-        pointer(A.colptr, 2), B, &mB, C,
-        &mC)
+         Ptr{BlasInt}, Ptr{$T}, Ref{BlasInt}, Ptr{$T},
+         Ref{BlasInt}),
+        transa, A.n, nC, α,
+        matdescra, A.nzval, A.rowval, A.colptr,
+        pointer(A.colptr, 2), B, mB, C,
+        mC)
     return C
 end
 
