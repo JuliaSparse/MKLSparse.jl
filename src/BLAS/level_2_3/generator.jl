@@ -43,7 +43,7 @@ function cscmv!(transa::Char, α::$T, matdescra::String,
          Ptr{UInt8}, Ptr{$T}, Ptr{BlasInt}, Ptr{BlasInt},
          Ptr{BlasInt}, Ptr{$T}, Ref{$T}, Ptr{$T}),
         transa, A.m, A.n, α,
-        matdescra, A.nzval, A.rowval, pointer(A.colptr, 1),
+        matdescra, A.nzval, A.rowval, A.colptr,
         pointer(A.colptr, 2), x, β, y)
     return y
 end
@@ -63,7 +63,7 @@ function cscmm!(transa::Char, α::$T, matdescra::String,
          Ref{$T}, Ptr{$T}, Ref{BlasInt}),
         transa, A.m, nC, A.n,
         α, matdescra, A.nzval, A.rowval,
-        pointer(A.colptr, 1), pointer(A.colptr, 2), B, mB,
+        A.colptr, pointer(A.colptr, 2), B, mB,
         β, C, mC)
     return C
 end
@@ -80,7 +80,7 @@ function cscsv!(transa::Char, α::$T, matdescra::String,
          Ptr{$T}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{BlasInt},
          Ptr{$T}, Ptr{$T}),
         transa, A.m, α, matdescra,
-        A.nzval, A.rowval, pointer(A.colptr, 1), pointer(A.colptr, 2),
+        A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2),
         x, y)
     return y
 end
@@ -100,7 +100,7 @@ function cscsm!(transa::Char, α::$T, matdescra::String,
          Ptr{BlasInt}, Ptr{$T}, Ref{BlasInt}, Ptr{$T},
          Ref{BlasInt}),
         transa, A.n, nC, α,
-        matdescra, A.nzval, A.rowval, pointer(A.colptr, 1),
+        matdescra, A.nzval, A.rowval, A.colptr,
         pointer(A.colptr, 2), B, mB, C,
         mC)
     return C
