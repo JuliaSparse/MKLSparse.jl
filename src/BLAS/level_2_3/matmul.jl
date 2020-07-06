@@ -24,8 +24,7 @@ for (tchar, ttype) in (('N', :()),
                        ('T', :Transpose))
     AT = tchar == 'N' ? :(SparseMatrixCSC{$T,BlasInt}) : :($ttype{$T,SparseMatrixCSC{$T,BlasInt}})
     @eval begin
-        function mul!(α::$T, adjA::$AT,
-                      B::$mat{$T}, β::$T, C::$mat{$T})
+        function mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}, α::$T, β::$T)
             A = _unwrap_adj(adjA)
             if isa(B, AbstractVector)
                 return cscmv!($tchar, α, matdescra(A), A, B, β, C)
@@ -34,7 +33,7 @@ for (tchar, ttype) in (('N', :()),
             end
         end
 
-        mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}) = mul!(one($T), adjA, B, zero($T), C)
+        mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}) = mul!(C, adjA, B, one($T), zero($T))
 
         function (*)(adjA::$AT, B::$mat{$T})
             A = _unwrap_adj(adjA)
@@ -51,8 +50,7 @@ for (tchar, ttype) in (('N', :()),
             :($w{$T,SparseMatrixCSC{$T,BlasInt}}) :
             :($ttype{$T,$w{$T,SparseMatrixCSC{$T,BlasInt}}})
         @eval begin
-            function mul!(α::$T, adjA::$AT,
-                         B::$mat{$T}, β::$T, C::$mat{$T})
+            function mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}, α::$T, β::$T)
                 A = _unwrap_adj(adjA)
                 if isa(B,AbstractVector)
                     return cscmv!($tchar, α, matdescra(A), _get_data(A), B, β, C)
@@ -61,7 +59,7 @@ for (tchar, ttype) in (('N', :()),
                 end
             end
 
-            mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}) = mul!(one($T), adjA, B, zero($T), C)
+            mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}) = mul!(C, adjA, B, one($T), zero($T))
 
             function (*)(adjA::$AT, B::$mat{$T})
                 A = _unwrap_adj(adjA)

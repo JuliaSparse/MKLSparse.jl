@@ -63,6 +63,9 @@ end
         @test_blas (maximum(abs.(mul!(similar(c), a, c) - Array(a)*c)) < 100*eps())
         @test_blas (maximum(abs.(mul!(similar(b), transpose(a), b) - transpose(Array(a))*b)) < 100*eps())
         @test_blas (maximum(abs.(mul!(similar(c), transpose(a), c) - transpose(Array(a))*c)) < 100*eps())
+        @test_blas (maximum(abs.(mul!(copy(b), a, b, α, β) - (α*(Array(a)*b) + β*b))) < 100*eps())
+        @test_blas (maximum(abs.(mul!(copy(b), transpose(a), b, α, β) - (α*(transpose(Array(a))*b) + β*b))) < 100*eps())
+        @test_blas (maximum(abs.(mul!(copy(c), transpose(a), c, α, β) - (α*(transpose(Array(a))*c) + β*c))) < 100*eps())
 
         c = randn(6) + im*randn(6)
         @test_throws DimensionMismatch transpose(a)*c
