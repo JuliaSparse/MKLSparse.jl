@@ -2,6 +2,7 @@ module BLAS
 
 using LinearAlgebra, SparseArrays
 using LinearAlgebra: BlasInt, checksquare
+using MKL_jll: libmkl_rt
 
 # For testing purposes:
 global const __counter = Ref(0)
