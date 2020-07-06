@@ -1,10 +1,13 @@
 name = "MKLSparse"
 uuid = "0c723cd3-b8cd-5d40-b370-ba682dde9aae"
-version = "1.0.0"
+version = "1.1.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[compat]
+julia = "1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
