@@ -38,7 +38,7 @@ function cscmv!(transa::Char, α::$T, matdescra::String,
     _check_transa(transa)
     _check_mat_mult_matvec(y, A, x, transa)
     __counter[] += 1
-    ccall(($(string(mv)), :libmkl_rt), Cvoid,
+    ccall(($(string(mv)), libmkl_rt), Cvoid,
         (Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt}, Ref{$T},
          Ptr{UInt8}, Ptr{$T}, Ptr{BlasInt}, Ptr{BlasInt},
          Ptr{BlasInt}, Ptr{$T}, Ref{$T}, Ptr{$T}),
@@ -56,7 +56,7 @@ function cscmm!(transa::Char, α::$T, matdescra::String,
     mB, nB = size(B)
     mC, nC = size(C)
     __counter[] += 1
-    ccall(($(string(mm)), :libmkl_rt), Cvoid,
+    ccall(($(string(mm)), libmkl_rt), Cvoid,
         (Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt}, Ref{BlasInt},
          Ref{$T}, Ptr{UInt8}, Ptr{$T}, Ptr{BlasInt},
          Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}, Ref{BlasInt},
@@ -75,7 +75,7 @@ function cscsv!(transa::Char, α::$T, matdescra::String,
     _check_transa(transa)
     _check_mat_mult_matvec(y, A, x, transa)
     __counter[] += 1
-    ccall(($(string(sv)), :libmkl_rt), Cvoid,
+    ccall(($(string(sv)), libmkl_rt), Cvoid,
         (Ref{UInt8}, Ref{BlasInt}, Ref{$T}, Ptr{UInt8},
          Ptr{$T}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{BlasInt},
          Ptr{$T}, Ptr{$T}),
@@ -94,7 +94,7 @@ function cscsm!(transa::Char, α::$T, matdescra::String,
     _check_transa(transa)
     _check_mat_mult_matvec(C, A, B, transa)
     __counter[] += 1
-    ccall(($(string(sm)), :libmkl_rt), Cvoid,
+    ccall(($(string(sm)), libmkl_rt), Cvoid,
         (Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt}, Ref{$T},
          Ptr{UInt8}, Ptr{$T}, Ptr{BlasInt}, Ptr{BlasInt},
          Ptr{BlasInt}, Ptr{$T}, Ref{BlasInt}, Ptr{$T},
