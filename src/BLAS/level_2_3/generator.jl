@@ -39,7 +39,7 @@ for (mv, sv, mm, sm, T) in (
     (:mkl_sparse_c_mv, :mkl_sparse_c_trsv, :mkl_sparse_c_mm, :mkl_sparse_c_trsm, :ComplexF32),
     (:mkl_sparse_z_mv, :mkl_sparse_z_trsv, :mkl_sparse_z_mm, :mkl_sparse_z_trsm, :ComplexF64))
 @eval begin
-function cscmv!(transa::Char, α::$T, matdescra::matrix_descr,
+function cscmv!(transa::Char, α::$T, desc::matrix_descr,
                 A::SparseMatrixCSC{$T, BlasInt}, x::StridedVector{$T},
                 β::$T, y::StridedVector{$T})
     op = _check_transa(transa)
@@ -48,13 +48,13 @@ function cscmv!(transa::Char, α::$T, matdescra::matrix_descr,
     p = cscptr(A)
     ret = ccall(($(string(mv)), libmkl_rt), sparse_status_t,
         (sparse_operation_t, $T, Ptr{MKLcsc{$T}}, matrix_descr, Ptr{$T}, $T, Ptr{$T},),
-        op, α, p, matdescra, x, β, y)
+        op, α, p, desc, x, β, y)
     ret == SPARSE_STATUS_SUCCESS || throw(ArgumentError(string(ret)))
     _destroy!(p)
     return y
 end
 
-function cscmm!(transa::Char, α::$T, matdescra::matrix_descr,
+function cscmm!(transa::Char, α::$T, desc::matrix_descr,
                 A::SparseMatrixCSC{$T, BlasInt}, B::StridedMatrix{$T},
                 β::$T, C::StridedMatrix{$T})
     op = _check_transa(transa)
@@ -66,13 +66,13 @@ function cscmm!(transa::Char, α::$T, matdescra::matrix_descr,
     ret = ccall(($(string(mm)), libmkl_rt), sparse_status_t,
         (sparse_operation_t, $T, Ptr{MKLcsc{$T}}, matrix_descr,
         sparse_layout_t, Ptr{$T}, BlasInt, BlasInt, $T, Ptr{$T}, BlasInt),
-        op, α, p, matdescra, SPARSE_LAYOUT_COLUMN_MAJOR, B, nB, mB, β, C, mC)
+        op, α, p, desc, SPARSE_LAYOUT_COLUMN_MAJOR, B, nB, mB, β, C, mC)
     ret == SPARSE_STATUS_SUCCESS || throw(ArgumentError(ret))
     _destroy!(p)
     return C
 end
 
-function cscsv!(transa::Char, α::$T, matdescra::matrix_descr,
+function cscsv!(transa::Char, α::$T, desc::matrix_descr,
                 A::SparseMatrixCSC{$T, BlasInt}, x::StridedVector{$T},
                 y::StridedVector{$T})
     n = checksquare(A)
@@ -83,14 +83,14 @@ function cscsv!(transa::Char, α::$T, matdescra::matrix_descr,
     ret = ccall(
         ($(string(sv)), libmkl_rt), sparse_status_t,
         (sparse_operation_t, $T, Ptr{MKLcsc{$T}}, matrix_descr, Ptr{$T}, Ptr{$T},),
-        op, α, p, matdescra, x, y,
+        op, α, p, desc, x, y,
     )
     ret == SPARSE_STATUS_SUCCESS || throw(ArgumentError(ret))
     _destroy!(p)
     return y
 end
 
-function cscsm!(transa::Char, α::$T, matdescra::matrix_descr,
+function cscsm!(transa::Char, α::$T, desc::matrix_descr,
                 A::SparseMatrixCSC{$T, BlasInt}, B::StridedMatrix{$T},
                 C::StridedMatrix{$T})
     mB, nB = size(B)
@@ -104,7 +104,7 @@ function cscsm!(transa::Char, α::$T, matdescra::matrix_descr,
         ($(string(sm)), libmkl_rt), sparse_status_t,
         (sparse_operation_t, $T, Ptr{MKLcsc{$T}}, matrix_descr,
         sparse_layout_t, Ptr{$T}, BlasInt, BlasInt, Ptr{$T}, BlasInt,),
-        op, α, p, matdescra, SPARSE_LAYOUT_COLUMN_MAJOR, B, nB, mB, C, mC,
+        op, α, p, desc, SPARSE_LAYOUT_COLUMN_MAJOR, B, nB, mB, C, mC,
     )
     ret == SPARSE_STATUS_SUCCESS || throw(ArgumentError(ret))
     _destroy!(p)
