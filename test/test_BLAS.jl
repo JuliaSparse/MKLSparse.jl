@@ -1,27 +1,22 @@
-module Matdescra
-
 using MKLSparse
 using Test, SparseArrays, LinearAlgebra
 
-sA = sprand(5, 5, 0.01)
-sS = sA'sA
-sTl = tril(sS)
-sTu = triu(sS)
+@testset "matdescra" begin
 
-@test MKLSparse.BLAS.matdescra(Symmetric(sTl,:L)) == "SLNF"
-@test MKLSparse.BLAS.matdescra(Symmetric(sTu,:U)) == "SUNF"
-@test MKLSparse.BLAS.matdescra(LowerTriangular(sTl)) == "TLNF"
-@test MKLSparse.BLAS.matdescra(UpperTriangular(sTu)) == "TUNF"
-@test MKLSparse.BLAS.matdescra(UnitLowerTriangular(sTl)) == "TLUF"
-@test MKLSparse.BLAS.matdescra(UnitUpperTriangular(sTu)) == "TUUF"
-@test MKLSparse.BLAS.matdescra(sA) == "GUUF"
+    sA = sprand(5, 5, 0.01)
+    sS = sA'sA
+    sTl = tril(sS)
+    sTu = triu(sS)
 
-end  # module
+    @test MKLSparse.BLAS.matdescra(Symmetric(sTl,:L)) == "SLNF"
+    @test MKLSparse.BLAS.matdescra(Symmetric(sTu,:U)) == "SUNF"
+    @test MKLSparse.BLAS.matdescra(LowerTriangular(sTl)) == "TLNF"
+    @test MKLSparse.BLAS.matdescra(UpperTriangular(sTu)) == "TUNF"
+    @test MKLSparse.BLAS.matdescra(UnitLowerTriangular(sTl)) == "TLUF"
+    @test MKLSparse.BLAS.matdescra(UnitUpperTriangular(sTu)) == "TUUF"
+    @test MKLSparse.BLAS.matdescra(sA) == "GUUF"
 
-module BLAS
-
-using MKLSparse
-using Test, LinearAlgebra, SparseArrays
+end
 
 macro test_blas(ex)
     return quote
@@ -102,5 +97,3 @@ end
 
     @test_blas Symmetric(symA) * b ≈ Array(Symmetric(symA)) * b
 end
-
-end # module

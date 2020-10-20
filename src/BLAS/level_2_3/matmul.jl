@@ -27,9 +27,9 @@ for (tchar, ttype) in (('N', :()),
         function mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}, α::Number, β::Number)
             A = _unwrap_adj(adjA)
             if isa(B, AbstractVector)
-                return cscmv!($tchar, $T(α), matdescra(A), A, B, $T(β), C)
+                return cscmv!($tchar, $T(α), matrix_descr(A), A, B, $T(β), C)
             else
-                return cscmm!($tchar, $T(α), matdescra(A), A, B, $T(β), C)
+                return cscmm!($tchar, $T(α), matrix_descr(A), A, B, $T(β), C)
             end
         end
 
@@ -53,9 +53,9 @@ for (tchar, ttype) in (('N', :()),
             function mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}, α::Number, β::Number)
                 A = _unwrap_adj(adjA)
                 if isa(B,AbstractVector)
-                    return cscmv!($tchar, $T(α), matdescra(A), _get_data(A), B, $T(β), C)
+                    return cscmv!($tchar, $T(α), matrix_descr(A), _get_data(A), B, $T(β), C)
                 else
-                    return cscmm!($tchar, $T(α), matdescra(A), _get_data(A), B, $T(β), C)
+                    return cscmm!($tchar, $T(α), matrix_descr(A), _get_data(A), B, $T(β), C)
                 end
             end
 
@@ -77,9 +77,9 @@ for (tchar, ttype) in (('N', :()),
                                B::$mat{$T}, C::$mat{$T})
                     A = _unwrap_adj(adjA)
                     if isa(B,AbstractVector)
-                        return cscsv!($tchar, $T(α), matdescra(A), _get_data(A), B, C)
+                        return cscsv!($tchar, $T(α), matrix_descr(A), _get_data(A), B, C)
                     else
-                        return cscsm!($tchar, $T(α), matdescra(A), _get_data(A), B, C)
+                        return cscsm!($tchar, $T(α), matrix_descr(A), _get_data(A), B, C)
                     end
                 end
 
