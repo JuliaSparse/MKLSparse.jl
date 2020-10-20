@@ -1,6 +1,6 @@
 using MKLSparse
 using Test, SparseArrays, LinearAlgebra
-
+#=
 @testset "matdescra" begin
 
     sA = sprand(5, 5, 0.01)
@@ -17,7 +17,7 @@ using Test, SparseArrays, LinearAlgebra
     @test MKLSparse.BLAS.matdescra(sA) == "GUUF"
 
 end
-
+=#
 macro test_blas(ex)
     return quote
         MKLSparse.BLAS.__counter[] = 0
@@ -83,17 +83,17 @@ end
     trilUA = tril(A, -1) + I
     triuUA = triu(A, 1)  + I
 
-    @test_blas LowerTriangular(trilA) \ b ≈ Array(LowerTriangular(trilA)) \ b
-    @test_blas LowerTriangular(trilA) * b ≈ Array(LowerTriangular(trilA)) * b
+    @test_blas LowerTriangular(trilA) \ b ≈ LowerTriangular(Array(trilA)) \ b
+    @test_blas LowerTriangular(trilA) * b ≈ LowerTriangular(Array(trilA)) * b
 
-    @test_blas UpperTriangular(triuA) \ b ≈ Array(UpperTriangular(triuA)) \ b
-    @test_blas UpperTriangular(triuA) * b ≈ Array(UpperTriangular(triuA)) * b
+    @test_blas UpperTriangular(triuA) \ b ≈ UpperTriangular(Array(triuA)) \ b
+    @test_blas UpperTriangular(triuA) * b ≈ UpperTriangular(Array(triuA)) * b
 
-    @test_blas UnitLowerTriangular(trilUA) \ b ≈ Array(UnitLowerTriangular(trilUA)) \ b
-    @test_blas UnitLowerTriangular(trilUA) * b ≈ Array(UnitLowerTriangular(trilUA)) * b
+    @test_blas UnitLowerTriangular(trilUA) \ b ≈ UnitLowerTriangular(Array(trilUA)) \ b
+    @test_blas UnitLowerTriangular(trilUA) * b ≈ UnitLowerTriangular(Array(trilUA)) * b
 
-    @test_blas UnitUpperTriangular(triuUA) \ b ≈ Array(UnitUpperTriangular(triuUA)) \ b
-    @test_blas UnitUpperTriangular(triuUA) * b ≈ Array(UnitUpperTriangular(triuUA)) * b
+    @test_blas UnitUpperTriangular(triuUA) \ b ≈ UnitUpperTriangular(Array(triuUA)) \ b
+    @test_blas UnitUpperTriangular(triuUA) * b ≈ UnitUpperTriangular(Array(triuUA)) * b
 
     @test_blas Symmetric(symA) * b ≈ Array(Symmetric(symA)) * b
 end
