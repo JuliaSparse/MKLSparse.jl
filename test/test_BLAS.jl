@@ -1,23 +1,6 @@
 using MKLSparse
 using Test, SparseArrays, LinearAlgebra
-#=
-@testset "matdescra" begin
 
-    sA = sprand(5, 5, 0.01)
-    sS = sA'sA
-    sTl = tril(sS)
-    sTu = triu(sS)
-
-    @test MKLSparse.BLAS.matdescra(Symmetric(sTl,:L)) == "SLNF"
-    @test MKLSparse.BLAS.matdescra(Symmetric(sTu,:U)) == "SUNF"
-    @test MKLSparse.BLAS.matdescra(LowerTriangular(sTl)) == "TLNF"
-    @test MKLSparse.BLAS.matdescra(UpperTriangular(sTu)) == "TUNF"
-    @test MKLSparse.BLAS.matdescra(UnitLowerTriangular(sTl)) == "TLUF"
-    @test MKLSparse.BLAS.matdescra(UnitUpperTriangular(sTu)) == "TUUF"
-    @test MKLSparse.BLAS.matdescra(sA) == "GUUF"
-
-end
-=#
 macro test_blas(ex)
     return quote
         MKLSparse.BLAS.__counter[] = 0
@@ -26,7 +9,7 @@ macro test_blas(ex)
     end
 end
 
-@testset "matrix-vector multiplication (non-square)" begin
+@testset "matrix-vector muutiplication (non-square)" begin
     for i = 1:5
         a = sprand(10, 5, 0.5)
         b = rand(5)
@@ -43,7 +26,7 @@ end
 end
 
 #?
-@testset "complex matrix-vector multiplication" begin
+@testset "complex matrix-vector muutiplication" begin
     for i = 1:5
         a = I + im * 0.1*sprandn(5, 5, 0.2)
         b = randn(5,3) + im*randn(5,3)
@@ -77,23 +60,76 @@ end
     n = 100
     A = sprandn(n, n, 0.5) + sqrt(n)*I
     b = rand(n)
+    bmat = reshape(b, (:, 1)) # Matrix with 1 column
     symA = A + transpose(A)
     trilA = tril(A)
     triuA = triu(A)
     trilUA = tril(A, -1) + I
     triuUA = triu(A, 1)  + I
 
-    @test_blas LowerTriangular(trilA) \ b ≈ LowerTriangular(Array(trilA)) \ b
-    @test_blas LowerTriangular(trilA) * b ≈ LowerTriangular(Array(trilA)) * b
+    ltA = LowerTriangular(trilA)
+    trilAd = Array(trilA)          # trilA as a dense matrix
+    ltAd = LowerTriangular(trilAd) # ltA as a LowerTriangular dense matrix
+    @test_blas ltA \ b ≈ ltAd \ b
+    @test_blas ltA \ bmat ≈ ltAd \ bmat
+    @test_blas ltA' \ b ≈ ltAd' \ b
+    @test_blas ltA' \ bmat ≈ ltAd' \ bmat
+    @test_blas ltA * b ≈ ltAd * b
+    @test_blas ltA * bmat ≈ ltAd * bmat
+    @test_blas trilA * b ≈ trilAd * b
+    @test_blas trilA * bmat ≈ trilAd * bmat
+    @test_blas ltA' * b ≈ ltAd' * b
+    @test_blas ltA' * bmat ≈ ltAd' * bmat
+    @test_blas trilA' * b ≈ trilAd' * b
+    @test_blas trilA' * bmat ≈ trilAd' * bmat
 
-    @test_blas UpperTriangular(triuA) \ b ≈ UpperTriangular(Array(triuA)) \ b
-    @test_blas UpperTriangular(triuA) * b ≈ UpperTriangular(Array(triuA)) * b
+    utA = UpperTriangular(triuA)
+    triuAd = Array(triuA)          # triuA as a dense matrix
+    utAd = UpperTriangular(triuAd) # utA as a UpperTriangular dense matrix
+    @test_blas utA \ b ≈ utAd \ b
+    @test_blas utA \ bmat ≈ utAd \ bmat
+    @test_blas utA' \ b ≈ utAd' \ b
+    @test_blas utA' \ bmat ≈ utAd' \ bmat
+    @test_blas utA * b ≈ utAd * b
+    @test_blas utA * bmat ≈ utAd * bmat
+    @test_blas trilA * b ≈ trilAd * b
+    @test_blas trilA * bmat ≈ trilAd * bmat
+    @test_blas utA' * b ≈ utAd' * b
+    @test_blas utA' * bmat ≈ utAd' * bmat
+    @test_blas triuA' * b ≈ triuAd' * b
+    @test_blas triuA' * bmat ≈ triuAd' * bmat
 
-    @test_blas UnitLowerTriangular(trilUA) \ b ≈ UnitLowerTriangular(Array(trilUA)) \ b
-    @test_blas UnitLowerTriangular(trilUA) * b ≈ UnitLowerTriangular(Array(trilUA)) * b
+    ltUA = UnitLowerTriangular(trilUA)
+    trilUAd = Array(trilUA)        # trilUA as a dense matrix
+    ltUAd = UnitLowerTriangular(trilUAd)
+    @test_blas ltUA \ b ≈ ltUAd \ b
+    @test_blas ltUA \ bmat ≈ ltUAd \ bmat
+    @test_blas ltUA' \ b ≈ ltUAd' \ b
+    @test_blas ltUA' \ bmat ≈ ltUAd' \ bmat
+    @test_blas ltUA * b ≈ ltUAd * b
+    @test_blas ltUA * bmat ≈ ltUAd * bmat
+    @test_blas trilUA * b ≈ ltUAd * b
+    @test_blas trilUA * bmat ≈ ltUAd * bmat
+    @test_blas ltUA' * b ≈ ltUAd' * b
+    @test_blas ltUA' * bmat ≈ ltUAd' * bmat
+    @test_blas trilUA' * b ≈ trilUAd' * b
+    @test_blas trilUA' * bmat ≈ trilUAd' * bmat
 
-    @test_blas UnitUpperTriangular(triuUA) \ b ≈ UnitUpperTriangular(Array(triuUA)) \ b
-    @test_blas UnitUpperTriangular(triuUA) * b ≈ UnitUpperTriangular(Array(triuUA)) * b
+    utUA = UnitUpperTriangular(triuUA)
+    triuUAd = Array(triuUA)        # triuUA as a dense matrix
+    utUAd = UnitUpperTriangular(triuUAd)
+    @test_blas utUA \ b ≈ utUAd \ b
+    @test_blas utUA \ bmat ≈ utUAd \ bmat
+    @test_blas utUA' \ b ≈ utUAd' \ b
+    @test_blas utUA' \ bmat ≈ utUAd' \ bmat
+    @test_blas utUA * b ≈ utUAd * b
+    @test_blas utUA * bmat ≈ utUAd * bmat
+    @test_blas triuUA * b ≈ utUAd * b
+    @test_blas triuUA * bmat ≈ utUAd * bmat
+    @test_blas utUA' * b ≈ utUAd' * b
+    @test_blas utUA' * bmat ≈ utUAd' * bmat
+    @test_blas triuUA' * b ≈ triuUAd' * b
+    @test_blas triuUA' * bmat ≈ triuUAd' * bmat
 
-    @test_blas Symmetric(symA) * b ≈ Array(Symmetric(symA)) * b
+    @test_blas Symmetric(symA) * b ≈ Symmetric(Array(symA)) * b
 end
