@@ -21,18 +21,17 @@ function _destroy!(p::Ptr{MKLcsc{T}}) where {T}
     nothing
 end
 
-
-for (T, crc, exc) in (
-    (Float32,    :mkl_sparse_s_create_csc, :mkl_sparse_s_export_csc,),
-    (Float64,    :mkl_sparse_d_create_csc, :mkl_sparse_d_export_csc,),
-    (ComplexF32, :mkl_sparse_c_create_csc, :mkl_sparse_c_export_csc,),
-    (ComplexF64, :mkl_sparse_z_create_csc, :mkl_sparse_z_export_csc,),
+for (csc, exc, T) in (
+    (:mkl_sparse_s_create_csc, :mkl_sparse_s_export_csc, Float32,),
+    (:mkl_sparse_d_create_csc, :mkl_sparse_d_export_csc, Float64,),
+    (:mkl_sparse_c_create_csc, :mkl_sparse_c_export_csc, ComplexF32,),
+    (:mkl_sparse_z_create_csc, :mkl_sparse_z_export_csc, ComplexF64),
     )
     @eval begin
         function cscptr(m::SparseMatrixCSC{$T,BlasInt}) # create a Ptr{MKLcsc}
             r = Ref(Ptr{MKLcsc{$T}}(0))
             ret = ccall(
-                ($(string(crc)), libmkl_rt), sparse_status_t,
+                ($(string(csc)), libmkl_rt), sparse_status_t,
                 (Ref{Ptr{MKLcsc{$T}}}, sparse_index_base_t, BlasInt, BlasInt, Ptr{BlasInt},
                  Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}),
                 r, SPARSE_INDEX_BASE_ONE, m.m, m.n, m.colptr, pointer(m.colptr, 2),
@@ -42,6 +41,7 @@ for (T, crc, exc) in (
             r[]
         end
 
+        # create a SparseMatrixCSC from a Ptr{MKLcsc}
         function SparseArrays.SparseMatrixCSC(cscpt::Ptr{MKLcsc{$T}})
             indexing = Ref(Cint(0))
             rows = Ref(BlasInt(0))
@@ -74,3 +74,24 @@ for (T, crc, exc) in (
         end
     end # eval        
 end #loop on types
+
+"""
+    struct matrix_descr
+
+Mirror the C struct `matrix_desrc` in `mkl_spblas.h`
+"""
+struct matrix_descr
+    type::sparse_matrix_type_t
+    mode::sparse_fill_mode_t
+    diag::sparse_diag_type_t
+end
+
+# special case the values
+matrix_descr(A::LowerTriangular) = matrix_descr(SPARSE_MATRIX_TYPE_TRIANGULAR, SPARSE_FILL_MODE_LOWER, SPARSE_DIAG_NON_UNIT)
+matrix_descr(A::UpperTriangular) = matrix_descr(SPARSE_MATRIX_TYPE_TRIANGULAR, SPARSE_FILL_MODE_UPPER, SPARSE_DIAG_NON_UNIT)
+matrix_descr(A::UnitLowerTriangular) = matrix_descr(SPARSE_MATRIX_TYPE_TRIANGULAR, SPARSE_FILL_MODE_LOWER, SPARSE_DIAG_UNIT)
+matrix_descr(A::UnitUpperTriangular) = matrix_descr(SPARSE_MATRIX_TYPE_TRIANGULAR, SPARSE_FILL_MODE_UPPER, SPARSE_DIAG_UNIT)
+matrix_descr(A::Diagonal) = matrix_descr(SPARSE_MATRIX_TYPE_DIAGONAL, SPARSE_FILL_MODE_FULL, SPARSE_DIAG_NON_UNIT)
+matrix_descr(A::Symmetric) = matrix_descr(SPARSE_MATRIX_TYPE_SYMMETRIC, (A.uplo == 'L' ? SPARSE_FILL_MODE_LOWER : SPARSE_FILL_MODE_UPPER), SPARSE_DIAG_NON_UNIT)
+matrix_descr(A::Hermitian) = matrix_descr(SPARSE_MATRIX_TYPE_HERMITIAN, (A.uplo == 'L' ? SPARSE_FILL_MODE_LOWER : SPARSE_FILL_MODE_UPPER), SPARSE_DIAG_NON_UNIT)
+matrix_descr(A::SparseMatrixCSC) = matrix_descr(SPARSE_MATRIX_TYPE_GENERAL, SPARSE_FILL_MODE_FULL, SPARSE_DIAG_NON_UNIT)

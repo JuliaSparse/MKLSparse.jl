@@ -75,18 +75,3 @@
     SPARSE_STAGE_FULL_MULT_NO_VAL     = 93,
     SPARSE_STAGE_FINALIZE_MULT_NO_VAL = 94
 )
-
-struct matrix_descr
-    type::sparse_matrix_type_t
-    mode::sparse_fill_mode_t
-    diag::sparse_diag_type_t
-end
-
-matrix_descr(A::LowerTriangular) = matrix_descr(SPARSE_MATRIX_TYPE_TRIANGULAR, SPARSE_FILL_MODE_LOWER, SPARSE_DIAG_NON_UNIT)
-matrix_descr(A::UpperTriangular) = matrix_descr(SPARSE_MATRIX_TYPE_TRIANGULAR, SPARSE_FILL_MODE_UPPER, SPARSE_DIAG_NON_UNIT)
-matrix_descr(A::UnitLowerTriangular) = matrix_descr(SPARSE_MATRIX_TYPE_TRIANGULAR, SPARSE_FILL_MODE_LOWER, SPARSE_DIAG_UNIT)
-matrix_descr(A::UnitUpperTriangular) = matrix_descr(SPARSE_MATRIX_TYPE_TRIANGULAR, SPARSE_FILL_MODE_UPPER, SPARSE_DIAG_UNIT)
-matrix_descr(A::Diagonal) = matrix_descr(SPARSE_MATRIX_TYPE_DIAGONAL, SPARSE_FILL_MODE_FULL, SPARSE_DIAG_NON_UNIT)
-matrix_descr(A::Symmetric) = matrix_descr(SPARSE_MATRIX_TYPE_SYMMETRIC, (A.uplo == 'L' ? SPARSE_FILL_MODE_LOWER : SPARSE_FILL_MODE_UPPER), SPARSE_DIAG_NON_UNIT)
-matrix_descr(A::Hermitian) = matrix_descr(SPARSE_MATRIX_TYPE_HERMITIAN, (A.uplo == 'L' ? SPARSE_FILL_MODE_LOWER : SPARSE_FILL_MODE_UPPER), SPARSE_DIAG_NON_UNIT)
-matrix_descr(A::SparseMatrixCSC) = matrix_descr(SPARSE_MATRIX_TYPE_GENERAL, SPARSE_FILL_MODE_FULL, SPARSE_DIAG_NON_UNIT)
