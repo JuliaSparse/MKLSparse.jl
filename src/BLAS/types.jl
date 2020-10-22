@@ -8,24 +8,36 @@ The opaque struct `sparse_matrix` from the MKL library in compressed sparse colu
 mutable struct MKLcsc{T<:MKLFloats}  # compressed sparse column (CSC) format
 end
 
-Base.eltype(m::MKLcsc{T}) where {T} = T
-
 """
-    _destroy!(p::Ptr{MKLcsc})
+    _destroy!(p::Union{Ptr{MKLcsc}, Ptr{MKLcsr}})
 
 Free the memory allocated by MKL for the sparse_matrix struct
 """
 function _destroy!(p::Ptr{MKLcsc{T}}) where {T}
     ret = ccall((:mkl_sparse_destroy, libmkl_rt), sparse_status_t, (Ptr{MKLcsc{T}},), p)
+    ret == SPARSE_STATUS_SUCCESS || throw(ArgumentError(string(ret)))
+    nothing
+end
+
+"""
+    MKLcsr{T<:MKLFloats}
+
+The opaque struct `sparse_matrix` from the MKL library in compressed sparse row (CSR) format
+"""
+mutable struct MKLcsr{T<:MKLFloats}  # compressed sparse row (CSR) format
+end
+
+function _destroy!(p::Ptr{MKLcsr{T}}) where {T}
+    ret = ccall((:mkl_sparse_destroy, libmkl_rt), sparse_status_t, (Ptr{MKLcsr{T}},), p)
     ret == SPARSE_STATUS_SUCCESS || throw(ArgumentError(ret))
     nothing
 end
 
-for (csc, exc, T) in (
-    (:mkl_sparse_s_create_csc, :mkl_sparse_s_export_csc, Float32,),
-    (:mkl_sparse_d_create_csc, :mkl_sparse_d_export_csc, Float64,),
-    (:mkl_sparse_c_create_csc, :mkl_sparse_c_export_csc, ComplexF32,),
-    (:mkl_sparse_z_create_csc, :mkl_sparse_z_export_csc, ComplexF64),
+for (csc, exc, csr, T) in (
+    (:mkl_sparse_s_create_csc, :mkl_sparse_s_export_csc, :mkl_sparse_s_create_csr, Float32,),
+    (:mkl_sparse_d_create_csc, :mkl_sparse_d_export_csc, :mkl_sparse_d_create_csr, Float64,),
+    (:mkl_sparse_c_create_csc, :mkl_sparse_c_export_csc, :mkl_sparse_c_create_csr, ComplexF32,),
+    (:mkl_sparse_z_create_csc, :mkl_sparse_z_export_csc, :mkl_sparse_z_create_csr, ComplexF64,),
     )
     @eval begin
         function cscptr(m::SparseMatrixCSC{$T,BlasInt}) # create a Ptr{MKLcsc}
@@ -57,7 +69,7 @@ for (csc, exc, T) in (
                 Ref{Ptr{BlasInt}}, Ref{Ptr{BlasInt}}, Ref{Ptr{BlasInt}}, Ref{Ptr{$T}}),
                 cscpt, indexing, rows, cols, rows_start, rows_end, col_indx, values,
             )
-            ret == SPARSE_STATUS_SUCCESS || throw(ArgumentError(ret))
+            ret == SPARSE_STATUS_SUCCESS || throw(ArgumentError(string(ret)))
             rowptr = Vector{BlasInt}(undef, rows[] + 1)
             unsafe_copyto!(pointer(rowptr), rows_start[], rows[])
             rowend = Vector{BlasInt}(undef, rows[])
@@ -72,6 +84,21 @@ for (csc, exc, T) in (
             unsafe_copyto!(pointer(nzvals), values[], nonzeros)
             SparseMatrixCSC{$T,BlasInt}(cols[], rows[], rowptr, colvals, nzvals)     
         end
+
+        # create a Ptr{MKLcsr{T}} to the *transpose* of m
+        function csrptrtr(m::SparseMatrixCSC{$T,BlasInt})
+            r = Ref(Ptr{MKLcsr{$T}}(0))
+            ret = ccall(
+                ($(string(csr)), libmkl_rt), sparse_status_t,
+                (Ref{Ptr{MKLcsr{$T}}}, sparse_index_base_t, BlasInt, BlasInt,
+                Ptr{BlasInt}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$T}),
+                r, SPARSE_INDEX_BASE_ONE, m.n, m.m, m.colptr, pointer(m.colptr, 2),
+                m.rowval, m.nzval
+            )
+            ret == SPARSE_STATUS_SUCCESS || throw(ArgumentError(string(ret)))
+            r[]
+        end
+
     end # eval        
 end #loop on types
 
