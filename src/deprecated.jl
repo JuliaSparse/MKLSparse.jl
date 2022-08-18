@@ -18,7 +18,7 @@ function _check_transa(t::Char)
 end
 
 mkl_size(t::Char, M::AbstractVecOrMat) = t == 'N' ? size(M) : reverse(size(M))
-
+mkl_size(t::Char, M::AbstractVecOrMat, ix::Integer) = t == 'N' ? size(M, ix) : size(M, ndims(M) - ix + 1)
 
 # Checks sizes for the multiplication C <- A * B
 function _check_mat_mult_matvec(C, A, B, tA)
