@@ -37,10 +37,10 @@ for (tchar, ttype) in (('N', :()),
 
         function (*)(adjA::$AT, B::$mat{$T})
             A = _unwrap_adj(adjA)
-            if isa(B,AbstractVector)
-                return mul!(zeros($T, mkl_size($tchar, A)[1]),            adjA, B)
+            if isa(B, AbstractVector)
+                return mul!(zeros($T, mkl_size($tchar, A, 1)),             adjA, B)
             else
-                return mul!(zeros($T, mkl_size($tchar, A)[1], size(B,2)), adjA, B)
+                return mul!(zeros($T, mkl_size($tchar, A, 1), size(B, 2)), adjA, B)
             end
         end
     end
@@ -52,7 +52,7 @@ for (tchar, ttype) in (('N', :()),
         @eval begin
             function mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}, α::Number, β::Number)
                 A = _unwrap_adj(adjA)
-                if isa(B,AbstractVector)
+                if isa(B, AbstractVector)
                     return cscmv!($tchar, $T(α), matdescra(A), _get_data(A), B, $T(β), C)
                 else
                     return cscmm!($tchar, $T(α), matdescra(A), _get_data(A), B, $T(β), C)
@@ -63,10 +63,10 @@ for (tchar, ttype) in (('N', :()),
 
             function (*)(adjA::$AT, B::$mat{$T})
                 A = _unwrap_adj(adjA)
-                if isa(B,AbstractVector)
-                    return mul!(zeros($T, mkl_size($tchar, A)[1]),            adjA, B)
+                if isa(B, AbstractVector)
+                    return mul!(zeros($T, mkl_size($tchar, A, 1)),             adjA, B)
                 else
-                    return mul!(zeros($T, mkl_size($tchar, A)[1], size(B,2)), adjA, B)
+                    return mul!(zeros($T, mkl_size($tchar, A, 1), size(B, 2)), adjA, B)
                 end
             end
         end
@@ -88,9 +88,9 @@ for (tchar, ttype) in (('N', :()),
 
                 function (\)(A::$AT, B::$mat{$T})
                     if isa(B,AbstractVector)
-                        return ldiv!(zeros($T, size(A,1)),            A, B)
+                        return ldiv!(zeros($T, size(A, 1)),             A, B)
                     else
-                        return ldiv!(zeros($T, size(A,1), size(B,2)), A, B)
+                        return ldiv!(zeros($T, size(A, 1), size(B, 2)), A, B)
                     end
                 end
             end
