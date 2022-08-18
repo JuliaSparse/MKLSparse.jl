@@ -7,11 +7,6 @@ using Test, SparseArrays, LinearAlgebra
     sTl = tril(sS)
     sTu = triu(sS)
 
-    sA = sprand(5, 5, 0.01)
-    sS = sA'sA
-    sTl = tril(sS)
-    sTu = triu(sS)
-
     @test MKLSparse.matdescra(Symmetric(sTl,:L)) == "SLNF"
     @test MKLSparse.matdescra(Symmetric(sTu,:U)) == "SUNF"
     @test MKLSparse.matdescra(LowerTriangular(sTl)) == "TLNF"
@@ -101,6 +96,8 @@ for T in (Float64, ComplexF64)
     end
 end
 
+const atol = 100*eps() # absolute tolerance for SparseBLAS results
+
 @testset "complex matrix-vector multiplication" begin
     for i = 1:5
         a = I + im * 0.1*sprandn(5, 5, 0.2)
@@ -109,20 +106,20 @@ end
         d = randn(5) + im*randn(5)
         α = rand(ComplexF64)
         β = rand(ComplexF64)
-        @test (maximum(abs.(@blas(a*b) - Array(a)*b)) < 100*eps())
-        @test (maximum(abs.(@blas(a'*b) - Array(a)'*b)) < 100*eps())
-        @test (maximum(abs.(@blas(transpose(a)*b) - transpose(Array(a))*b)) < 100*eps())
-        @test (maximum(abs.(@blas(mul!(similar(b), a, b)) - Array(a)*b)) < 100*eps())
-        @test (maximum(abs.(@blas(mul!(similar(c), a, c)) - Array(a)*c)) < 100*eps())
-        @test (maximum(abs.(@blas(mul!(similar(b), transpose(a), b)) - transpose(Array(a))*b)) < 100*eps())
-        @test (maximum(abs.(@blas(mul!(similar(c), transpose(a), c)) - transpose(Array(a))*c)) < 100*eps())
-        @test (maximum(abs.(@blas(mul!(copy(b), a, b, α, β)) - (α*(Array(a)*b) + β*b))) < 100*eps())
-        @test (maximum(abs.(@blas(mul!(copy(b), transpose(a), b, α, β)) - (α*(transpose(Array(a))*b) + β*b))) < 100*eps())
-        @test (maximum(abs.(@blas(mul!(copy(c), transpose(a), c, α, β)) - (α*(transpose(Array(a))*c) + β*c))) < 100*eps())
+        @test @blas(a*b) ≈ Array(a)*b atol=atol
+        @test @blas(a'*b) ≈ Array(a)'*b atol=atol
+        @test @blas(transpose(a)*b) ≈ transpose(Array(a))*b atol=atol
+        @test @blas(mul!(similar(b), a, b)) ≈ Array(a)*b atol=atol
+        @test @blas(mul!(similar(c), a, c)) ≈ Array(a)*c atol=atol
+        @test @blas(mul!(similar(b), transpose(a), b)) ≈ transpose(Array(a))*b atol=atol
+        @test @blas(mul!(similar(c), transpose(a), c)) ≈ transpose(Array(a))*c atol=atol
+        @test @blas(mul!(copy(b), a, b, α, β)) ≈ (α*(Array(a)*b) + β*b) atol=atol
+        @test @blas(mul!(copy(b), transpose(a), b, α, β)) ≈ (α*(transpose(Array(a))*b) + β*b) atol=atol
+        @test @blas(mul!(copy(c), transpose(a), c, α, β)) ≈ (α*(transpose(Array(a))*c) + β*c) atol=atol
         α = β = 1 # test conversion to float
-        @test (maximum(abs.(@blas(mul!(copy(b), a, b, α, β)) - (α*(Array(a)*b) + β*b))) < 100*eps())
-        @test (maximum(abs.(@blas(mul!(copy(b), transpose(a), b, α, β)) - (α*(transpose(Array(a))*b) + β*b))) < 100*eps())
-        @test (maximum(abs.(@blas(mul!(copy(c), transpose(a), c, α, β)) - (α*(transpose(Array(a))*c) + β*c))) < 100*eps())
+        @test @blas(mul!(copy(b), a, b, α, β)) ≈ (α*(Array(a)*b) + β*b) atol=atol
+        @test @blas(mul!(copy(b), transpose(a), b, α, β)) ≈ (α*(transpose(Array(a))*b) + β*b) atol=atol
+        @test @blas(mul!(copy(c), transpose(a), c, α, β)) ≈ (α*(transpose(Array(a))*c) + β*c) atol=atol
 
         c = randn(6) + im*randn(6)
         @test_throws DimensionMismatch transpose(a)*c
