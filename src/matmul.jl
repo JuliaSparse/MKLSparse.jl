@@ -19,10 +19,9 @@ const SparseMatrices{T} = Union{SparseMatrixCSC{T,BlasInt},
 
 for T in [Complex{Float32}, Complex{Float64}, Float32, Float64]
 for mat in (:StridedVector, :StridedMatrix)
-for (tchar, ttype) in (('N', :()),
-                       ('C', :Adjoint),
-                       ('T', :Transpose))
-    AT = tchar == 'N' ? :(SparseMatrixCSC{$T,BlasInt}) : :($ttype{$T,SparseMatrixCSC{$T,BlasInt}})
+for ttype in (nothing, :Adjoint, :Transpose)
+    tchar = mkl_operation_code(ttype)
+    AT = isnothing(ttype) ? :(SparseMatrixCSC{$T,BlasInt}) : :($ttype{$T,SparseMatrixCSC{$T,BlasInt}})
     @eval begin
         function mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}, α::Number, β::Number)
             A = _unwrap_adj(adjA)
@@ -46,7 +45,7 @@ for (tchar, ttype) in (('N', :()),
     end
 
     for w in (:Symmetric, :LowerTriangular, :UnitLowerTriangular, :UpperTriangular, :UnitUpperTriangular)
-        AT = tchar == 'N' ?
+        AT = isnothing(ttype) ?
             :($w{$T,SparseMatrixCSC{$T,BlasInt}}) :
             :($ttype{$T,$w{$T,SparseMatrixCSC{$T,BlasInt}}})
         @eval begin
