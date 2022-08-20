@@ -12,6 +12,13 @@ function Base.convert(::Type{sparse_operation_t}, trans::Char)
     end
 end
 
+# converts julia matrix transformation into MKL sparse operation code
+mkl_operation_code(op) =
+    isnothing(op) ? 'N' :
+    op == :Adjoint ? 'C' :
+    op == :Transpose ? 'T' :
+    throw(ArgumentError("Unsupported matrix operation: $op"))
+
 function Base.convert(::Type{sparse_matrix_type_t}, mattype::Char)
     if mattype == 'G'
         SPARSE_MATRIX_TYPE_GENERAL
