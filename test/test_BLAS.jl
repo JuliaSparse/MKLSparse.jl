@@ -28,7 +28,7 @@ end
     @test MKLSparse.matdescra(sA) == "GUUF"
 end
 
-@testset "SparseBLAS for $T matrices and vectors" for T in (Float32, Float64, ComplexF32, ComplexF64) 
+@testset "SparseBLAS for $T matrices and vectors" for T in (Float32, Float64, ComplexF32, ComplexF64)
 
 local atol::real(T) = 100*eps(real(one(T))) # absolute tolerance for SparseBLAS results
 
@@ -117,7 +117,10 @@ end
         α = rand(T)
         β = rand(T)
 
-        @test @blas(b*spA) ≈ b*a atol=atol
+        # on MacOS nightly Julia b*spA is broken (only the first column is correct)
+        broken_bXspA = Sys.isapple() && (VERSION > v"1.8")
+
+        @test ≈(@blas(b*spA), b*a, atol=atol) broken=broken_bXspA
         @test @blas(c*spA') ≈ c*a' atol=atol
         @test @blas(c*transpose(spA)) ≈ c*transpose(a) atol=atol
 
@@ -125,15 +128,15 @@ end
         @test_throws DimensionMismatch b*spA'
         @test_throws DimensionMismatch b*transpose(spA)
 
-        @test @blas(mul!(similar(ba), b, spA)) ≈ b*a atol=atol
+        @test ≈(@blas(mul!(similar(ba), b, spA)), b*a, atol=atol) broken=broken_bXspA
         @test @blas(mul!(similar(cta), c, spA')) ≈ c*a' atol=atol
         @test @blas(mul!(similar(cta), c, transpose(spA))) ≈ c*transpose(a) atol=atol
 
-        @test @blas(mul!(copy(ba), b, spA, α, β)) ≈ α*b*a + β*ba atol=atol
+        @test ≈(@blas(mul!(copy(ba), b, spA, α, β)), α*b*a + β*ba, atol=atol) broken=broken_bXspA
         @test @blas(mul!(copy(cta), c, spA', α, β)) ≈ α*c*a' + β*cta atol=atol
         @test @blas(mul!(copy(cta), c, transpose(spA), α, β)) ≈ α*c*transpose(a) + β*cta atol=atol
 
-        @test @blas(mul!(copy(ba), b, spA, 1, 1)) ≈ b*a + ba atol=atol
+        @test ≈(@blas(mul!(copy(ba), b, spA, 1, 1)), b*a + ba, atol=atol) broken=broken_bXspA
         @test @blas(mul!(copy(cta), c, transpose(spA), 1, 1)) ≈ c*transpose(a) + cta atol=atol
         @test @blas(mul!(copy(cta), c, spA', 1, 1)) ≈ c*a' + cta atol=atol
     end
