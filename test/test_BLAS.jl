@@ -1,5 +1,3 @@
-module Matdescra
-
 using MKLSparse
 using Test, SparseArrays, LinearAlgebra
 
@@ -8,26 +6,19 @@ sS = sA'sA
 sTl = tril(sS)
 sTu = triu(sS)
 
-@test MKLSparse.BLAS.matdescra(Symmetric(sTl,:L)) == "SLNF"
-@test MKLSparse.BLAS.matdescra(Symmetric(sTu,:U)) == "SUNF"
-@test MKLSparse.BLAS.matdescra(LowerTriangular(sTl)) == "TLNF"
-@test MKLSparse.BLAS.matdescra(UpperTriangular(sTu)) == "TUNF"
-@test MKLSparse.BLAS.matdescra(UnitLowerTriangular(sTl)) == "TLUF"
-@test MKLSparse.BLAS.matdescra(UnitUpperTriangular(sTu)) == "TUUF"
-@test MKLSparse.BLAS.matdescra(sA) == "GUUF"
-
-end  # module
-
-module BLAS
-
-using MKLSparse
-using Test, LinearAlgebra, SparseArrays
+@test MKLSparse.matdescra(Symmetric(sTl,:L)) == "SLNF"
+@test MKLSparse.matdescra(Symmetric(sTu,:U)) == "SUNF"
+@test MKLSparse.matdescra(LowerTriangular(sTl)) == "TLNF"
+@test MKLSparse.matdescra(UpperTriangular(sTu)) == "TUNF"
+@test MKLSparse.matdescra(UnitLowerTriangular(sTl)) == "TLUF"
+@test MKLSparse.matdescra(UnitUpperTriangular(sTu)) == "TUUF"
+@test MKLSparse.matdescra(sA) == "GUUF"
 
 macro test_blas(ex)
     return quote
-        MKLSparse.BLAS.__counter[] = 0
+        MKLSparse.__counter[] = 0
         @test $(esc(ex))
-        @test MKLSparse.BLAS.__counter[] == 1
+        @test MKLSparse.__counter[] == 1
     end
 end
 
@@ -102,5 +93,3 @@ end
 
     @test_blas Symmetric(symA) * b ≈ Array(Symmetric(symA)) * b
 end
-
-end # module
