@@ -1,29 +1,35 @@
-const MKL_LAYOUT = UInt32
-const MKL_ROW_MAJOR = 101 % UInt32
-const MKL_COL_MAJOR = 102 % UInt32
+@enum MKL_LAYOUT::UInt32 begin
+    MKL_ROW_MAJOR = 101
+    MKL_COL_MAJOR = 102
+end
 
-const MKL_TRANSPOSE = UInt32
-const MKL_NOTRANS = 111 % UInt32
-const MKL_TRANS = 112 % UInt32
-const MKL_CONJTRANS = 113 % UInt32
-const MKL_CONJ = 114 % UInt32
+@enum MKL_TRANSPOSE::UInt32 begin
+    MKL_NOTRANS = 111
+    MKL_TRANS = 112
+    MKL_CONJTRANS = 113
+    MKL_CONJ = 114
+end
 
-const MKL_UPLO = UInt32
-const MKL_UPPER = 121 % UInt32
-const MKL_LOWER = 122 % UInt32
+@enum MKL_UPLO::UInt32 begin
+    MKL_UPPER = 121
+    MKL_LOWER = 122
+end
 
-const MKL_DIAG = UInt32
-const MKL_NONUNIT = 131 % UInt32
-const MKL_UNIT = 132 % UInt32
+@enum MKL_DIAG::UInt32 begin
+    MKL_NONUNIT = 131
+    MKL_UNIT = 132
+end
 
-const MKL_SIDE = UInt32
-const MKL_LEFT = 141 % UInt32
-const MKL_RIGHT = 142 % UInt32
+@enum MKL_SIDE::UInt32 begin
+    MKL_LEFT = 141
+    MKL_RIGHT = 142
+end
 
-const MKL_COMPACT_PACK = UInt32
-const MKL_COMPACT_SSE = 181 % UInt32
-const MKL_COMPACT_AVX = 182 % UInt32
-const MKL_COMPACT_AVX512 = 183 % UInt32
+@enum MKL_COMPACT_PACK::UInt32 begin
+    MKL_COMPACT_SSE = 181
+    MKL_COMPACT_AVX = 182
+    MKL_COMPACT_AVX512 = 183
+end
 
 const sgemm_jit_kernel_t = Ptr{Cvoid}
 
@@ -33,10 +39,11 @@ const cgemm_jit_kernel_t = Ptr{Cvoid}
 
 const zgemm_jit_kernel_t = Ptr{Cvoid}
 
-const mkl_jit_status_t = UInt32
-const MKL_JIT_SUCCESS = 0 % UInt32
-const MKL_NO_JIT = 1 % UInt32
-const MKL_JIT_ERROR = 2 % UInt32
+@enum mkl_jit_status_t::UInt32 begin
+    MKL_JIT_SUCCESS = 0
+    MKL_NO_JIT = 1
+    MKL_JIT_ERROR = 2
+end
 
 function mkl_scsrmv(transa, m, k, alpha, matdescra, val, indx, pntrb, pntre, x, beta, y)
     @ccall libmkl_rt.mkl_scsrmv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
@@ -3232,61 +3239,71 @@ function MKL_ZCSRADD(transa, job, sort, m, n, a, ja, ia, beta, b, jb, ib, c, jc,
                                  nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
-const sparse_status_t = UInt32
-const SPARSE_STATUS_SUCCESS = 0 % UInt32
-const SPARSE_STATUS_NOT_INITIALIZED = 1 % UInt32
-const SPARSE_STATUS_ALLOC_FAILED = 2 % UInt32
-const SPARSE_STATUS_INVALID_VALUE = 3 % UInt32
-const SPARSE_STATUS_EXECUTION_FAILED = 4 % UInt32
-const SPARSE_STATUS_INTERNAL_ERROR = 5 % UInt32
-const SPARSE_STATUS_NOT_SUPPORTED = 6 % UInt32
+@enum sparse_status_t::UInt32 begin
+    SPARSE_STATUS_SUCCESS = 0
+    SPARSE_STATUS_NOT_INITIALIZED = 1
+    SPARSE_STATUS_ALLOC_FAILED = 2
+    SPARSE_STATUS_INVALID_VALUE = 3
+    SPARSE_STATUS_EXECUTION_FAILED = 4
+    SPARSE_STATUS_INTERNAL_ERROR = 5
+    SPARSE_STATUS_NOT_SUPPORTED = 6
+end
 
-const sparse_operation_t = UInt32
-const SPARSE_OPERATION_NON_TRANSPOSE = 10 % UInt32
-const SPARSE_OPERATION_TRANSPOSE = 11 % UInt32
-const SPARSE_OPERATION_CONJUGATE_TRANSPOSE = 12 % UInt32
+@enum sparse_operation_t::UInt32 begin
+    SPARSE_OPERATION_NON_TRANSPOSE = 10
+    SPARSE_OPERATION_TRANSPOSE = 11
+    SPARSE_OPERATION_CONJUGATE_TRANSPOSE = 12
+end
 
-const sparse_matrix_type_t = UInt32
-const SPARSE_MATRIX_TYPE_GENERAL = 20 % UInt32
-const SPARSE_MATRIX_TYPE_SYMMETRIC = 21 % UInt32
-const SPARSE_MATRIX_TYPE_HERMITIAN = 22 % UInt32
-const SPARSE_MATRIX_TYPE_TRIANGULAR = 23 % UInt32
-const SPARSE_MATRIX_TYPE_DIAGONAL = 24 % UInt32
-const SPARSE_MATRIX_TYPE_BLOCK_TRIANGULAR = 25 % UInt32
-const SPARSE_MATRIX_TYPE_BLOCK_DIAGONAL = 26 % UInt32
+@enum sparse_matrix_type_t::UInt32 begin
+    SPARSE_MATRIX_TYPE_GENERAL = 20
+    SPARSE_MATRIX_TYPE_SYMMETRIC = 21
+    SPARSE_MATRIX_TYPE_HERMITIAN = 22
+    SPARSE_MATRIX_TYPE_TRIANGULAR = 23
+    SPARSE_MATRIX_TYPE_DIAGONAL = 24
+    SPARSE_MATRIX_TYPE_BLOCK_TRIANGULAR = 25
+    SPARSE_MATRIX_TYPE_BLOCK_DIAGONAL = 26
+end
 
-const sparse_index_base_t = UInt32
-const SPARSE_INDEX_BASE_ZERO = 0 % UInt32
-const SPARSE_INDEX_BASE_ONE = 1 % UInt32
+@enum sparse_index_base_t::UInt32 begin
+    SPARSE_INDEX_BASE_ZERO = 0
+    SPARSE_INDEX_BASE_ONE = 1
+end
 
-const sparse_fill_mode_t = UInt32
-const SPARSE_FILL_MODE_LOWER = 40 % UInt32
-const SPARSE_FILL_MODE_UPPER = 41 % UInt32
-const SPARSE_FILL_MODE_FULL = 42 % UInt32
+@enum sparse_fill_mode_t::UInt32 begin
+    SPARSE_FILL_MODE_LOWER = 40
+    SPARSE_FILL_MODE_UPPER = 41
+    SPARSE_FILL_MODE_FULL = 42
+end
 
-const sparse_diag_type_t = UInt32
-const SPARSE_DIAG_NON_UNIT = 50 % UInt32
-const SPARSE_DIAG_UNIT = 51 % UInt32
+@enum sparse_diag_type_t::UInt32 begin
+    SPARSE_DIAG_NON_UNIT = 50
+    SPARSE_DIAG_UNIT = 51
+end
 
-const sparse_layout_t = UInt32
-const SPARSE_LAYOUT_ROW_MAJOR = 101 % UInt32
-const SPARSE_LAYOUT_COLUMN_MAJOR = 102 % UInt32
+@enum sparse_layout_t::UInt32 begin
+    SPARSE_LAYOUT_ROW_MAJOR = 101
+    SPARSE_LAYOUT_COLUMN_MAJOR = 102
+end
 
-const verbose_mode_t = UInt32
-const SPARSE_VERBOSE_OFF = 70 % UInt32
-const SPARSE_VERBOSE_BASIC = 71 % UInt32
-const SPARSE_VERBOSE_EXTENDED = 72 % UInt32
+@enum verbose_mode_t::UInt32 begin
+    SPARSE_VERBOSE_OFF = 70
+    SPARSE_VERBOSE_BASIC = 71
+    SPARSE_VERBOSE_EXTENDED = 72
+end
 
-const sparse_memory_usage_t = UInt32
-const SPARSE_MEMORY_NONE = 80 % UInt32
-const SPARSE_MEMORY_AGGRESSIVE = 81 % UInt32
+@enum sparse_memory_usage_t::UInt32 begin
+    SPARSE_MEMORY_NONE = 80
+    SPARSE_MEMORY_AGGRESSIVE = 81
+end
 
-const sparse_request_t = UInt32
-const SPARSE_STAGE_FULL_MULT = 90 % UInt32
-const SPARSE_STAGE_NNZ_COUNT = 91 % UInt32
-const SPARSE_STAGE_FINALIZE_MULT = 92 % UInt32
-const SPARSE_STAGE_FULL_MULT_NO_VAL = 93 % UInt32
-const SPARSE_STAGE_FINALIZE_MULT_NO_VAL = 94 % UInt32
+@enum sparse_request_t::UInt32 begin
+    SPARSE_STAGE_FULL_MULT = 90
+    SPARSE_STAGE_NNZ_COUNT = 91
+    SPARSE_STAGE_FINALIZE_MULT = 92
+    SPARSE_STAGE_FULL_MULT_NO_VAL = 93
+    SPARSE_STAGE_FINALIZE_MULT_NO_VAL = 94
+end
 
 mutable struct sparse_matrix end
 
@@ -4132,86 +4149,84 @@ function mkl_sparse_z_syrkd(operation, A, alpha, beta, C, layout, ldc)
                                         ldc::BlasInt)::sparse_status_t
 end
 
-const MKL_INT64 = Clonglong
+@enum sparse_qr_hint_t::UInt32 begin
+    SPARSE_QR_WITH_PIVOTS = 0
+end
 
-const MKL_UINT64 = Culonglong
+function mkl_sparse_set_qr_hint(A, hint)
+    @ccall libmkl_rt.mkl_sparse_set_qr_hint(A::sparse_matrix_t,
+                                            hint::sparse_qr_hint_t)::sparse_status_t
+end
 
-const MKL_INT = BlasInt
+function mkl_sparse_d_qr(operation, A, descr, layout, columns, x, ldx, b, ldb)
+    @ccall libmkl_rt.mkl_sparse_d_qr(operation::sparse_operation_t, A::sparse_matrix_t,
+                                     descr::matrix_descr, layout::sparse_layout_t,
+                                     columns::BlasInt, x::Ptr{Float64}, ldx::BlasInt,
+                                     b::Ptr{Float64}, ldb::BlasInt)::sparse_status_t
+end
 
-const MKL_UINT = Cuint
+function mkl_sparse_s_qr(operation, A, descr, layout, columns, x, ldx, b, ldb)
+    @ccall libmkl_rt.mkl_sparse_s_qr(operation::sparse_operation_t, A::sparse_matrix_t,
+                                     descr::matrix_descr, layout::sparse_layout_t,
+                                     columns::BlasInt, x::Ptr{Float32}, ldx::BlasInt,
+                                     b::Ptr{Float32}, ldb::BlasInt)::sparse_status_t
+end
 
+function mkl_sparse_qr_reorder(A, descr)
+    @ccall libmkl_rt.mkl_sparse_qr_reorder(A::sparse_matrix_t,
+                                           descr::matrix_descr)::sparse_status_t
+end
 
-const MKL_UINT8 = Cuchar
+function mkl_sparse_d_qr_factorize(A, alt_values)
+    @ccall libmkl_rt.mkl_sparse_d_qr_factorize(A::sparse_matrix_t,
+                                               alt_values::Ptr{Float64})::sparse_status_t
+end
 
-const MKL_INT8 = Cchar
+function mkl_sparse_s_qr_factorize(A, alt_values)
+    @ccall libmkl_rt.mkl_sparse_s_qr_factorize(A::sparse_matrix_t,
+                                               alt_values::Ptr{Float32})::sparse_status_t
+end
 
-const MKL_INT16 = Cshort
+function mkl_sparse_d_qr_solve(operation, A, alt_values, layout, columns, x, ldx, b, ldb)
+    @ccall libmkl_rt.mkl_sparse_d_qr_solve(operation::sparse_operation_t,
+                                           A::sparse_matrix_t, alt_values::Ptr{Float64},
+                                           layout::sparse_layout_t, columns::BlasInt,
+                                           x::Ptr{Float64}, ldx::BlasInt, b::Ptr{Float64},
+                                           ldb::BlasInt)::sparse_status_t
+end
 
-const MKL_BF16 = Cushort
+function mkl_sparse_s_qr_solve(operation, A, alt_values, layout, columns, x, ldx, b, ldb)
+    @ccall libmkl_rt.mkl_sparse_s_qr_solve(operation::sparse_operation_t,
+                                           A::sparse_matrix_t, alt_values::Ptr{Float32},
+                                           layout::sparse_layout_t, columns::BlasInt,
+                                           x::Ptr{Float32}, ldx::BlasInt, b::Ptr{Float32},
+                                           ldb::BlasInt)::sparse_status_t
+end
 
-const MKL_INT32 = BlasInt
+function mkl_sparse_d_qr_qmult(operation, A, layout, columns, x, ldx, b, ldb)
+    @ccall libmkl_rt.mkl_sparse_d_qr_qmult(operation::sparse_operation_t,
+                                           A::sparse_matrix_t, layout::sparse_layout_t,
+                                           columns::BlasInt, x::Ptr{Float64}, ldx::BlasInt,
+                                           b::Ptr{Float64}, ldb::BlasInt)::sparse_status_t
+end
 
-const MKL_F16 = Cushort
+function mkl_sparse_s_qr_qmult(operation, A, layout, columns, x, ldx, b, ldb)
+    @ccall libmkl_rt.mkl_sparse_s_qr_qmult(operation::sparse_operation_t,
+                                           A::sparse_matrix_t, layout::sparse_layout_t,
+                                           columns::BlasInt, x::Ptr{Float32}, ldx::BlasInt,
+                                           b::Ptr{Float32}, ldb::BlasInt)::sparse_status_t
+end
 
-const MKL_DOMAIN_ALL = 0
+function mkl_sparse_d_qr_rsolve(operation, A, layout, columns, x, ldx, b, ldb)
+    @ccall libmkl_rt.mkl_sparse_d_qr_rsolve(operation::sparse_operation_t,
+                                            A::sparse_matrix_t, layout::sparse_layout_t,
+                                            columns::BlasInt, x::Ptr{Float64}, ldx::BlasInt,
+                                            b::Ptr{Float64}, ldb::BlasInt)::sparse_status_t
+end
 
-const MKL_DOMAIN_BLAS = 1
-
-const MKL_DOMAIN_FFT = 2
-
-const MKL_DOMAIN_VML = 3
-
-const MKL_DOMAIN_PARDISO = 4
-
-const MKL_DOMAIN_LAPACK = 5
-
-const MKL_CBWR_BRANCH = 1
-
-const MKL_CBWR_ALL = ~0
-
-const MKL_CBWR_STRICT = 0x00010000
-
-const MKL_CBWR_OFF = 0
-
-const MKL_CBWR_UNSET_ALL = MKL_CBWR_OFF
-
-const MKL_CBWR_BRANCH_OFF = 1
-
-const MKL_CBWR_AUTO = 2
-
-const MKL_CBWR_COMPATIBLE = 3
-
-const MKL_CBWR_SSE2 = 4
-
-const MKL_CBWR_SSSE3 = 6
-
-const MKL_CBWR_SSE4_1 = 7
-
-const MKL_CBWR_SSE4_2 = 8
-
-const MKL_CBWR_AVX = 9
-
-const MKL_CBWR_AVX2 = 10
-
-const MKL_CBWR_AVX512_MIC = 11
-
-const MKL_CBWR_AVX512 = 12
-
-const MKL_CBWR_AVX512_MIC_E1 = 13
-
-const MKL_CBWR_AVX512_E1 = 14
-
-const MKL_CBWR_SUCCESS = 0
-
-const MKL_CBWR_ERR_INVALID_SETTINGS = -1
-
-const MKL_CBWR_ERR_INVALID_INPUT = -2
-
-const MKL_CBWR_ERR_UNSUPPORTED_BRANCH = -3
-
-const MKL_CBWR_ERR_UNKNOWN_BRANCH = -4
-
-const MKL_CBWR_ERR_MODE_CHANGE_FAILURE = -8
-
-const MKL_CBWR_SSE3 = 5
-
+function mkl_sparse_s_qr_rsolve(operation, A, layout, columns, x, ldx, b, ldb)
+    @ccall libmkl_rt.mkl_sparse_s_qr_rsolve(operation::sparse_operation_t,
+                                            A::sparse_matrix_t, layout::sparse_layout_t,
+                                            columns::BlasInt, x::Ptr{Float32}, ldx::BlasInt,
+                                            b::Ptr{Float32}, ldb::BlasInt)::sparse_status_t
+end

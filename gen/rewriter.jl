@@ -32,5 +32,6 @@ function rewrite!(path::String)
   text = replace(text, "# typedef void ( * zgemm_jit_kernel_t ) ( void * , ComplexF64 * , ComplexF64 * , ComplexF64 * )\n" => "")
   text = replace(text, "# Skipping MacroDefinition: MKL_LONG long int\n" => "")
   text = replace(text, "# Skipping MacroDefinition: MKL_DEPRECATED __attribute__ ( ( deprecated ) )\n" => "")
+  text = replace(text, "\n\n\n" => "\n")
   write(path, text)
 end
