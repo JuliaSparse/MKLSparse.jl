@@ -102,7 +102,7 @@ function Base.convert(::Type{verbose_mode_t}, verbose::String)
     end
 end
 
-function Base.convert(::Type{sparse_layout_t}, memory::String)
+function Base.convert(::Type{sparse_memory_usage_t}, memory::String)
     if memory == "none"
         SPARSE_MEMORY_NONE
     elseif memory == "aggressive"
