@@ -12,11 +12,17 @@ function wrapper(name::String, headers::Vector{String}, optimized::Bool=false)
   include_dir = joinpath(@__DIR__, "mkl-include-2022.2.0-intel_8748", "include")
 
   options = load_options(joinpath(@__DIR__, "mkl.toml"))
-  options["general"]["library_name"] = "libmkl_rt"
-  options["general"]["output_file_path"] = joinpath("..", "src", "$(name).jl")
-  optimized && (options["general"]["output_ignorelist"] = ["MKL_Complex8",
-                                                           "MKL_Complex16",
-                                                           "MKLVersion"])
+  ignore_list = ["MKL_Complex8", "MKL_Complex16", "MKLVersion", "MKL_INT64",
+  "MKL_INT", "MKL_UINT", "MKL_UINT8", "MKL_INT8", "MKL_INT16", "MKL_BF16", "MKL_INT32",
+  "MKL_F16", "MKL_DOMAIN_ALL", "MKL_DOMAIN_BLAS", "MKL_DOMAIN_FFT", "MKL_DOMAIN_VML",
+  "MKL_DOMAIN_PARDISO", "MKL_DOMAIN_LAPACK", "MKL_CBWR_BRANCH", "MKL_CBWR_ALL",
+  "MKL_CBWR_STRICT", "MKL_CBWR_OFF", "MKL_CBWR_UNSET_ALL", "MKL_CBWR_BRANCH_OFF",
+  "MKL_CBWR_AUTO", "MKL_CBWR_COMPATIBLE", "MKL_CBWR_SSE2", "MKL_CBWR_SSSE3",
+  "MKL_CBWR_SSE4_1", "MKL_CBWR_SSE4_2", "MKL_CBWR_AVX", "MKL_CBWR_AVX2", "MKL_CBWR_AVX512_MIC",
+  "MKL_CBWR_AVX512", "MKL_CBWR_AVX512_MIC_E1", "MKL_CBWR_AVX512_E1", "MKL_CBWR_SUCCESS",
+  "MKL_CBWR_ERR_INVALID_SETTINGS", "MKL_CBWR_ERR_INVALID_INPUT", "MKL_CBWR_ERR_UNSUPPORTED_BRANCH",
+  "MKL_CBWR_ERR_UNKNOWN_BRANCH", "MKL_CBWR_ERR_MODE_CHANGE_FAILURE", "MKL_CBWR_SSE3"]
+  optimized && (options["general"]["output_ignorelist"] = ignore_list)
 
   args = get_default_args()
   push!(args, "-I$include_dir")
@@ -34,7 +40,7 @@ end
 function main(; optimized::Bool=false)
   # TODO: Add mkl_spblas.h in the artifact MKL_Headers_jll
   mkl = joinpath(@__DIR__, "mkl-include-2022.2.0-intel_8748", "include")
-  wrapper("libmklsparse", ["$mkl/mkl_spblas.h"], optimized)
+  wrapper("libmklsparse", ["$mkl/mkl_spblas.h", "$mkl/mkl_sparse_qr.h"], optimized)
 end
 
 # If we want to use the file as a script with `julia wrapper.jl`
