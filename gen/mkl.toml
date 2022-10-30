@@ -1,0 +1,9 @@
+[general]
+use_julia_native_enum_type = false
+print_using_CEnum = false
+print_enum_as_integer = true
+
+[codegen]
+use_julia_bool = true
+use_ccall_macro = true
+always_NUL_terminated_string = true
