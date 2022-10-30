@@ -25,16 +25,12 @@ const MKL_COMPACT_SSE = 181 % UInt32
 const MKL_COMPACT_AVX = 182 % UInt32
 const MKL_COMPACT_AVX512 = 183 % UInt32
 
-# typedef void ( * sgemm_jit_kernel_t ) ( void * , float * , float * , float * )
 const sgemm_jit_kernel_t = Ptr{Cvoid}
 
-# typedef void ( * dgemm_jit_kernel_t ) ( void * , double * , double * , double * )
 const dgemm_jit_kernel_t = Ptr{Cvoid}
 
-# typedef void ( * cgemm_jit_kernel_t ) ( void * , ComplexF32 * , ComplexF32 * , ComplexF32 * )
 const cgemm_jit_kernel_t = Ptr{Cvoid}
 
-# typedef void ( * zgemm_jit_kernel_t ) ( void * , ComplexF64 * , ComplexF64 * , ComplexF64 * )
 const zgemm_jit_kernel_t = Ptr{Cvoid}
 
 const mkl_jit_status_t = UInt32
@@ -110,87 +106,87 @@ end
 function mkl_scoomv(transa, m, k, alpha, matdescra, val, rowind, colind, nnz, x, beta, y)
     @ccall libmkl_rt.mkl_scoomv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 x::Ptr{Float32}, beta::Ref{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_scoosv(transa, m, alpha, matdescra, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_scoosv(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{Float32},
                                 matdescra::Ptr{UInt8}, val::Ptr{Float32}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{Float32},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{Float32},
                                 y::Ptr{Float32})::Cvoid
 end
 
 function mkl_scoogemv(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_scoogemv(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_cspblas_scoogemv(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_cspblas_scoogemv(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{Float32},
+                                          nnz::Ref{BlasInt}, x::Ptr{Float32},
                                           y::Ptr{Float32})::Cvoid
 end
 
 function mkl_scoosymv(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_scoosymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_cspblas_scoosymv(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_cspblas_scoosymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{Float32},
+                                          nnz::Ref{BlasInt}, x::Ptr{Float32},
                                           y::Ptr{Float32})::Cvoid
 end
 
 function mkl_scootrsv(uplo, transa, diag, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_scootrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                   m::Ref{BlasInt}, val::Ptr{Float32}, rowind::Ptr{BlasInt},
-                                  colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{Float32},
+                                  colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{Float32},
                                   y::Ptr{Float32})::Cvoid
 end
 
 function mkl_cspblas_scootrsv(uplo, transa, diag, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_cspblas_scootrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                           m::Ref{BlasInt}, val::Ptr{Float32}, rowind::Ptr{BlasInt},
-                                          colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{Float32},
+                                          colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{Float32},
                                           y::Ptr{Float32})::Cvoid
 end
 
 function mkl_sdiamv(transa, m, k, alpha, matdescra, val, lval, idiag, ndiag, x, beta, y)
     @ccall libmkl_rt.mkl_sdiamv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 x::Ptr{Float32}, beta::Ref{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_sdiasv(transa, m, alpha, matdescra, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_sdiasv(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{Float32},
-                                matdescra::Ptr{UInt8}, val::Ptr{Float32}, lval::Ptr{BlasInt},
-                                idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{Float32},
+                                matdescra::Ptr{UInt8}, val::Ptr{Float32}, lval::Ref{BlasInt},
+                                idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{Float32},
                                 y::Ptr{Float32})::Cvoid
 end
 
 function mkl_sdiagemv(transa, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_sdiagemv(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_sdiasymv(uplo, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_sdiasymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_sdiatrsv(uplo, transa, diag, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_sdiatrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, val::Ptr{Float32}, lval::Ptr{BlasInt},
-                                  idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{Float32},
+                                  m::Ref{BlasInt}, val::Ptr{Float32}, lval::Ref{BlasInt},
+                                  idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{Float32},
                                   y::Ptr{Float32})::Cvoid
 end
 
@@ -208,53 +204,53 @@ function mkl_sskysv(transa, m, alpha, matdescra, val, pntr, x, y)
 end
 
 function mkl_sbsrmv(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre, x, beta, y)
-    @ccall libmkl_rt.mkl_sbsrmv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_sbsrmv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 x::Ptr{Float32}, beta::Ref{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_sbsrsv(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x, y)
-    @ccall libmkl_rt.mkl_sbsrsv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_sbsrsv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_sbsrgemv(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_sbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_sbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{Float32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_cspblas_sbsrgemv(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_cspblas_sbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cspblas_sbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{Float32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                           x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_sbsrsymv(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_sbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_sbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{Float32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_cspblas_sbsrsymv(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_cspblas_sbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cspblas_sbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{Float32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                           x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function mkl_sbsrtrsv(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.mkl_sbsrtrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{Float32},
+                                  m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{Float32},
                                   ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{Float32},
                                   y::Ptr{Float32})::Cvoid
 end
 
 function mkl_cspblas_sbsrtrsv(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.mkl_cspblas_sbsrtrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                          m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{Float32},
+                                          m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{Float32},
                                           ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{Float32},
                                           y::Ptr{Float32})::Cvoid
 end
@@ -297,7 +293,7 @@ function mkl_scoomm(transa, m, n, k, alpha, matdescra, val, rowind, colind, nnz,
                     beta, c, ldc)
     @ccall libmkl_rt.mkl_scoomm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 b::Ptr{Float32}, ldb::Ref{BlasInt}, beta::Ref{Float32},
                                 c::Ptr{Float32}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -306,7 +302,7 @@ function mkl_scoosm(transa, m, n, alpha, matdescra, val, rowind, colind, nnz, b,
                     ldc)
     @ccall libmkl_rt.mkl_scoosm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 b::Ptr{Float32}, ldb::Ref{BlasInt}, c::Ptr{Float32},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -315,7 +311,7 @@ function mkl_sdiamm(transa, m, n, k, alpha, matdescra, val, lval, idiag, ndiag, 
                     beta, c, ldc)
     @ccall libmkl_rt.mkl_sdiamm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 b::Ptr{Float32}, ldb::Ref{BlasInt}, beta::Ref{Float32},
                                 c::Ptr{Float32}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -323,7 +319,7 @@ end
 function mkl_sdiasm(transa, m, n, alpha, matdescra, val, lval, idiag, ndiag, b, ldb, c, ldc)
     @ccall libmkl_rt.mkl_sdiasm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 b::Ptr{Float32}, ldb::Ref{BlasInt}, c::Ptr{Float32},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -345,7 +341,7 @@ end
 function mkl_sbsrmm(transa, m, n, k, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb,
                     beta, c, ldc)
     @ccall libmkl_rt.mkl_sbsrmm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
-                                lb::Ptr{BlasInt}, alpha::Ref{Float32}, matdescra::Ptr{UInt8},
+                                lb::Ref{BlasInt}, alpha::Ref{Float32}, matdescra::Ptr{UInt8},
                                 val::Ptr{Float32}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, b::Ptr{Float32}, ldb::Ref{BlasInt},
                                 beta::Ref{Float32}, c::Ptr{Float32}, ldc::Ref{BlasInt})::Cvoid
@@ -353,7 +349,7 @@ end
 
 function mkl_sbsrsm(transa, m, n, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb, c,
                     ldc)
-    @ccall libmkl_rt.mkl_sbsrsm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_sbsrsm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 b::Ptr{Float32}, ldb::Ref{BlasInt}, c::Ptr{Float32},
@@ -428,87 +424,87 @@ end
 function MKL_SCOOMV(transa, m, k, alpha, matdescra, val, rowind, colind, nnz, x, beta, y)
     @ccall libmkl_rt.MKL_SCOOMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 x::Ptr{Float32}, beta::Ref{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SCOOSV(transa, m, alpha, matdescra, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_SCOOSV(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{Float32},
                                 matdescra::Ptr{UInt8}, val::Ptr{Float32}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{Float32},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{Float32},
                                 y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SCOOGEMV(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_SCOOGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_CSPBLAS_SCOOGEMV(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_SCOOGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{Float32},
+                                          nnz::Ref{BlasInt}, x::Ptr{Float32},
                                           y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SCOOSYMV(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_SCOOSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_CSPBLAS_SCOOSYMV(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_SCOOSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{Float32},
+                                          nnz::Ref{BlasInt}, x::Ptr{Float32},
                                           y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SCOOTRSV(uplo, transa, diag, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_SCOOTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                   m::Ref{BlasInt}, val::Ptr{Float32}, rowind::Ptr{BlasInt},
-                                  colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{Float32},
+                                  colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{Float32},
                                   y::Ptr{Float32})::Cvoid
 end
 
 function MKL_CSPBLAS_SCOOTRSV(uplo, transa, diag, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_SCOOTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                           m::Ref{BlasInt}, val::Ptr{Float32}, rowind::Ptr{BlasInt},
-                                          colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{Float32},
+                                          colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{Float32},
                                           y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SDIAMV(transa, m, k, alpha, matdescra, val, lval, idiag, ndiag, x, beta, y)
     @ccall libmkl_rt.MKL_SDIAMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 x::Ptr{Float32}, beta::Ref{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SDIASV(transa, m, alpha, matdescra, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_SDIASV(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{Float32},
-                                matdescra::Ptr{UInt8}, val::Ptr{Float32}, lval::Ptr{BlasInt},
-                                idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{Float32},
+                                matdescra::Ptr{UInt8}, val::Ptr{Float32}, lval::Ref{BlasInt},
+                                idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{Float32},
                                 y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SDIAGEMV(transa, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_SDIAGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SDIASYMV(uplo, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_SDIASYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float32},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SDIATRSV(uplo, transa, diag, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_SDIATRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, val::Ptr{Float32}, lval::Ptr{BlasInt},
-                                  idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{Float32},
+                                  m::Ref{BlasInt}, val::Ptr{Float32}, lval::Ref{BlasInt},
+                                  idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{Float32},
                                   y::Ptr{Float32})::Cvoid
 end
 
@@ -526,53 +522,53 @@ function MKL_SSKYSV(transa, m, alpha, matdescra, val, pntr, x, y)
 end
 
 function MKL_SBSRMV(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre, x, beta, y)
-    @ccall libmkl_rt.MKL_SBSRMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_SBSRMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 x::Ptr{Float32}, beta::Ref{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SBSRSV(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x, y)
-    @ccall libmkl_rt.MKL_SBSRSV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_SBSRSV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SBSRGEMV(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_SBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_SBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{Float32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_CSPBLAS_SBSRGEMV(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_CSPBLAS_SBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CSPBLAS_SBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{Float32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                           x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SBSRSYMV(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_SBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_SBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{Float32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_CSPBLAS_SBSRSYMV(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_CSPBLAS_SBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CSPBLAS_SBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{Float32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                           x::Ptr{Float32}, y::Ptr{Float32})::Cvoid
 end
 
 function MKL_SBSRTRSV(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.MKL_SBSRTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{Float32},
+                                  m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{Float32},
                                   ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{Float32},
                                   y::Ptr{Float32})::Cvoid
 end
 
 function MKL_CSPBLAS_SBSRTRSV(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_SBSRTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                          m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{Float32},
+                                          m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{Float32},
                                           ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{Float32},
                                           y::Ptr{Float32})::Cvoid
 end
@@ -615,7 +611,7 @@ function MKL_SCOOMM(transa, m, n, k, alpha, matdescra, val, rowind, colind, nnz,
                     beta, c, ldc)
     @ccall libmkl_rt.MKL_SCOOMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 b::Ptr{Float32}, ldb::Ref{BlasInt}, beta::Ref{Float32},
                                 c::Ptr{Float32}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -624,7 +620,7 @@ function MKL_SCOOSM(transa, m, n, alpha, matdescra, val, rowind, colind, nnz, b,
                     ldc)
     @ccall libmkl_rt.MKL_SCOOSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 b::Ptr{Float32}, ldb::Ref{BlasInt}, c::Ptr{Float32},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -633,7 +629,7 @@ function MKL_SDIAMM(transa, m, n, k, alpha, matdescra, val, lval, idiag, ndiag, 
                     beta, c, ldc)
     @ccall libmkl_rt.MKL_SDIAMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 b::Ptr{Float32}, ldb::Ref{BlasInt}, beta::Ref{Float32},
                                 c::Ptr{Float32}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -641,7 +637,7 @@ end
 function MKL_SDIASM(transa, m, n, alpha, matdescra, val, lval, idiag, ndiag, b, ldb, c, ldc)
     @ccall libmkl_rt.MKL_SDIASM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 b::Ptr{Float32}, ldb::Ref{BlasInt}, c::Ptr{Float32},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -663,7 +659,7 @@ end
 function MKL_SBSRMM(transa, m, n, k, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb,
                     beta, c, ldc)
     @ccall libmkl_rt.MKL_SBSRMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
-                                lb::Ptr{BlasInt}, alpha::Ref{Float32}, matdescra::Ptr{UInt8},
+                                lb::Ref{BlasInt}, alpha::Ref{Float32}, matdescra::Ptr{UInt8},
                                 val::Ptr{Float32}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, b::Ptr{Float32}, ldb::Ref{BlasInt},
                                 beta::Ref{Float32}, c::Ptr{Float32}, ldc::Ref{BlasInt})::Cvoid
@@ -671,7 +667,7 @@ end
 
 function MKL_SBSRSM(transa, m, n, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb, c,
                     ldc)
-    @ccall libmkl_rt.MKL_SBSRSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_SBSRSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float32}, matdescra::Ptr{UInt8}, val::Ptr{Float32},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 b::Ptr{Float32}, ldb::Ref{BlasInt}, c::Ptr{Float32},
@@ -746,47 +742,47 @@ end
 function mkl_dcoomv(transa, m, k, alpha, matdescra, val, rowind, colind, nnz, x, beta, y)
     @ccall libmkl_rt.mkl_dcoomv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 x::Ptr{Float64}, beta::Ref{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_dcoosv(transa, m, alpha, matdescra, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_dcoosv(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{Float64},
                                 matdescra::Ptr{UInt8}, val::Ptr{Float64}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{Float64},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{Float64},
                                 y::Ptr{Float64})::Cvoid
 end
 
 function mkl_dcoogemv(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_dcoogemv(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_cspblas_dcoogemv(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_cspblas_dcoogemv(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{Float64},
+                                          nnz::Ref{BlasInt}, x::Ptr{Float64},
                                           y::Ptr{Float64})::Cvoid
 end
 
 function mkl_dcoosymv(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_dcoosymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_cspblas_dcoosymv(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_cspblas_dcoosymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{Float64},
+                                          nnz::Ref{BlasInt}, x::Ptr{Float64},
                                           y::Ptr{Float64})::Cvoid
 end
 
 function mkl_dcootrsv(uplo, transa, diag, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_dcootrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                   m::Ref{BlasInt}, val::Ptr{Float64}, rowind::Ptr{BlasInt},
-                                  colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{Float64},
+                                  colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{Float64},
                                   y::Ptr{Float64})::Cvoid
 end
 
@@ -794,40 +790,40 @@ function mkl_cspblas_dcootrsv(uplo, transa, diag, m, val, rowind, colind, nnz, x
     @ccall libmkl_rt.mkl_cspblas_dcootrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                           m::Ref{BlasInt}, val::Ptr{Float64},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{Float64},
+                                          nnz::Ref{BlasInt}, x::Ptr{Float64},
                                           y::Ptr{Float64})::Cvoid
 end
 
 function mkl_ddiamv(transa, m, k, alpha, matdescra, val, lval, idiag, ndiag, x, beta, y)
     @ccall libmkl_rt.mkl_ddiamv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 x::Ptr{Float64}, beta::Ref{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_ddiasv(transa, m, alpha, matdescra, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_ddiasv(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{Float64},
-                                matdescra::Ptr{UInt8}, val::Ptr{Float64}, lval::Ptr{BlasInt},
-                                idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{Float64},
+                                matdescra::Ptr{UInt8}, val::Ptr{Float64}, lval::Ref{BlasInt},
+                                idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{Float64},
                                 y::Ptr{Float64})::Cvoid
 end
 
 function mkl_ddiagemv(transa, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_ddiagemv(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_ddiasymv(uplo, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_ddiasymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_ddiatrsv(uplo, transa, diag, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_ddiatrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, val::Ptr{Float64}, lval::Ptr{BlasInt},
-                                  idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{Float64},
+                                  m::Ref{BlasInt}, val::Ptr{Float64}, lval::Ref{BlasInt},
+                                  idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{Float64},
                                   y::Ptr{Float64})::Cvoid
 end
 
@@ -845,53 +841,53 @@ function mkl_dskysv(transa, m, alpha, matdescra, val, pntr, x, y)
 end
 
 function mkl_dbsrmv(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre, x, beta, y)
-    @ccall libmkl_rt.mkl_dbsrmv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_dbsrmv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 x::Ptr{Float64}, beta::Ref{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_dbsrsv(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x, y)
-    @ccall libmkl_rt.mkl_dbsrsv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_dbsrsv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_dbsrgemv(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_dbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_dbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{Float64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_cspblas_dbsrgemv(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_cspblas_dbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cspblas_dbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{Float64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                           x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_dbsrsymv(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_dbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_dbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{Float64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_cspblas_dbsrsymv(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_cspblas_dbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cspblas_dbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{Float64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                           x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function mkl_dbsrtrsv(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.mkl_dbsrtrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{Float64},
+                                  m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{Float64},
                                   ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{Float64},
                                   y::Ptr{Float64})::Cvoid
 end
 
 function mkl_cspblas_dbsrtrsv(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.mkl_cspblas_dbsrtrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                          m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{Float64},
+                                          m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{Float64},
                                           ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{Float64},
                                           y::Ptr{Float64})::Cvoid
 end
@@ -934,7 +930,7 @@ function mkl_dcoomm(transa, m, n, k, alpha, matdescra, val, rowind, colind, nnz,
                     beta, c, ldc)
     @ccall libmkl_rt.mkl_dcoomm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 b::Ptr{Float64}, ldb::Ref{BlasInt}, beta::Ref{Float64},
                                 c::Ptr{Float64}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -943,7 +939,7 @@ function mkl_dcoosm(transa, m, n, alpha, matdescra, val, rowind, colind, nnz, b,
                     ldc)
     @ccall libmkl_rt.mkl_dcoosm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 b::Ptr{Float64}, ldb::Ref{BlasInt}, c::Ptr{Float64},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -952,7 +948,7 @@ function mkl_ddiamm(transa, m, n, k, alpha, matdescra, val, lval, idiag, ndiag, 
                     beta, c, ldc)
     @ccall libmkl_rt.mkl_ddiamm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 b::Ptr{Float64}, ldb::Ref{BlasInt}, beta::Ref{Float64},
                                 c::Ptr{Float64}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -960,7 +956,7 @@ end
 function mkl_ddiasm(transa, m, n, alpha, matdescra, val, lval, idiag, ndiag, b, ldb, c, ldc)
     @ccall libmkl_rt.mkl_ddiasm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 b::Ptr{Float64}, ldb::Ref{BlasInt}, c::Ptr{Float64},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -982,7 +978,7 @@ end
 function mkl_dbsrmm(transa, m, n, k, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb,
                     beta, c, ldc)
     @ccall libmkl_rt.mkl_dbsrmm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
-                                lb::Ptr{BlasInt}, alpha::Ref{Float64}, matdescra::Ptr{UInt8},
+                                lb::Ref{BlasInt}, alpha::Ref{Float64}, matdescra::Ptr{UInt8},
                                 val::Ptr{Float64}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, b::Ptr{Float64}, ldb::Ref{BlasInt},
                                 beta::Ref{Float64}, c::Ptr{Float64}, ldc::Ref{BlasInt})::Cvoid
@@ -990,7 +986,7 @@ end
 
 function mkl_dbsrsm(transa, m, n, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb, c,
                     ldc)
-    @ccall libmkl_rt.mkl_dbsrsm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_dbsrsm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 b::Ptr{Float64}, ldb::Ref{BlasInt}, c::Ptr{Float64},
@@ -1065,47 +1061,47 @@ end
 function MKL_DCOOMV(transa, m, k, alpha, matdescra, val, rowind, colind, nnz, x, beta, y)
     @ccall libmkl_rt.MKL_DCOOMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 x::Ptr{Float64}, beta::Ref{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DCOOSV(transa, m, alpha, matdescra, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_DCOOSV(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{Float64},
                                 matdescra::Ptr{UInt8}, val::Ptr{Float64}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{Float64},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{Float64},
                                 y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DCOOGEMV(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_DCOOGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_CSPBLAS_DCOOGEMV(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_DCOOGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{Float64},
+                                          nnz::Ref{BlasInt}, x::Ptr{Float64},
                                           y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DCOOSYMV(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_DCOOSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_CSPBLAS_DCOOSYMV(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_DCOOSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{Float64},
+                                          nnz::Ref{BlasInt}, x::Ptr{Float64},
                                           y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DCOOTRSV(uplo, transa, diag, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_DCOOTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                   m::Ref{BlasInt}, val::Ptr{Float64}, rowind::Ptr{BlasInt},
-                                  colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{Float64},
+                                  colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{Float64},
                                   y::Ptr{Float64})::Cvoid
 end
 
@@ -1113,40 +1109,40 @@ function MKL_CSPBLAS_DCOOTRSV(uplo, transa, diag, m, val, rowind, colind, nnz, x
     @ccall libmkl_rt.MKL_CSPBLAS_DCOOTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                           m::Ref{BlasInt}, val::Ptr{Float64},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{Float64},
+                                          nnz::Ref{BlasInt}, x::Ptr{Float64},
                                           y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DDIAMV(transa, m, k, alpha, matdescra, val, lval, idiag, ndiag, x, beta, y)
     @ccall libmkl_rt.MKL_DDIAMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 x::Ptr{Float64}, beta::Ref{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DDIASV(transa, m, alpha, matdescra, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_DDIASV(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{Float64},
-                                matdescra::Ptr{UInt8}, val::Ptr{Float64}, lval::Ptr{BlasInt},
-                                idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{Float64},
+                                matdescra::Ptr{UInt8}, val::Ptr{Float64}, lval::Ref{BlasInt},
+                                idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{Float64},
                                 y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DDIAGEMV(transa, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_DDIAGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DDIASYMV(uplo, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_DDIASYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{Float64},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DDIATRSV(uplo, transa, diag, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_DDIATRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, val::Ptr{Float64}, lval::Ptr{BlasInt},
-                                  idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{Float64},
+                                  m::Ref{BlasInt}, val::Ptr{Float64}, lval::Ref{BlasInt},
+                                  idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{Float64},
                                   y::Ptr{Float64})::Cvoid
 end
 
@@ -1164,53 +1160,53 @@ function MKL_DSKYSV(transa, m, alpha, matdescra, val, pntr, x, y)
 end
 
 function MKL_DBSRMV(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre, x, beta, y)
-    @ccall libmkl_rt.MKL_DBSRMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_DBSRMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 x::Ptr{Float64}, beta::Ref{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DBSRSV(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x, y)
-    @ccall libmkl_rt.MKL_DBSRSV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_DBSRSV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DBSRGEMV(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_DBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_DBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{Float64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_CSPBLAS_DBSRGEMV(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_CSPBLAS_DBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CSPBLAS_DBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{Float64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                           x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DBSRSYMV(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_DBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_DBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{Float64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_CSPBLAS_DBSRSYMV(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_CSPBLAS_DBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CSPBLAS_DBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{Float64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                           x::Ptr{Float64}, y::Ptr{Float64})::Cvoid
 end
 
 function MKL_DBSRTRSV(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.MKL_DBSRTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{Float64},
+                                  m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{Float64},
                                   ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{Float64},
                                   y::Ptr{Float64})::Cvoid
 end
 
 function MKL_CSPBLAS_DBSRTRSV(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_DBSRTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                          m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{Float64},
+                                          m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{Float64},
                                           ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{Float64},
                                           y::Ptr{Float64})::Cvoid
 end
@@ -1253,7 +1249,7 @@ function MKL_DCOOMM(transa, m, n, k, alpha, matdescra, val, rowind, colind, nnz,
                     beta, c, ldc)
     @ccall libmkl_rt.MKL_DCOOMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 b::Ptr{Float64}, ldb::Ref{BlasInt}, beta::Ref{Float64},
                                 c::Ptr{Float64}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -1262,7 +1258,7 @@ function MKL_DCOOSM(transa, m, n, alpha, matdescra, val, rowind, colind, nnz, b,
                     ldc)
     @ccall libmkl_rt.MKL_DCOOSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 b::Ptr{Float64}, ldb::Ref{BlasInt}, c::Ptr{Float64},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -1271,7 +1267,7 @@ function MKL_DDIAMM(transa, m, n, k, alpha, matdescra, val, lval, idiag, ndiag, 
                     beta, c, ldc)
     @ccall libmkl_rt.MKL_DDIAMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 b::Ptr{Float64}, ldb::Ref{BlasInt}, beta::Ref{Float64},
                                 c::Ptr{Float64}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -1279,7 +1275,7 @@ end
 function MKL_DDIASM(transa, m, n, alpha, matdescra, val, lval, idiag, ndiag, b, ldb, c, ldc)
     @ccall libmkl_rt.MKL_DDIASM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 b::Ptr{Float64}, ldb::Ref{BlasInt}, c::Ptr{Float64},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -1301,7 +1297,7 @@ end
 function MKL_DBSRMM(transa, m, n, k, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb,
                     beta, c, ldc)
     @ccall libmkl_rt.MKL_DBSRMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
-                                lb::Ptr{BlasInt}, alpha::Ref{Float64}, matdescra::Ptr{UInt8},
+                                lb::Ref{BlasInt}, alpha::Ref{Float64}, matdescra::Ptr{UInt8},
                                 val::Ptr{Float64}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, b::Ptr{Float64}, ldb::Ref{BlasInt},
                                 beta::Ref{Float64}, c::Ptr{Float64}, ldc::Ref{BlasInt})::Cvoid
@@ -1309,7 +1305,7 @@ end
 
 function MKL_DBSRSM(transa, m, n, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb, c,
                     ldc)
-    @ccall libmkl_rt.MKL_DBSRSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_DBSRSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{Float64}, matdescra::Ptr{UInt8}, val::Ptr{Float64},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 b::Ptr{Float64}, ldb::Ref{BlasInt}, c::Ptr{Float64},
@@ -1389,47 +1385,47 @@ function mkl_ccoomv(transa, m, k, alpha, matdescra, val, rowind, colind, nnz, x,
     @ccall libmkl_rt.mkl_ccoomv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{ComplexF32},
                                 beta::Ref{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_ccoosv(transa, m, alpha, matdescra, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_ccoosv(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{ComplexF32},
                                 matdescra::Ptr{UInt8}, val::Ptr{ComplexF32},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_ccoogemv(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_ccoogemv(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF32},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_cspblas_ccoogemv(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_cspblas_ccoogemv(transa::Ref{UInt8}, m::Ref{BlasInt},
                                           val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                          colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                          colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                           x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_ccoosymv(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_ccoosymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF32},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_cspblas_ccoosymv(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_cspblas_ccoosymv(uplo::Ref{UInt8}, m::Ref{BlasInt},
                                           val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                          colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                          colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                           x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_ccootrsv(uplo, transa, diag, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_ccootrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                   m::Ref{BlasInt}, val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                  colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                  colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{ComplexF32},
                                   y::Ptr{ComplexF32})::Cvoid
 end
 
@@ -1437,41 +1433,41 @@ function mkl_cspblas_ccootrsv(uplo, transa, diag, m, val, rowind, colind, nnz, x
     @ccall libmkl_rt.mkl_cspblas_ccootrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                           m::Ref{BlasInt}, val::Ptr{ComplexF32},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                          nnz::Ref{BlasInt}, x::Ptr{ComplexF32},
                                           y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_cdiamv(transa, m, k, alpha, matdescra, val, lval, idiag, ndiag, x, beta, y)
     @ccall libmkl_rt.mkl_cdiamv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF32}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                val::Ptr{ComplexF32}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, x::Ptr{ComplexF32},
                                 beta::Ref{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_cdiasv(transa, m, alpha, matdescra, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_cdiasv(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{ComplexF32},
-                                matdescra::Ptr{UInt8}, val::Ptr{ComplexF32}, lval::Ptr{BlasInt},
-                                idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                matdescra::Ptr{UInt8}, val::Ptr{ComplexF32}, lval::Ref{BlasInt},
+                                idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{ComplexF32},
                                 y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_cdiagemv(transa, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_cdiagemv(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF32},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_cdiasymv(uplo, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_cdiasymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF32},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_cdiatrsv(uplo, transa, diag, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_cdiatrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, val::Ptr{ComplexF32}, lval::Ptr{BlasInt},
-                                  idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                  m::Ref{BlasInt}, val::Ptr{ComplexF32}, lval::Ref{BlasInt},
+                                  idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{ComplexF32},
                                   y::Ptr{ComplexF32})::Cvoid
 end
 
@@ -1490,7 +1486,7 @@ function mkl_cskysv(transa, m, alpha, matdescra, val, pntr, x, y)
 end
 
 function mkl_cbsrmv(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre, x, beta, y)
-    @ccall libmkl_rt.mkl_cbsrmv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cbsrmv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, x::Ptr{ComplexF32},
@@ -1498,7 +1494,7 @@ function mkl_cbsrmv(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre,
 end
 
 function mkl_cbsrsv(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x, y)
-    @ccall libmkl_rt.mkl_cbsrsv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cbsrsv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, x::Ptr{ComplexF32},
@@ -1506,26 +1502,26 @@ function mkl_cbsrsv(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x,
 end
 
 function mkl_cbsrgemv(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_cbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{ComplexF32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_cspblas_cbsrgemv(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_cspblas_cbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cspblas_cbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{ComplexF32}, ia::Ptr{BlasInt},
                                           ja::Ptr{BlasInt}, x::Ptr{ComplexF32},
                                           y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_cbsrsymv(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_cbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{ComplexF32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_cspblas_cbsrsymv(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_cspblas_cbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cspblas_cbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{ComplexF32}, ia::Ptr{BlasInt},
                                           ja::Ptr{BlasInt}, x::Ptr{ComplexF32},
                                           y::Ptr{ComplexF32})::Cvoid
@@ -1533,14 +1529,14 @@ end
 
 function mkl_cbsrtrsv(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.mkl_cbsrtrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{ComplexF32},
+                                  m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{ComplexF32},
                                   ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{ComplexF32},
                                   y::Ptr{ComplexF32})::Cvoid
 end
 
 function mkl_cspblas_cbsrtrsv(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.mkl_cspblas_cbsrtrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                          m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{ComplexF32},
+                                          m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{ComplexF32},
                                           ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                           x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
@@ -1586,7 +1582,7 @@ function mkl_ccoomm(transa, m, n, k, alpha, matdescra, val, rowind, colind, nnz,
     @ccall libmkl_rt.mkl_ccoomm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, b::Ptr{ComplexF32},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, b::Ptr{ComplexF32},
                                 ldb::Ref{BlasInt}, beta::Ref{ComplexF32},
                                 c::Ptr{ComplexF32}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -1596,7 +1592,7 @@ function mkl_ccoosm(transa, m, n, alpha, matdescra, val, rowind, colind, nnz, b,
     @ccall libmkl_rt.mkl_ccoosm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, b::Ptr{ComplexF32},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, b::Ptr{ComplexF32},
                                 ldb::Ref{BlasInt}, c::Ptr{ComplexF32}, ldc::Ref{BlasInt})::Cvoid
 end
 
@@ -1604,8 +1600,8 @@ function mkl_cdiamm(transa, m, n, k, alpha, matdescra, val, lval, idiag, ndiag, 
                     beta, c, ldc)
     @ccall libmkl_rt.mkl_cdiamm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF32}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
+                                val::Ptr{ComplexF32}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
                                 beta::Ref{ComplexF32}, c::Ptr{ComplexF32},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -1613,8 +1609,8 @@ end
 function mkl_cdiasm(transa, m, n, alpha, matdescra, val, lval, idiag, ndiag, b, ldb, c, ldc)
     @ccall libmkl_rt.mkl_cdiasm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF32}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
+                                val::Ptr{ComplexF32}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
                                 c::Ptr{ComplexF32}, ldc::Ref{BlasInt})::Cvoid
 end
 
@@ -1638,7 +1634,7 @@ end
 function mkl_cbsrmm(transa, m, n, k, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb,
                     beta, c, ldc)
     @ccall libmkl_rt.mkl_cbsrmm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
-                                lb::Ptr{BlasInt}, alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
+                                lb::Ref{BlasInt}, alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
                                 beta::Ref{ComplexF32}, c::Ptr{ComplexF32},
@@ -1647,7 +1643,7 @@ end
 
 function mkl_cbsrsm(transa, m, n, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb, c,
                     ldc)
-    @ccall libmkl_rt.mkl_cbsrsm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cbsrsm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
@@ -1727,47 +1723,47 @@ function MKL_CCOOMV(transa, m, k, alpha, matdescra, val, rowind, colind, nnz, x,
     @ccall libmkl_rt.MKL_CCOOMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{ComplexF32},
                                 beta::Ref{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CCOOSV(transa, m, alpha, matdescra, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CCOOSV(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{ComplexF32},
                                 matdescra::Ptr{UInt8}, val::Ptr{ComplexF32},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CCOOGEMV(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CCOOGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF32},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CSPBLAS_CCOOGEMV(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_CCOOGEMV(transa::Ref{UInt8}, m::Ref{BlasInt},
                                           val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                          colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                          colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                           x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CCOOSYMV(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CCOOSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF32},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CSPBLAS_CCOOSYMV(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_CCOOSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt},
                                           val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                          colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                          colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                           x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CCOOTRSV(uplo, transa, diag, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CCOOTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                   m::Ref{BlasInt}, val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                  colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                  colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{ComplexF32},
                                   y::Ptr{ComplexF32})::Cvoid
 end
 
@@ -1775,41 +1771,41 @@ function MKL_CSPBLAS_CCOOTRSV(uplo, transa, diag, m, val, rowind, colind, nnz, x
     @ccall libmkl_rt.MKL_CSPBLAS_CCOOTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                           m::Ref{BlasInt}, val::Ptr{ComplexF32},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                          nnz::Ref{BlasInt}, x::Ptr{ComplexF32},
                                           y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CDIAMV(transa, m, k, alpha, matdescra, val, lval, idiag, ndiag, x, beta, y)
     @ccall libmkl_rt.MKL_CDIAMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF32}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                val::Ptr{ComplexF32}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, x::Ptr{ComplexF32},
                                 beta::Ref{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CDIASV(transa, m, alpha, matdescra, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_CDIASV(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{ComplexF32},
-                                matdescra::Ptr{UInt8}, val::Ptr{ComplexF32}, lval::Ptr{BlasInt},
-                                idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                matdescra::Ptr{UInt8}, val::Ptr{ComplexF32}, lval::Ref{BlasInt},
+                                idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{ComplexF32},
                                 y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CDIAGEMV(transa, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_CDIAGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF32},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CDIASYMV(uplo, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_CDIASYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF32},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CDIATRSV(uplo, transa, diag, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_CDIATRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, val::Ptr{ComplexF32}, lval::Ptr{BlasInt},
-                                  idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{ComplexF32},
+                                  m::Ref{BlasInt}, val::Ptr{ComplexF32}, lval::Ref{BlasInt},
+                                  idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{ComplexF32},
                                   y::Ptr{ComplexF32})::Cvoid
 end
 
@@ -1828,7 +1824,7 @@ function MKL_CSKYSV(transa, m, alpha, matdescra, val, pntr, x, y)
 end
 
 function MKL_CBSRMV(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre, x, beta, y)
-    @ccall libmkl_rt.MKL_CBSRMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CBSRMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, x::Ptr{ComplexF32},
@@ -1836,7 +1832,7 @@ function MKL_CBSRMV(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre,
 end
 
 function MKL_CBSRSV(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x, y)
-    @ccall libmkl_rt.MKL_CBSRSV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CBSRSV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, x::Ptr{ComplexF32},
@@ -1844,26 +1840,26 @@ function MKL_CBSRSV(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x,
 end
 
 function MKL_CBSRGEMV(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_CBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{ComplexF32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CSPBLAS_CBSRGEMV(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_CSPBLAS_CBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CSPBLAS_CBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{ComplexF32}, ia::Ptr{BlasInt},
                                           ja::Ptr{BlasInt}, x::Ptr{ComplexF32},
                                           y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CBSRSYMV(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_CBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{ComplexF32}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CSPBLAS_CBSRSYMV(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_CSPBLAS_CBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CSPBLAS_CBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{ComplexF32}, ia::Ptr{BlasInt},
                                           ja::Ptr{BlasInt}, x::Ptr{ComplexF32},
                                           y::Ptr{ComplexF32})::Cvoid
@@ -1871,14 +1867,14 @@ end
 
 function MKL_CBSRTRSV(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.MKL_CBSRTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{ComplexF32},
+                                  m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{ComplexF32},
                                   ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{ComplexF32},
                                   y::Ptr{ComplexF32})::Cvoid
 end
 
 function MKL_CSPBLAS_CBSRTRSV(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_CBSRTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                          m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{ComplexF32},
+                                          m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{ComplexF32},
                                           ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                           x::Ptr{ComplexF32}, y::Ptr{ComplexF32})::Cvoid
 end
@@ -1924,7 +1920,7 @@ function MKL_CCOOMM(transa, m, n, k, alpha, matdescra, val, rowind, colind, nnz,
     @ccall libmkl_rt.MKL_CCOOMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, b::Ptr{ComplexF32},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, b::Ptr{ComplexF32},
                                 ldb::Ref{BlasInt}, beta::Ref{ComplexF32},
                                 c::Ptr{ComplexF32}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -1934,7 +1930,7 @@ function MKL_CCOOSM(transa, m, n, alpha, matdescra, val, rowind, colind, nnz, b,
     @ccall libmkl_rt.MKL_CCOOSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, b::Ptr{ComplexF32},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, b::Ptr{ComplexF32},
                                 ldb::Ref{BlasInt}, c::Ptr{ComplexF32}, ldc::Ref{BlasInt})::Cvoid
 end
 
@@ -1942,8 +1938,8 @@ function MKL_CDIAMM(transa, m, n, k, alpha, matdescra, val, lval, idiag, ndiag, 
                     beta, c, ldc)
     @ccall libmkl_rt.MKL_CDIAMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF32}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
+                                val::Ptr{ComplexF32}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
                                 beta::Ref{ComplexF32}, c::Ptr{ComplexF32},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -1951,8 +1947,8 @@ end
 function MKL_CDIASM(transa, m, n, alpha, matdescra, val, lval, idiag, ndiag, b, ldb, c, ldc)
     @ccall libmkl_rt.MKL_CDIASM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF32}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
+                                val::Ptr{ComplexF32}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
                                 c::Ptr{ComplexF32}, ldc::Ref{BlasInt})::Cvoid
 end
 
@@ -1976,7 +1972,7 @@ end
 function MKL_CBSRMM(transa, m, n, k, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb,
                     beta, c, ldc)
     @ccall libmkl_rt.MKL_CBSRMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
-                                lb::Ptr{BlasInt}, alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
+                                lb::Ref{BlasInt}, alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
                                 beta::Ref{ComplexF32}, c::Ptr{ComplexF32},
@@ -1985,7 +1981,7 @@ end
 
 function MKL_CBSRSM(transa, m, n, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb, c,
                     ldc)
-    @ccall libmkl_rt.MKL_CBSRSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CBSRSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF32}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF32}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, b::Ptr{ComplexF32}, ldb::Ref{BlasInt},
@@ -2067,41 +2063,41 @@ function mkl_zcoomv(transa, m, k, alpha, matdescra, val, rowind, colind, nnz, x,
     @ccall libmkl_rt.mkl_zcoomv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{ComplexF64},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{ComplexF64},
                                 beta::Ref{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_zcoosv(transa, m, alpha, matdescra, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_zcoosv(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{ComplexF64},
                                 matdescra::Ptr{UInt8}, val::Ptr{ComplexF64},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_zcoogemv(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_zcoogemv(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF64},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_cspblas_zcoogemv(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_cspblas_zcoogemv(transa::Ref{UInt8}, m::Ref{BlasInt},
                                           val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                          colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                          colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                           x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_zcoosymv(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_zcoosymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF64},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_cspblas_zcoosymv(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_cspblas_zcoosymv(uplo::Ref{UInt8}, m::Ref{BlasInt},
                                           val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                          colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                          colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                           x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
 end
@@ -2109,7 +2105,7 @@ end
 function mkl_zcootrsv(uplo, transa, diag, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.mkl_zcootrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                   m::Ref{BlasInt}, val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                  colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{ComplexF64},
+                                  colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{ComplexF64},
                                   y::Ptr{ComplexF64})::Cvoid
 end
 
@@ -2117,41 +2113,41 @@ function mkl_cspblas_zcootrsv(uplo, transa, diag, m, val, rowind, colind, nnz, x
     @ccall libmkl_rt.mkl_cspblas_zcootrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                           m::Ref{BlasInt}, val::Ptr{ComplexF64},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{ComplexF64},
+                                          nnz::Ref{BlasInt}, x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_zdiamv(transa, m, k, alpha, matdescra, val, lval, idiag, ndiag, x, beta, y)
     @ccall libmkl_rt.mkl_zdiamv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF64}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, x::Ptr{ComplexF64},
+                                val::Ptr{ComplexF64}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, x::Ptr{ComplexF64},
                                 beta::Ref{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_zdiasv(transa, m, alpha, matdescra, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_zdiasv(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{ComplexF64},
                                 matdescra::Ptr{UInt8}, val::Ptr{ComplexF64},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_zdiagemv(transa, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_zdiagemv(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF64},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_zdiasymv(uplo, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_zdiasymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF64},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_zdiatrsv(uplo, transa, diag, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.mkl_zdiatrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, val::Ptr{ComplexF64}, lval::Ptr{BlasInt},
-                                  idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{ComplexF64},
+                                  m::Ref{BlasInt}, val::Ptr{ComplexF64}, lval::Ref{BlasInt},
+                                  idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{ComplexF64},
                                   y::Ptr{ComplexF64})::Cvoid
 end
 
@@ -2171,7 +2167,7 @@ function mkl_zskysv(transa, m, alpha, matdescra, val, pntr, x, y)
 end
 
 function mkl_zbsrmv(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre, x, beta, y)
-    @ccall libmkl_rt.mkl_zbsrmv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_zbsrmv(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, x::Ptr{ComplexF64},
@@ -2179,7 +2175,7 @@ function mkl_zbsrmv(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre,
 end
 
 function mkl_zbsrsv(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x, y)
-    @ccall libmkl_rt.mkl_zbsrsv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_zbsrsv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, x::Ptr{ComplexF64},
@@ -2187,26 +2183,26 @@ function mkl_zbsrsv(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x,
 end
 
 function mkl_zbsrgemv(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_zbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_zbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{ComplexF64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_cspblas_zbsrgemv(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_cspblas_zbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cspblas_zbsrgemv(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{ComplexF64}, ia::Ptr{BlasInt},
                                           ja::Ptr{BlasInt}, x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_zbsrsymv(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_zbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_zbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{ComplexF64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_cspblas_zbsrsymv(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.mkl_cspblas_zbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_cspblas_zbsrsymv(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{ComplexF64}, ia::Ptr{BlasInt},
                                           ja::Ptr{BlasInt}, x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
@@ -2214,14 +2210,14 @@ end
 
 function mkl_zbsrtrsv(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.mkl_zbsrtrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{ComplexF64},
+                                  m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{ComplexF64},
                                   ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{ComplexF64},
                                   y::Ptr{ComplexF64})::Cvoid
 end
 
 function mkl_cspblas_zbsrtrsv(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.mkl_cspblas_zbsrtrsv(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                          m::Ref{BlasInt}, lb::Ptr{BlasInt},
+                                          m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{ComplexF64}, ia::Ptr{BlasInt},
                                           ja::Ptr{BlasInt}, x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
@@ -2268,7 +2264,7 @@ function mkl_zcoomm(transa, m, n, k, alpha, matdescra, val, rowind, colind, nnz,
     @ccall libmkl_rt.mkl_zcoomm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, b::Ptr{ComplexF64},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, b::Ptr{ComplexF64},
                                 ldb::Ref{BlasInt}, beta::Ref{ComplexF64},
                                 c::Ptr{ComplexF64}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -2278,7 +2274,7 @@ function mkl_zcoosm(transa, m, n, alpha, matdescra, val, rowind, colind, nnz, b,
     @ccall libmkl_rt.mkl_zcoosm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, b::Ptr{ComplexF64},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, b::Ptr{ComplexF64},
                                 ldb::Ref{BlasInt}, c::Ptr{ComplexF64},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -2287,8 +2283,8 @@ function mkl_zdiamm(transa, m, n, k, alpha, matdescra, val, lval, idiag, ndiag, 
                     beta, c, ldc)
     @ccall libmkl_rt.mkl_zdiamm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF64}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
+                                val::Ptr{ComplexF64}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
                                 beta::Ref{ComplexF64}, c::Ptr{ComplexF64},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -2296,8 +2292,8 @@ end
 function mkl_zdiasm(transa, m, n, alpha, matdescra, val, lval, idiag, ndiag, b, ldb, c, ldc)
     @ccall libmkl_rt.mkl_zdiasm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF64}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
+                                val::Ptr{ComplexF64}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
                                 c::Ptr{ComplexF64}, ldc::Ref{BlasInt})::Cvoid
 end
 
@@ -2321,7 +2317,7 @@ end
 function mkl_zbsrmm(transa, m, n, k, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb,
                     beta, c, ldc)
     @ccall libmkl_rt.mkl_zbsrmm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
-                                lb::Ptr{BlasInt}, alpha::Ref{ComplexF64},
+                                lb::Ref{BlasInt}, alpha::Ref{ComplexF64},
                                 matdescra::Ptr{UInt8}, val::Ptr{ComplexF64},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
@@ -2331,7 +2327,7 @@ end
 
 function mkl_zbsrsm(transa, m, n, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb, c,
                     ldc)
-    @ccall libmkl_rt.mkl_zbsrsm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_zbsrsm(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
@@ -2413,41 +2409,41 @@ function MKL_ZCOOMV(transa, m, k, alpha, matdescra, val, rowind, colind, nnz, x,
     @ccall libmkl_rt.MKL_ZCOOMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{ComplexF64},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{ComplexF64},
                                 beta::Ref{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_ZCOOSV(transa, m, alpha, matdescra, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_ZCOOSV(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{ComplexF64},
                                 matdescra::Ptr{UInt8}, val::Ptr{ComplexF64},
-                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                 x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_ZCOOGEMV(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_ZCOOGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF64},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_CSPBLAS_ZCOOGEMV(transa, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_ZCOOGEMV(transa::Ref{UInt8}, m::Ref{BlasInt},
                                           val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                          colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                          colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                           x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_ZCOOSYMV(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_ZCOOSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF64},
-                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                  rowind::Ptr{BlasInt}, colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_CSPBLAS_ZCOOSYMV(uplo, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_ZCOOSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt},
                                           val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                          colind::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                          colind::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                           x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
 end
@@ -2455,7 +2451,7 @@ end
 function MKL_ZCOOTRSV(uplo, transa, diag, m, val, rowind, colind, nnz, x, y)
     @ccall libmkl_rt.MKL_ZCOOTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                   m::Ref{BlasInt}, val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                  colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, x::Ptr{ComplexF64},
+                                  colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, x::Ptr{ComplexF64},
                                   y::Ptr{ComplexF64})::Cvoid
 end
 
@@ -2463,41 +2459,41 @@ function MKL_CSPBLAS_ZCOOTRSV(uplo, transa, diag, m, val, rowind, colind, nnz, x
     @ccall libmkl_rt.MKL_CSPBLAS_ZCOOTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
                                           m::Ref{BlasInt}, val::Ptr{ComplexF64},
                                           rowind::Ptr{BlasInt}, colind::Ptr{BlasInt},
-                                          nnz::Ptr{BlasInt}, x::Ptr{ComplexF64},
+                                          nnz::Ref{BlasInt}, x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_ZDIAMV(transa, m, k, alpha, matdescra, val, lval, idiag, ndiag, x, beta, y)
     @ccall libmkl_rt.MKL_ZDIAMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF64}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, x::Ptr{ComplexF64},
+                                val::Ptr{ComplexF64}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, x::Ptr{ComplexF64},
                                 beta::Ref{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_ZDIASV(transa, m, alpha, matdescra, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_ZDIASV(transa::Ref{UInt8}, m::Ref{BlasInt}, alpha::Ref{ComplexF64},
                                 matdescra::Ptr{UInt8}, val::Ptr{ComplexF64},
-                                lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                 x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_ZDIAGEMV(transa, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_ZDIAGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF64},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_ZDIASYMV(uplo, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_ZDIASYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, val::Ptr{ComplexF64},
-                                  lval::Ptr{BlasInt}, idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt},
+                                  lval::Ref{BlasInt}, idiag::Ref{BlasInt}, ndiag::Ref{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_ZDIATRSV(uplo, transa, diag, m, val, lval, idiag, ndiag, x, y)
     @ccall libmkl_rt.MKL_ZDIATRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, val::Ptr{ComplexF64}, lval::Ptr{BlasInt},
-                                  idiag::Ptr{BlasInt}, ndiag::Ptr{BlasInt}, x::Ptr{ComplexF64},
+                                  m::Ref{BlasInt}, val::Ptr{ComplexF64}, lval::Ref{BlasInt},
+                                  idiag::Ref{BlasInt}, ndiag::Ref{BlasInt}, x::Ptr{ComplexF64},
                                   y::Ptr{ComplexF64})::Cvoid
 end
 
@@ -2517,7 +2513,7 @@ function MKL_ZSKYSV(transa, m, alpha, matdescra, val, pntr, x, y)
 end
 
 function MKL_ZBSRMV(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre, x, beta, y)
-    @ccall libmkl_rt.MKL_ZBSRMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_ZBSRMV(transa::Ref{UInt8}, m::Ref{BlasInt}, k::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, x::Ptr{ComplexF64},
@@ -2525,7 +2521,7 @@ function MKL_ZBSRMV(transa, m, k, lb, alpha, matdescra, val, indx, pntrb, pntre,
 end
 
 function MKL_ZBSRSV(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x, y)
-    @ccall libmkl_rt.MKL_ZBSRSV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_ZBSRSV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, x::Ptr{ComplexF64},
@@ -2533,26 +2529,26 @@ function MKL_ZBSRSV(transa, m, lb, alpha, matdescra, val, indx, pntrb, pntre, x,
 end
 
 function MKL_ZBSRGEMV(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_ZBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_ZBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{ComplexF64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_CSPBLAS_ZBSRGEMV(transa, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_CSPBLAS_ZBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CSPBLAS_ZBSRGEMV(transa::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{ComplexF64}, ia::Ptr{BlasInt},
                                           ja::Ptr{BlasInt}, x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_ZBSRSYMV(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_ZBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_ZBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                   a::Ptr{ComplexF64}, ia::Ptr{BlasInt}, ja::Ptr{BlasInt},
                                   x::Ptr{ComplexF64}, y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_CSPBLAS_ZBSRSYMV(uplo, m, lb, a, ia, ja, x, y)
-    @ccall libmkl_rt.MKL_CSPBLAS_ZBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CSPBLAS_ZBSRSYMV(uplo::Ref{UInt8}, m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{ComplexF64}, ia::Ptr{BlasInt},
                                           ja::Ptr{BlasInt}, x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
@@ -2560,14 +2556,14 @@ end
 
 function MKL_ZBSRTRSV(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.MKL_ZBSRTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                  m::Ref{BlasInt}, lb::Ptr{BlasInt}, a::Ptr{ComplexF64},
+                                  m::Ref{BlasInt}, lb::Ref{BlasInt}, a::Ptr{ComplexF64},
                                   ia::Ptr{BlasInt}, ja::Ptr{BlasInt}, x::Ptr{ComplexF64},
                                   y::Ptr{ComplexF64})::Cvoid
 end
 
 function MKL_CSPBLAS_ZBSRTRSV(uplo, transa, diag, m, lb, a, ia, ja, x, y)
     @ccall libmkl_rt.MKL_CSPBLAS_ZBSRTRSV(uplo::Ref{UInt8}, transa::Ref{UInt8}, diag::Ref{UInt8},
-                                          m::Ref{BlasInt}, lb::Ptr{BlasInt},
+                                          m::Ref{BlasInt}, lb::Ref{BlasInt},
                                           a::Ptr{ComplexF64}, ia::Ptr{BlasInt},
                                           ja::Ptr{BlasInt}, x::Ptr{ComplexF64},
                                           y::Ptr{ComplexF64})::Cvoid
@@ -2614,7 +2610,7 @@ function MKL_ZCOOMM(transa, m, n, k, alpha, matdescra, val, rowind, colind, nnz,
     @ccall libmkl_rt.MKL_ZCOOMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, b::Ptr{ComplexF64},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, b::Ptr{ComplexF64},
                                 ldb::Ref{BlasInt}, beta::Ref{ComplexF64},
                                 c::Ptr{ComplexF64}, ldc::Ref{BlasInt})::Cvoid
 end
@@ -2624,7 +2620,7 @@ function MKL_ZCOOSM(transa, m, n, alpha, matdescra, val, rowind, colind, nnz, b,
     @ccall libmkl_rt.MKL_ZCOOSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, rowind::Ptr{BlasInt},
-                                colind::Ptr{BlasInt}, nnz::Ptr{BlasInt}, b::Ptr{ComplexF64},
+                                colind::Ptr{BlasInt}, nnz::Ref{BlasInt}, b::Ptr{ComplexF64},
                                 ldb::Ref{BlasInt}, c::Ptr{ComplexF64},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -2633,8 +2629,8 @@ function MKL_ZDIAMM(transa, m, n, k, alpha, matdescra, val, lval, idiag, ndiag, 
                     beta, c, ldc)
     @ccall libmkl_rt.MKL_ZDIAMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF64}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
+                                val::Ptr{ComplexF64}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
                                 beta::Ref{ComplexF64}, c::Ptr{ComplexF64},
                                 ldc::Ref{BlasInt})::Cvoid
 end
@@ -2642,8 +2638,8 @@ end
 function MKL_ZDIASM(transa, m, n, alpha, matdescra, val, lval, idiag, ndiag, b, ldb, c, ldc)
     @ccall libmkl_rt.MKL_ZDIASM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
-                                val::Ptr{ComplexF64}, lval::Ptr{BlasInt}, idiag::Ptr{BlasInt},
-                                ndiag::Ptr{BlasInt}, b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
+                                val::Ptr{ComplexF64}, lval::Ref{BlasInt}, idiag::Ref{BlasInt},
+                                ndiag::Ref{BlasInt}, b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
                                 c::Ptr{ComplexF64}, ldc::Ref{BlasInt})::Cvoid
 end
 
@@ -2667,7 +2663,7 @@ end
 function MKL_ZBSRMM(transa, m, n, k, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb,
                     beta, c, ldc)
     @ccall libmkl_rt.MKL_ZBSRMM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
-                                lb::Ptr{BlasInt}, alpha::Ref{ComplexF64},
+                                lb::Ref{BlasInt}, alpha::Ref{ComplexF64},
                                 matdescra::Ptr{UInt8}, val::Ptr{ComplexF64},
                                 indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt}, pntre::Ptr{BlasInt},
                                 b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
@@ -2677,7 +2673,7 @@ end
 
 function MKL_ZBSRSM(transa, m, n, lb, alpha, matdescra, val, indx, pntrb, pntre, b, ldb, c,
                     ldc)
-    @ccall libmkl_rt.MKL_ZBSRSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_ZBSRSM(transa::Ref{UInt8}, m::Ref{BlasInt}, n::Ref{BlasInt}, lb::Ref{BlasInt},
                                 alpha::Ref{ComplexF64}, matdescra::Ptr{UInt8},
                                 val::Ptr{ComplexF64}, indx::Ptr{BlasInt}, pntrb::Ptr{BlasInt},
                                 pntre::Ptr{BlasInt}, b::Ptr{ComplexF64}, ldb::Ref{BlasInt},
@@ -2686,344 +2682,344 @@ end
 
 function mkl_dcsrbsr(job, m, mblk, ldAbsr, Acsr, AJ, AI, Absr, AJB, AIB, info)
     @ccall libmkl_rt.mkl_dcsrbsr(job::Ref{BlasInt}, m::Ref{BlasInt}, mblk::Ref{BlasInt},
-                                 ldAbsr::Ptr{BlasInt}, Acsr::Ptr{Float64}, AJ::Ptr{BlasInt},
+                                 ldAbsr::Ref{BlasInt}, Acsr::Ptr{Float64}, AJ::Ptr{BlasInt},
                                  AI::Ptr{BlasInt}, Absr::Ptr{Float64}, AJB::Ptr{BlasInt},
-                                 AIB::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AIB::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_dcsrcoo(job, n, Acsr, AJR, AIR, nnz, Acoo, ir, jc, info)
     @ccall libmkl_rt.mkl_dcsrcoo(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float64},
-                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                  Acoo::Ptr{Float64}, ir::Ptr{BlasInt}, jc::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_ddnscsr(job, m, n, Adns, lda, Acsr, AJ, AI, info)
     @ccall libmkl_rt.mkl_ddnscsr(job::Ref{BlasInt}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                  Adns::Ptr{Float64}, lda::Ref{BlasInt}, Acsr::Ptr{Float64},
-                                 AJ::Ptr{BlasInt}, AI::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ::Ptr{BlasInt}, AI::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_dcsrcsc(job, n, Acsr, AJ0, AI0, Acsc, AJ1, AI1, info)
     @ccall libmkl_rt.mkl_dcsrcsc(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Acsc::Ptr{Float64},
-                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_dcsrdia(job, n, Acsr, AJ0, AI0, Adia, ndiag, distance, idiag, Acsr_rem,
                      AJ0_rem, AI0_rem, info)
     @ccall libmkl_rt.mkl_dcsrdia(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Adia::Ptr{Float64},
-                                 ndiag::Ptr{BlasInt}, distance::Ptr{BlasInt}, idiag::Ptr{BlasInt},
+                                 ndiag::Ref{BlasInt}, distance::Ptr{BlasInt}, idiag::Ref{BlasInt},
                                  Acsr_rem::Ref{Float64}, AJ0_rem::Ref{BlasInt},
-                                 AI0_rem::Ref{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AI0_rem::Ref{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_dcsrsky(job, n, Acsr, AJ0, AI0, Asky, pointers, info)
     @ccall libmkl_rt.mkl_dcsrsky(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Asky::Ptr{Float64},
-                                 pointers::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 pointers::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_scsrbsr(job, m, mblk, ldAbsr, Acsr, AJ, AI, Absr, AJB, AIB, info)
     @ccall libmkl_rt.mkl_scsrbsr(job::Ref{BlasInt}, m::Ref{BlasInt}, mblk::Ref{BlasInt},
-                                 ldAbsr::Ptr{BlasInt}, Acsr::Ptr{Float32}, AJ::Ptr{BlasInt},
+                                 ldAbsr::Ref{BlasInt}, Acsr::Ptr{Float32}, AJ::Ptr{BlasInt},
                                  AI::Ptr{BlasInt}, Absr::Ptr{Float32}, AJB::Ptr{BlasInt},
-                                 AIB::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AIB::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_scsrcoo(job, n, Acsr, AJR, AIR, nnz, Acoo, ir, jc, info)
     @ccall libmkl_rt.mkl_scsrcoo(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float32},
-                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                  Acoo::Ptr{Float32}, ir::Ptr{BlasInt}, jc::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_sdnscsr(job, m, n, Adns, lda, Acsr, AJ, AI, info)
     @ccall libmkl_rt.mkl_sdnscsr(job::Ref{BlasInt}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                  Adns::Ptr{Float32}, lda::Ref{BlasInt}, Acsr::Ptr{Float32},
-                                 AJ::Ptr{BlasInt}, AI::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ::Ptr{BlasInt}, AI::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_scsrcsc(job, n, Acsr, AJ0, AI0, Acsc, AJ1, AI1, info)
     @ccall libmkl_rt.mkl_scsrcsc(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Acsc::Ptr{Float32},
-                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_scsrdia(job, n, Acsr, AJ0, AI0, Adia, ndiag, distance, idiag, Acsr_rem,
                      AJ0_rem, AI0_rem, info)
     @ccall libmkl_rt.mkl_scsrdia(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Adia::Ptr{Float32},
-                                 ndiag::Ptr{BlasInt}, distance::Ptr{BlasInt}, idiag::Ptr{BlasInt},
+                                 ndiag::Ref{BlasInt}, distance::Ptr{BlasInt}, idiag::Ref{BlasInt},
                                  Acsr_rem::Ref{Float32}, AJ0_rem::Ref{BlasInt},
-                                 AI0_rem::Ref{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AI0_rem::Ref{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_scsrsky(job, n, Acsr, AJ0, AI0, Asky, pointers, info)
     @ccall libmkl_rt.mkl_scsrsky(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Asky::Ptr{Float32},
-                                 pointers::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 pointers::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_ccsrbsr(job, m, mblk, ldAbsr, Acsr, AJ, AI, Absr, AJB, AIB, info)
     @ccall libmkl_rt.mkl_ccsrbsr(job::Ref{BlasInt}, m::Ref{BlasInt}, mblk::Ref{BlasInt},
-                                 ldAbsr::Ptr{BlasInt}, Acsr::Ptr{ComplexF32}, AJ::Ptr{BlasInt},
+                                 ldAbsr::Ref{BlasInt}, Acsr::Ptr{ComplexF32}, AJ::Ptr{BlasInt},
                                  AI::Ptr{BlasInt}, Absr::Ptr{ComplexF32}, AJB::Ptr{BlasInt},
-                                 AIB::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AIB::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_ccsrcoo(job, n, Acsr, AJR, AIR, nnz, Acoo, ir, jc, info)
     @ccall libmkl_rt.mkl_ccsrcoo(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF32},
-                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                  Acoo::Ptr{ComplexF32}, ir::Ptr{BlasInt}, jc::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_cdnscsr(job, m, n, Adns, lda, Acsr, AJ, AI, info)
     @ccall libmkl_rt.mkl_cdnscsr(job::Ref{BlasInt}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                  Adns::Ptr{ComplexF32}, lda::Ref{BlasInt},
                                  Acsr::Ptr{ComplexF32}, AJ::Ptr{BlasInt}, AI::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_ccsrcsc(job, n, Acsr, AJ0, AI0, Acsc, AJ1, AI1, info)
     @ccall libmkl_rt.mkl_ccsrcsc(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Acsc::Ptr{ComplexF32},
-                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_ccsrdia(job, n, Acsr, AJ0, AI0, Adia, ndiag, distance, idiag, Acsr_rem,
                      AJ0_rem, AI0_rem, info)
     @ccall libmkl_rt.mkl_ccsrdia(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Adia::Ptr{ComplexF32},
-                                 ndiag::Ptr{BlasInt}, distance::Ptr{BlasInt}, idiag::Ptr{BlasInt},
+                                 ndiag::Ref{BlasInt}, distance::Ptr{BlasInt}, idiag::Ref{BlasInt},
                                  Acsr_rem::Ref{ComplexF32}, AJ0_rem::Ref{BlasInt},
-                                 AI0_rem::Ref{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AI0_rem::Ref{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_ccsrsky(job, n, Acsr, AJ0, AI0, Asky, pointers, info)
     @ccall libmkl_rt.mkl_ccsrsky(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Asky::Ptr{ComplexF32},
-                                 pointers::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 pointers::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_zcsrbsr(job, m, mblk, ldAbsr, Acsr, AJ, AI, Absr, AJB, AIB, info)
     @ccall libmkl_rt.mkl_zcsrbsr(job::Ref{BlasInt}, m::Ref{BlasInt}, mblk::Ref{BlasInt},
-                                 ldAbsr::Ptr{BlasInt}, Acsr::Ptr{ComplexF64}, AJ::Ptr{BlasInt},
+                                 ldAbsr::Ref{BlasInt}, Acsr::Ptr{ComplexF64}, AJ::Ptr{BlasInt},
                                  AI::Ptr{BlasInt}, Absr::Ptr{ComplexF64}, AJB::Ptr{BlasInt},
-                                 AIB::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AIB::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_zcsrcoo(job, n, Acsr, AJR, AIR, nnz, Acoo, ir, jc, info)
     @ccall libmkl_rt.mkl_zcsrcoo(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF64},
-                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                  Acoo::Ptr{ComplexF64}, ir::Ptr{BlasInt}, jc::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_zdnscsr(job, m, n, Adns, lda, Acsr, AJ, AI, info)
     @ccall libmkl_rt.mkl_zdnscsr(job::Ref{BlasInt}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                  Adns::Ptr{ComplexF64}, lda::Ref{BlasInt},
                                  Acsr::Ptr{ComplexF64}, AJ::Ptr{BlasInt}, AI::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_zcsrcsc(job, n, Acsr, AJ0, AI0, Acsc, AJ1, AI1, info)
     @ccall libmkl_rt.mkl_zcsrcsc(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Acsc::Ptr{ComplexF64},
-                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_zcsrdia(job, n, Acsr, AJ0, AI0, Adia, ndiag, distance, idiag, Acsr_rem,
                      AJ0_rem, AI0_rem, info)
     @ccall libmkl_rt.mkl_zcsrdia(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Adia::Ptr{ComplexF64},
-                                 ndiag::Ptr{BlasInt}, distance::Ptr{BlasInt}, idiag::Ptr{BlasInt},
+                                 ndiag::Ref{BlasInt}, distance::Ptr{BlasInt}, idiag::Ref{BlasInt},
                                  Acsr_rem::Ref{ComplexF64}, AJ0_rem::Ref{BlasInt},
-                                 AI0_rem::Ref{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AI0_rem::Ref{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_zcsrsky(job, n, Acsr, AJ0, AI0, Asky, pointers, info)
     @ccall libmkl_rt.mkl_zcsrsky(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Asky::Ptr{ComplexF64},
-                                 pointers::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 pointers::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_DCSRBSR(job, m, mblk, ldAbsr, Acsr, AJ, AI, Absr, AJB, AIB, info)
     @ccall libmkl_rt.MKL_DCSRBSR(job::Ref{BlasInt}, m::Ref{BlasInt}, mblk::Ref{BlasInt},
-                                 ldAbsr::Ptr{BlasInt}, Acsr::Ptr{Float64}, AJ::Ptr{BlasInt},
+                                 ldAbsr::Ref{BlasInt}, Acsr::Ptr{Float64}, AJ::Ptr{BlasInt},
                                  AI::Ptr{BlasInt}, Absr::Ptr{Float64}, AJB::Ptr{BlasInt},
-                                 AIB::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AIB::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_DCSRCOO(job, n, Acsr, AJR, AIR, nnz, Acoo, ir, jc, info)
     @ccall libmkl_rt.MKL_DCSRCOO(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float64},
-                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                  Acoo::Ptr{Float64}, ir::Ptr{BlasInt}, jc::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_DDNSCSR(job, m, n, Adns, lda, Acsr, AJ, AI, info)
     @ccall libmkl_rt.MKL_DDNSCSR(job::Ref{BlasInt}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                  Adns::Ptr{Float64}, lda::Ref{BlasInt}, Acsr::Ptr{Float64},
-                                 AJ::Ptr{BlasInt}, AI::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ::Ptr{BlasInt}, AI::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_DCSRCSC(job, n, Acsr, AJ0, AI0, Acsc, AJ1, AI1, info)
     @ccall libmkl_rt.MKL_DCSRCSC(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Acsc::Ptr{Float64},
-                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_DCSRDIA(job, n, Acsr, AJ0, AI0, Adia, ndiag, distance, idiag, Acsr_rem,
                      AJ0_rem, AI0_rem, info)
     @ccall libmkl_rt.MKL_DCSRDIA(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Adia::Ptr{Float64},
-                                 ndiag::Ptr{BlasInt}, distance::Ptr{BlasInt}, idiag::Ptr{BlasInt},
+                                 ndiag::Ref{BlasInt}, distance::Ptr{BlasInt}, idiag::Ref{BlasInt},
                                  Acsr_rem::Ref{Float64}, AJ0_rem::Ref{BlasInt},
-                                 AI0_rem::Ref{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AI0_rem::Ref{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_DCSRSKY(job, n, Acsr, AJ0, AI0, Asky, pointers, info)
     @ccall libmkl_rt.MKL_DCSRSKY(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Asky::Ptr{Float64},
-                                 pointers::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 pointers::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_SCSRBSR(job, m, mblk, ldAbsr, Acsr, AJ, AI, Absr, AJB, AIB, info)
     @ccall libmkl_rt.MKL_SCSRBSR(job::Ref{BlasInt}, m::Ref{BlasInt}, mblk::Ref{BlasInt},
-                                 ldAbsr::Ptr{BlasInt}, Acsr::Ptr{Float32}, AJ::Ptr{BlasInt},
+                                 ldAbsr::Ref{BlasInt}, Acsr::Ptr{Float32}, AJ::Ptr{BlasInt},
                                  AI::Ptr{BlasInt}, Absr::Ptr{Float32}, AJB::Ptr{BlasInt},
-                                 AIB::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AIB::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_SCSRCOO(job, n, Acsr, AJR, AIR, nnz, Acoo, ir, jc, info)
     @ccall libmkl_rt.MKL_SCSRCOO(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float32},
-                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                  Acoo::Ptr{Float32}, ir::Ptr{BlasInt}, jc::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_SDNSCSR(job, m, n, Adns, lda, Acsr, AJ, AI, info)
     @ccall libmkl_rt.MKL_SDNSCSR(job::Ref{BlasInt}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                  Adns::Ptr{Float32}, lda::Ref{BlasInt}, Acsr::Ptr{Float32},
-                                 AJ::Ptr{BlasInt}, AI::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ::Ptr{BlasInt}, AI::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_SCSRCSC(job, n, Acsr, AJ0, AI0, Acsc, AJ1, AI1, info)
     @ccall libmkl_rt.MKL_SCSRCSC(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Acsc::Ptr{Float32},
-                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_SCSRDIA(job, n, Acsr, AJ0, AI0, Adia, ndiag, distance, idiag, Acsr_rem,
                      AJ0_rem, AI0_rem, info)
     @ccall libmkl_rt.MKL_SCSRDIA(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Adia::Ptr{Float32},
-                                 ndiag::Ptr{BlasInt}, distance::Ptr{BlasInt}, idiag::Ptr{BlasInt},
+                                 ndiag::Ref{BlasInt}, distance::Ptr{BlasInt}, idiag::Ref{BlasInt},
                                  Acsr_rem::Ref{Float32}, AJ0_rem::Ref{BlasInt},
-                                 AI0_rem::Ref{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AI0_rem::Ref{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_SCSRSKY(job, n, Acsr, AJ0, AI0, Asky, pointers, info)
     @ccall libmkl_rt.MKL_SCSRSKY(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{Float32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Asky::Ptr{Float32},
-                                 pointers::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 pointers::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_CCSRBSR(job, m, mblk, ldAbsr, Acsr, AJ, AI, Absr, AJB, AIB, info)
     @ccall libmkl_rt.MKL_CCSRBSR(job::Ref{BlasInt}, m::Ref{BlasInt}, mblk::Ref{BlasInt},
-                                 ldAbsr::Ptr{BlasInt}, Acsr::Ptr{ComplexF32}, AJ::Ptr{BlasInt},
+                                 ldAbsr::Ref{BlasInt}, Acsr::Ptr{ComplexF32}, AJ::Ptr{BlasInt},
                                  AI::Ptr{BlasInt}, Absr::Ptr{ComplexF32}, AJB::Ptr{BlasInt},
-                                 AIB::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AIB::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_CCSRCOO(job, n, Acsr, AJR, AIR, nnz, Acoo, ir, jc, info)
     @ccall libmkl_rt.MKL_CCSRCOO(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF32},
-                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                  Acoo::Ptr{ComplexF32}, ir::Ptr{BlasInt}, jc::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_CDNSCSR(job, m, n, Adns, lda, Acsr, AJ, AI, info)
     @ccall libmkl_rt.MKL_CDNSCSR(job::Ref{BlasInt}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                  Adns::Ptr{ComplexF32}, lda::Ref{BlasInt},
                                  Acsr::Ptr{ComplexF32}, AJ::Ptr{BlasInt}, AI::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_CCSRCSC(job, n, Acsr, AJ0, AI0, Acsc, AJ1, AI1, info)
     @ccall libmkl_rt.MKL_CCSRCSC(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Acsc::Ptr{ComplexF32},
-                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_CCSRDIA(job, n, Acsr, AJ0, AI0, Adia, ndiag, distance, idiag, Acsr_rem,
                      AJ0_rem, AI0_rem, info)
     @ccall libmkl_rt.MKL_CCSRDIA(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Adia::Ptr{ComplexF32},
-                                 ndiag::Ptr{BlasInt}, distance::Ptr{BlasInt}, idiag::Ptr{BlasInt},
+                                 ndiag::Ref{BlasInt}, distance::Ptr{BlasInt}, idiag::Ref{BlasInt},
                                  Acsr_rem::Ref{ComplexF32}, AJ0_rem::Ref{BlasInt},
-                                 AI0_rem::Ref{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AI0_rem::Ref{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_CCSRSKY(job, n, Acsr, AJ0, AI0, Asky, pointers, info)
     @ccall libmkl_rt.MKL_CCSRSKY(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF32},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Asky::Ptr{ComplexF32},
-                                 pointers::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 pointers::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_ZCSRBSR(job, m, mblk, ldAbsr, Acsr, AJ, AI, Absr, AJB, AIB, info)
     @ccall libmkl_rt.MKL_ZCSRBSR(job::Ref{BlasInt}, m::Ref{BlasInt}, mblk::Ref{BlasInt},
-                                 ldAbsr::Ptr{BlasInt}, Acsr::Ptr{ComplexF64}, AJ::Ptr{BlasInt},
+                                 ldAbsr::Ref{BlasInt}, Acsr::Ptr{ComplexF64}, AJ::Ptr{BlasInt},
                                  AI::Ptr{BlasInt}, Absr::Ptr{ComplexF64}, AJB::Ptr{BlasInt},
-                                 AIB::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AIB::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_ZCSRCOO(job, n, Acsr, AJR, AIR, nnz, Acoo, ir, jc, info)
     @ccall libmkl_rt.MKL_ZCSRCOO(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF64},
-                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ptr{BlasInt},
+                                 AJR::Ptr{BlasInt}, AIR::Ptr{BlasInt}, nnz::Ref{BlasInt},
                                  Acoo::Ptr{ComplexF64}, ir::Ptr{BlasInt}, jc::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_ZDNSCSR(job, m, n, Adns, lda, Acsr, AJ, AI, info)
     @ccall libmkl_rt.MKL_ZDNSCSR(job::Ref{BlasInt}, m::Ref{BlasInt}, n::Ref{BlasInt},
                                  Adns::Ptr{ComplexF64}, lda::Ref{BlasInt},
                                  Acsr::Ptr{ComplexF64}, AJ::Ptr{BlasInt}, AI::Ptr{BlasInt},
-                                 info::Ptr{BlasInt})::Cvoid
+                                 info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_ZCSRCSC(job, n, Acsr, AJ0, AI0, Acsc, AJ1, AI1, info)
     @ccall libmkl_rt.MKL_ZCSRCSC(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Acsc::Ptr{ComplexF64},
-                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AJ1::Ptr{BlasInt}, AI1::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_ZCSRDIA(job, n, Acsr, AJ0, AI0, Adia, ndiag, distance, idiag, Acsr_rem,
                      AJ0_rem, AI0_rem, info)
     @ccall libmkl_rt.MKL_ZCSRDIA(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Adia::Ptr{ComplexF64},
-                                 ndiag::Ptr{BlasInt}, distance::Ptr{BlasInt}, idiag::Ptr{BlasInt},
+                                 ndiag::Ref{BlasInt}, distance::Ptr{BlasInt}, idiag::Ref{BlasInt},
                                  Acsr_rem::Ref{ComplexF64}, AJ0_rem::Ref{BlasInt},
-                                 AI0_rem::Ref{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 AI0_rem::Ref{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function MKL_ZCSRSKY(job, n, Acsr, AJ0, AI0, Asky, pointers, info)
     @ccall libmkl_rt.MKL_ZCSRSKY(job::Ref{BlasInt}, n::Ref{BlasInt}, Acsr::Ptr{ComplexF64},
                                  AJ0::Ptr{BlasInt}, AI0::Ptr{BlasInt}, Asky::Ptr{ComplexF64},
-                                 pointers::Ptr{BlasInt}, info::Ptr{BlasInt})::Cvoid
+                                 pointers::Ptr{BlasInt}, info::Ref{BlasInt})::Cvoid
 end
 
 function mkl_dcsrmultcsr(transa, job, sort, m, n, k, a, ja, ia, b, jb, ib, c, jc, ic,
                          nnzmax, ierr)
-    @ccall libmkl_rt.mkl_dcsrmultcsr(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_dcsrmultcsr(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                      m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                      a::Ptr{Float64}, ja::Ptr{BlasInt}, ia::Ptr{BlasInt},
                                      b::Ptr{Float64}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                      c::Ptr{Float64}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                     nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                     nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 function mkl_dcsrmultd(transa, m, n, k, a, ja, ia, b, jb, ib, c, ldc)
@@ -3035,22 +3031,22 @@ end
 
 function mkl_dcsradd(transa, job, sort, m, n, a, ja, ia, beta, b, jb, ib, c, jc, ic, nnzmax,
                      ierr)
-    @ccall libmkl_rt.mkl_dcsradd(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_dcsradd(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                  m::Ref{BlasInt}, n::Ref{BlasInt}, a::Ptr{Float64}, ja::Ptr{BlasInt},
                                  ia::Ptr{BlasInt}, beta::Ref{Float64}, b::Ptr{Float64},
                                  jb::Ptr{BlasInt}, ib::Ptr{BlasInt}, c::Ptr{Float64},
-                                 jc::Ptr{BlasInt}, ic::Ptr{BlasInt}, nnzmax::Ptr{BlasInt},
-                                 ierr::Ptr{BlasInt})::Cvoid
+                                 jc::Ptr{BlasInt}, ic::Ptr{BlasInt}, nnzmax::Ref{BlasInt},
+                                 ierr::Ref{BlasInt})::Cvoid
 end
 
 function mkl_scsrmultcsr(transa, job, sort, m, n, k, a, ja, ia, b, jb, ib, c, jc, ic,
                          nnzmax, ierr)
-    @ccall libmkl_rt.mkl_scsrmultcsr(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_scsrmultcsr(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                      m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                      a::Ptr{Float32}, ja::Ptr{BlasInt}, ia::Ptr{BlasInt},
                                      b::Ptr{Float32}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                      c::Ptr{Float32}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                     nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                     nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 function mkl_scsrmultd(transa, m, n, k, a, ja, ia, b, jb, ib, c, ldc)
@@ -3062,22 +3058,22 @@ end
 
 function mkl_scsradd(transa, job, sort, m, n, a, ja, ia, beta, b, jb, ib, c, jc, ic, nnzmax,
                      ierr)
-    @ccall libmkl_rt.mkl_scsradd(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_scsradd(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                  m::Ref{BlasInt}, n::Ref{BlasInt}, a::Ptr{Float32}, ja::Ptr{BlasInt},
                                  ia::Ptr{BlasInt}, beta::Ref{Float32}, b::Ptr{Float32},
                                  jb::Ptr{BlasInt}, ib::Ptr{BlasInt}, c::Ptr{Float32},
-                                 jc::Ptr{BlasInt}, ic::Ptr{BlasInt}, nnzmax::Ptr{BlasInt},
-                                 ierr::Ptr{BlasInt})::Cvoid
+                                 jc::Ptr{BlasInt}, ic::Ptr{BlasInt}, nnzmax::Ref{BlasInt},
+                                 ierr::Ref{BlasInt})::Cvoid
 end
 
 function mkl_ccsrmultcsr(transa, job, sort, m, n, k, a, ja, ia, b, jb, ib, c, jc, ic,
                          nnzmax, ierr)
-    @ccall libmkl_rt.mkl_ccsrmultcsr(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_ccsrmultcsr(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                      m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                      a::Ptr{ComplexF32}, ja::Ptr{BlasInt}, ia::Ptr{BlasInt},
                                      b::Ptr{ComplexF32}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                      c::Ptr{ComplexF32}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                     nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                     nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 function mkl_ccsrmultd(transa, m, n, k, a, ja, ia, b, jb, ib, c, ldc)
@@ -3090,22 +3086,22 @@ end
 
 function mkl_ccsradd(transa, job, sort, m, n, a, ja, ia, beta, b, jb, ib, c, jc, ic, nnzmax,
                      ierr)
-    @ccall libmkl_rt.mkl_ccsradd(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_ccsradd(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                  m::Ref{BlasInt}, n::Ref{BlasInt}, a::Ptr{ComplexF32},
                                  ja::Ptr{BlasInt}, ia::Ptr{BlasInt}, beta::Ref{ComplexF32},
                                  b::Ptr{ComplexF32}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                  c::Ptr{ComplexF32}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                 nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                 nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 function mkl_zcsrmultcsr(transa, job, sort, m, n, k, a, ja, ia, b, jb, ib, c, jc, ic,
                          nnzmax, ierr)
-    @ccall libmkl_rt.mkl_zcsrmultcsr(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_zcsrmultcsr(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                      m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                      a::Ptr{ComplexF64}, ja::Ptr{BlasInt}, ia::Ptr{BlasInt},
                                      b::Ptr{ComplexF64}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                      c::Ptr{ComplexF64}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                     nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                     nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 function mkl_zcsrmultd(transa, m, n, k, a, ja, ia, b, jb, ib, c, ldc)
@@ -3118,22 +3114,22 @@ end
 
 function mkl_zcsradd(transa, job, sort, m, n, a, ja, ia, beta, b, jb, ib, c, jc, ic, nnzmax,
                      ierr)
-    @ccall libmkl_rt.mkl_zcsradd(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.mkl_zcsradd(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                  m::Ref{BlasInt}, n::Ref{BlasInt}, a::Ptr{ComplexF64},
                                  ja::Ptr{BlasInt}, ia::Ptr{BlasInt}, beta::Ref{ComplexF64},
                                  b::Ptr{ComplexF64}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                  c::Ptr{ComplexF64}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                 nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                 nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 function MKL_DCSRMULTCSR(transa, job, sort, m, n, k, a, ja, ia, b, jb, ib, c, jc, ic,
                          nnzmax, ierr)
-    @ccall libmkl_rt.MKL_DCSRMULTCSR(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_DCSRMULTCSR(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                      m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                      a::Ptr{Float64}, ja::Ptr{BlasInt}, ia::Ptr{BlasInt},
                                      b::Ptr{Float64}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                      c::Ptr{Float64}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                     nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                     nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 function MKL_DCSRMULTD(transa, m, n, k, a, ja, ia, b, jb, ib, c, ldc)
@@ -3145,22 +3141,22 @@ end
 
 function MKL_DCSRADD(transa, job, sort, m, n, a, ja, ia, beta, b, jb, ib, c, jc, ic, nnzmax,
                      ierr)
-    @ccall libmkl_rt.MKL_DCSRADD(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_DCSRADD(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                  m::Ref{BlasInt}, n::Ref{BlasInt}, a::Ptr{Float64}, ja::Ptr{BlasInt},
                                  ia::Ptr{BlasInt}, beta::Ref{Float64}, b::Ptr{Float64},
                                  jb::Ptr{BlasInt}, ib::Ptr{BlasInt}, c::Ptr{Float64},
-                                 jc::Ptr{BlasInt}, ic::Ptr{BlasInt}, nnzmax::Ptr{BlasInt},
-                                 ierr::Ptr{BlasInt})::Cvoid
+                                 jc::Ptr{BlasInt}, ic::Ptr{BlasInt}, nnzmax::Ref{BlasInt},
+                                 ierr::Ref{BlasInt})::Cvoid
 end
 
 function MKL_SCSRMULTCSR(transa, job, sort, m, n, k, a, ja, ia, b, jb, ib, c, jc, ic,
                          nnzmax, ierr)
-    @ccall libmkl_rt.MKL_SCSRMULTCSR(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_SCSRMULTCSR(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                      m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                      a::Ptr{Float32}, ja::Ptr{BlasInt}, ia::Ptr{BlasInt},
                                      b::Ptr{Float32}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                      c::Ptr{Float32}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                     nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                     nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 function MKL_SCSRMULTD(transa, m, n, k, a, ja, ia, b, jb, ib, c, ldc)
@@ -3172,22 +3168,22 @@ end
 
 function MKL_SCSRADD(transa, job, sort, m, n, a, ja, ia, beta, b, jb, ib, c, jc, ic, nnzmax,
                      ierr)
-    @ccall libmkl_rt.MKL_SCSRADD(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_SCSRADD(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                  m::Ref{BlasInt}, n::Ref{BlasInt}, a::Ptr{Float32}, ja::Ptr{BlasInt},
                                  ia::Ptr{BlasInt}, beta::Ref{Float32}, b::Ptr{Float32},
                                  jb::Ptr{BlasInt}, ib::Ptr{BlasInt}, c::Ptr{Float32},
-                                 jc::Ptr{BlasInt}, ic::Ptr{BlasInt}, nnzmax::Ptr{BlasInt},
-                                 ierr::Ptr{BlasInt})::Cvoid
+                                 jc::Ptr{BlasInt}, ic::Ptr{BlasInt}, nnzmax::Ref{BlasInt},
+                                 ierr::Ref{BlasInt})::Cvoid
 end
 
 function MKL_CCSRMULTCSR(transa, job, sort, m, n, k, a, ja, ia, b, jb, ib, c, jc, ic,
                          nnzmax, ierr)
-    @ccall libmkl_rt.MKL_CCSRMULTCSR(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CCSRMULTCSR(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                      m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                      a::Ptr{ComplexF32}, ja::Ptr{BlasInt}, ia::Ptr{BlasInt},
                                      b::Ptr{ComplexF32}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                      c::Ptr{ComplexF32}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                     nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                     nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 function MKL_CCSRMULTD(transa, m, n, k, a, ja, ia, b, jb, ib, c, ldc)
@@ -3200,22 +3196,22 @@ end
 
 function MKL_CCSRADD(transa, job, sort, m, n, a, ja, ia, beta, b, jb, ib, c, jc, ic, nnzmax,
                      ierr)
-    @ccall libmkl_rt.MKL_CCSRADD(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_CCSRADD(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                  m::Ref{BlasInt}, n::Ref{BlasInt}, a::Ptr{ComplexF32},
                                  ja::Ptr{BlasInt}, ia::Ptr{BlasInt}, beta::Ref{ComplexF32},
                                  b::Ptr{ComplexF32}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                  c::Ptr{ComplexF32}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                 nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                 nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 function MKL_ZCSRMULTCSR(transa, job, sort, m, n, k, a, ja, ia, b, jb, ib, c, jc, ic,
                          nnzmax, ierr)
-    @ccall libmkl_rt.MKL_ZCSRMULTCSR(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_ZCSRMULTCSR(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                      m::Ref{BlasInt}, n::Ref{BlasInt}, k::Ref{BlasInt},
                                      a::Ptr{ComplexF64}, ja::Ptr{BlasInt}, ia::Ptr{BlasInt},
                                      b::Ptr{ComplexF64}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                      c::Ptr{ComplexF64}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                     nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                     nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 function MKL_ZCSRMULTD(transa, m, n, k, a, ja, ia, b, jb, ib, c, ldc)
@@ -3228,12 +3224,12 @@ end
 
 function MKL_ZCSRADD(transa, job, sort, m, n, a, ja, ia, beta, b, jb, ib, c, jc, ic, nnzmax,
                      ierr)
-    @ccall libmkl_rt.MKL_ZCSRADD(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ptr{BlasInt},
+    @ccall libmkl_rt.MKL_ZCSRADD(transa::Ref{UInt8}, job::Ref{BlasInt}, sort::Ref{BlasInt},
                                  m::Ref{BlasInt}, n::Ref{BlasInt}, a::Ptr{ComplexF64},
                                  ja::Ptr{BlasInt}, ia::Ptr{BlasInt}, beta::Ref{ComplexF64},
                                  b::Ptr{ComplexF64}, jb::Ptr{BlasInt}, ib::Ptr{BlasInt},
                                  c::Ptr{ComplexF64}, jc::Ptr{BlasInt}, ic::Ptr{BlasInt},
-                                 nnzmax::Ptr{BlasInt}, ierr::Ptr{BlasInt})::Cvoid
+                                 nnzmax::Ref{BlasInt}, ierr::Ref{BlasInt})::Cvoid
 end
 
 const sparse_status_t = UInt32
@@ -3461,7 +3457,7 @@ end
 
 function mkl_sparse_get_error_info(A, info)
     @ccall libmkl_rt.mkl_sparse_get_error_info(A::sparse_matrix_t,
-                                               info::Ptr{BlasInt})::sparse_status_t
+                                               info::Ref{BlasInt})::sparse_status_t
 end
 
 function mkl_sparse_convert_csr(source, operation, dest)
@@ -4144,7 +4140,6 @@ const MKL_INT = BlasInt
 
 const MKL_UINT = Cuint
 
-# Skipping MacroDefinition: MKL_LONG long int
 
 const MKL_UINT8 = Cuchar
 
@@ -4220,4 +4215,3 @@ const MKL_CBWR_ERR_MODE_CHANGE_FAILURE = -8
 
 const MKL_CBWR_SSE3 = 5
 
-# Skipping MacroDefinition: MKL_DEPRECATED __attribute__ ( ( deprecated ) )

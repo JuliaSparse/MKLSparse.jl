@@ -17,10 +17,20 @@ function rewrite!(path::String)
   for (keys, vals) in cstring_modifications
     text = replace(text, keys => vals)
   end
-  for argument in ("m", "n", "k", "job", "alpha", "beta", "lda", "ldb", "ldc") 
+  # Note: `job` and `idiag` are vectors in some cases, we must be careful with these two arguments.
+  for argument in ("job", "m", "n", "k", "job", "nnz", "nnzmax", "lval",
+                   "lb", "mblk", "idiag", "ldabsr", "ndiag", "ldAbsr", "sort",
+                   "alpha", "beta", "lda", "ldb", "ldc", "ierr", "info")
     for T in ("BlasInt", "Float32", "Float64", "ComplexF32", "ComplexF64")
       text = replace(text, "$argument::Ptr{$T}" => "$argument::Ref{$T}")
     end
   end
+  # Remove comments in libmklsparse.jl
+  text = replace(text, "# typedef void ( * sgemm_jit_kernel_t ) ( void * , float * , float * , float * )\n" => "")
+  text = replace(text, "# typedef void ( * dgemm_jit_kernel_t ) ( void * , double * , double * , double * )\n" => "")
+  text = replace(text, "# typedef void ( * cgemm_jit_kernel_t ) ( void * , ComplexF32 * , ComplexF32 * , ComplexF32 * )\n" => "")
+  text = replace(text, "# typedef void ( * zgemm_jit_kernel_t ) ( void * , ComplexF64 * , ComplexF64 * , ComplexF64 * )\n" => "")
+  text = replace(text, "# Skipping MacroDefinition: MKL_LONG long int\n" => "")
+  text = replace(text, "# Skipping MacroDefinition: MKL_DEPRECATED __attribute__ ( ( deprecated ) )\n" => "")
   write(path, text)
 end
