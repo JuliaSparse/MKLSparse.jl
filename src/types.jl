@@ -1,5 +1,30 @@
 # MKL sparse types
 
+function mkl_type_specifier(T::Symbol)
+    if T == :Float32
+        's'
+    elseif T == :Float64
+        'd'
+    elseif T == :ComplexF32
+        'c'
+    elseif T == :ComplexF64
+        'z'
+    else
+        throw(ArgumentError("Unsupported numeric type $T"))
+    end
+end
+
+matrixdescra(A::LowerTriangular)     = matrix_descr('T','L','N')
+matrixdescra(A::UpperTriangular)     = matrix_descr('T','U','N')
+matrixdescra(A::Diagonal)            = matrix_descr('D','F','N')
+matrixdescra(A::UnitLowerTriangular) = matrix_descr('T','L','U')
+matrixdescra(A::UnitUpperTriangular) = matrix_descr('T','U','U')
+matrixdescra(A::Symmetric)           = matrix_descr('S', A.uplo, 'N')
+matrixdescra(A::Hermitian)           = matrix_descr('H', A.uplo, 'N')
+matrixdescra(A::SparseMatrixCSC)     = matrix_descr('G', 'F', 'N')
+matrixdescra(A::Transpose)           = matrixdescra(A.parent)
+matrixdescra(A::Adjoint)             = matrixdescra(A.parent)
+
 function Base.convert(::Type{sparse_operation_t}, trans::Char)
     if trans == 'N'
         SPARSE_OPERATION_NON_TRANSPOSE
