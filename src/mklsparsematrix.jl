@@ -18,6 +18,9 @@ mutable struct SparseMatrixCSR{Tv,Ti} <: AbstractSparseMatrix{Tv,Ti}
   nzval::Vector{Tv}
 end
 
+Base.size(A::MKLSparse.SparseMatrixCOO) = (A.m, A.n)
+Base.size(A::MKLSparse.SparseMatrixCSR) = (A.m, A.n)
+
 SparseArrays.nnz(A::MKLSparse.SparseMatrixCOO) = length(A.vals)
 SparseArrays.nnz(A::MKLSparse.SparseMatrixCSR) = length(A.nzval)
 
