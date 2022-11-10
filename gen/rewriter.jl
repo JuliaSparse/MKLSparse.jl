@@ -4,11 +4,6 @@ type_modifications = Dict("Cint"            => "BlasInt",
                           "MKL_Complex8"    => "ComplexF32",
                           "MKL_Complex16"   => "ComplexF64")
 
-cstring_modifications = Dict("transa::Cstring"    => "transa::Ref{UInt8}",
-                             "uplo::Cstring"      => "uplo::Ref{UInt8}",
-                             "diag::Cstring"      => "diag::Ref{UInt8}",
-                             "matdescra::Cstring" => "matdescra::Ptr{UInt8}")
-
 function rewrite!(path::String)
   text = read(path, String)
   for (keys, vals) in type_modifications
@@ -24,6 +19,9 @@ function rewrite!(path::String)
     for T in ("BlasInt", "Float32", "Float64", "ComplexF32", "ComplexF64")
       text = replace(text, "$argument::Ptr{$T}" => "$argument::Ref{$T}")
     end
+  end
+  for argument in ("transa", "uplo", "diag")
+    text = replace(text, "$argument::Ptr{Cchar}" => "$argument::Ref{Cchar}")
   end
   # Remove comments in libmklsparse.jl
   text = replace(text, "# typedef void ( * sgemm_jit_kernel_t ) ( void * , float * , float * , float * )\n" => "")

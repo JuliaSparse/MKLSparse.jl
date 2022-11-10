@@ -1,4 +1,5 @@
 # Script to parse MKL headers and generate Julia wrappers.
+using MKL_Headers_jll
 using Clang
 using Clang.Generators
 using JuliaFormatter
@@ -9,7 +10,7 @@ function wrapper(name::String, headers::Vector{String}, optimized::Bool=false)
 
   @info "Wrapping $name"
   cd(@__DIR__)
-  include_dir = joinpath(@__DIR__, "mkl-include-2022.2.0-intel_8748", "include")
+  include_dir = joinpath(MKL_Headers_jll.artifact_dir, "include")
 
   options = load_options(joinpath(@__DIR__, "mkl.toml"))
   ignore_list = ["MKL_Complex8", "MKL_Complex16", "MKLVersion", "MKL_INT64",
@@ -38,8 +39,7 @@ function wrapper(name::String, headers::Vector{String}, optimized::Bool=false)
 end
 
 function main(; optimized::Bool=false)
-  # TODO: Add mkl_spblas.h in the artifact MKL_Headers_jll
-  mkl = joinpath(@__DIR__, "mkl-include-2022.2.0-intel_8748", "include")
+  mkl = joinpath(MKL_Headers_jll.artifact_dir, "include")
   wrapper("libmklsparse", ["$mkl/mkl_spblas.h", "$mkl/mkl_sparse_qr.h"], optimized)
 end
 
