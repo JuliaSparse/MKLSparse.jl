@@ -7,4 +7,4 @@ output_file_path = "../src/libmklsparse.jl"
 [codegen]
 use_julia_bool = true
 use_ccall_macro = true
-always_NUL_terminated_string = true
+always_NUL_terminated_string = false
