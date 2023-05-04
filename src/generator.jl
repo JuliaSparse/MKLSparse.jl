@@ -36,7 +36,7 @@ mkl_typespec(::Type{T}) where T =
 @inline @generated function mkl_call(::Val{F}, ::Type{T}, args...) where {F, T}
     fname = Symbol(replace(String(F), "T" => mkl_typespec(T)))
     quote
-        __counter[] += 1
+        _log_mklsparse_call($fname)
         $fname(args...)
     end
 end
