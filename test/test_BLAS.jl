@@ -118,7 +118,7 @@ end
         β = rand(T)
 
         # on MacOS nightly Julia b*spA is broken (only the first column is correct)
-        broken_bXspA = Sys.isapple() && (VERSION > v"1.8")
+        broken_bXspA = Sys.isapple() && (VERSION >= v"1.9")
 
         # the VERSION branching is a workaround for @test not supporting broken= before 1.7
         # currently there are no broken pre-1.7 tests, so we just remove broken= for these versions
