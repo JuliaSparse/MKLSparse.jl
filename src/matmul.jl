@@ -48,7 +48,11 @@ for T in (Complex{Float32}, Complex{Float64}, Float32, Float64),
             LinearAlgebra.mul!(C::StridedMatrix{$T}, A::$AT, B::StridedMatrix{$T}, α::Number, β::Number) =
                 cscmm!($tchar, $T(α), describe_and_unwrap(A)..., B, $T(β), C)
 
+            LinearAlgebra.mul!(C::StridedMatrix{$T}, A::StridedMatrix{$T}, B::$AT, α::Number, β::Number) =
+                cscmm!($tchar, $T(α), A, describe_and_unwrap(B)..., $T(β), C)
+
             LinearAlgebra.mul!(C::BT, A::$AT, B::BT) where BT <: $BT = mul!(C, A, B, one($T), zero($T))
+            LinearAlgebra.mul!(C::BT, A::BT, B::$AT) where BT <: $BT = mul!(C, A, B, one($T), zero($T))
 
             Base.:(*)(A::$AT, B::StridedVector{$T}) = mul!(Vector{$T}(undef, size(A, 1)), A, B)
             Base.:(*)(A::$AT, B::StridedMatrix{$T}) = mul!(Matrix{$T}(undef, size(A, 1), size(B, 2)), A, B)

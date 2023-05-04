@@ -119,3 +119,25 @@ function mkl_sparse_create_csc(A::SparseMatrixCSC{T}) where {T <: BlasFloat}
     return h[]
 end
 
+# ColMajorRes = ColMajorMtx*SparseMatrixCSC is implemented via RowMajorRes = SparseMatrixCSR*RowMajorMtx Sparse MKL BLAS calls
+
+function cscmm!(transb::Char, α::T,
+                A::StridedMatrix{T},
+                matdescrb::String, B::SparseMatrixCSC{T, BlasInt},
+                β::T, C::StridedMatrix{T}) where {T <: BlasFloat}
+    _check_transa(transb)
+    _check_mat_mult_matvec(C, A, 'N', B, transb)
+    mA, nA = size(A)
+    mC, nC = size(C)
+
+    mklB = mkl_sparse_create_csr(B)
+    res = mkl_call(Val(:mkl_sparse_T_mm), T,
+        convert(sparse_operation_t, transb),
+        α, mklB,
+        convert(matrix_descr, matdescrb), SPARSE_LAYOUT_ROW_MAJOR,
+        A, mC, mA, β, C, mC)
+    delres = mkl_sparse_destroy(mklB)
+    @assert res == SPARSE_STATUS_SUCCESS
+    @assert delres == SPARSE_STATUS_SUCCESS
+    return C
+end

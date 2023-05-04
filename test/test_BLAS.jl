@@ -106,6 +106,39 @@ end
     end
 end
 
+@testset "Matrix{$T} * SparseMatrixCSC{$T}" begin
+    for _ in 1:10
+        spA = sprand(T, 10, 5, 0.5)
+        a = Array(spA)
+        b = rand(T, 12, 10)
+        c = rand(T, 8, 5)
+        ba = rand(T, 12, 5)
+        cta = rand(T, 8, 10)
+        α = rand(T)
+        β = rand(T)
+
+        @test @blas(b*spA) ≈ b*a atol=atol
+        @test @blas(c*spA') ≈ c*a' atol=atol
+        @test @blas(c*transpose(spA)) ≈ c*transpose(a) atol=atol
+
+        @test_throws DimensionMismatch c*spA
+        @test_throws DimensionMismatch b*spA'
+        @test_throws DimensionMismatch b*transpose(spA)
+
+        @test @blas(mul!(similar(ba), b, spA)) ≈ b*a atol=atol
+        @test @blas(mul!(similar(cta), c, spA')) ≈ c*a' atol=atol
+        @test @blas(mul!(similar(cta), c, transpose(spA))) ≈ c*transpose(a) atol=atol
+
+        @test @blas(mul!(copy(ba), b, spA, α, β)) ≈ α*b*a + β*ba atol=atol
+        @test @blas(mul!(copy(cta), c, spA', α, β)) ≈ α*c*a' + β*cta atol=atol
+        @test @blas(mul!(copy(cta), c, transpose(spA), α, β)) ≈ α*c*transpose(a) + β*cta atol=atol
+
+        @test @blas(mul!(copy(ba), b, spA, 1, 1)) ≈ b*a + ba atol=atol
+        @test @blas(mul!(copy(cta), c, transpose(spA), 1, 1)) ≈ c*transpose(a) + cta atol=atol
+        @test @blas(mul!(copy(cta), c, spA', 1, 1)) ≈ c*a' + cta atol=atol
+    end
+end
+
 @testset "SparseTriangular{$T} {* /} Vector{$T}" begin
     for _ in 1:10
         n = rand(50:150)
