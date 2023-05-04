@@ -120,7 +120,13 @@ end
         # on MacOS nightly Julia b*spA is broken (only the first column is correct)
         broken_bXspA = Sys.isapple() && (VERSION > v"1.8")
 
-        @test ≈(@blas(b*spA), b*a, atol=atol) broken=broken_bXspA
+        # the VERSION branching is a workaround for @test not supporting broken= before 1.7
+        # currently there are no broken pre-1.7 tests, so we just remove broken= for these versions
+        if VERSION >= v"1.7"
+            @test @blas(b*spA) ≈ b*a atol=atol broken=broken_bXspA
+        else
+            @test @blas(b*spA) ≈ b*a atol=atol
+        end
         @test @blas(c*spA') ≈ c*a' atol=atol
         @test @blas(c*transpose(spA)) ≈ c*transpose(a) atol=atol
 
@@ -128,15 +134,27 @@ end
         @test_throws DimensionMismatch b*spA'
         @test_throws DimensionMismatch b*transpose(spA)
 
-        @test ≈(@blas(mul!(similar(ba), b, spA)), b*a, atol=atol) broken=broken_bXspA
+        if VERSION >= v"1.7"
+            @test @blas(mul!(similar(ba), b, spA)) ≈ b*a atol=atol broken=broken_bXspA
+        else
+            @test @blas(mul!(similar(ba), b, spA)) ≈ b*a atol=atol
+        end
         @test @blas(mul!(similar(cta), c, spA')) ≈ c*a' atol=atol
         @test @blas(mul!(similar(cta), c, transpose(spA))) ≈ c*transpose(a) atol=atol
 
-        @test ≈(@blas(mul!(copy(ba), b, spA, α, β)), α*b*a + β*ba, atol=atol) broken=broken_bXspA
+        if VERSION >= v"1.7"
+            @test @blas(mul!(copy(ba), b, spA, α, β)) ≈ α*b*a + β*ba atol=atol broken=broken_bXspA
+        else
+            @test @blas(mul!(copy(ba), b, spA, α, β)) ≈ α*b*a + β*ba atol=atol
+        end
         @test @blas(mul!(copy(cta), c, spA', α, β)) ≈ α*c*a' + β*cta atol=atol
         @test @blas(mul!(copy(cta), c, transpose(spA), α, β)) ≈ α*c*transpose(a) + β*cta atol=atol
 
-        @test ≈(@blas(mul!(copy(ba), b, spA, 1, 1)), b*a + ba, atol=atol) broken=broken_bXspA
+        if VERSION >= v"1.7"
+            @test @blas(mul!(copy(ba), b, spA, 1, 1)) ≈ b*a + ba atol=atol broken=broken_bXspA
+        else
+            @test @blas(mul!(copy(ba), b, spA, 1, 1)) ≈ b*a + ba
+        end
         @test @blas(mul!(copy(cta), c, transpose(spA), 1, 1)) ≈ c*transpose(a) + cta atol=atol
         @test @blas(mul!(copy(cta), c, spA', 1, 1)) ≈ c*a' + cta atol=atol
     end
