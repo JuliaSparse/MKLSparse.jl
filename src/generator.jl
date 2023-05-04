@@ -1,43 +1,60 @@
-# The increments to the `__counter` variable is for testing purposes
-
 function _check_transa(t::Char)
     if !(t in ('C', 'N', 'T'))
-        error("transa: is '$t', must be 'N', 'T', or 'C'")
+        throw(ArgumentError("transa: is '$t', must be 'N', 'T', or 'C'"))
     end
 end
 
-mkl_size(t::Char, M::AbstractVecOrMat) = t == 'N' ? size(M) : reverse(size(M))
+# Checks sizes for the multiplication C <- tA[A] * tB[B]
+function _check_mat_mult_matvec(C, A, tA, B, tB)
+    _size(t::Char, M::AbstractMatrix) = t == 'N' ? size(M) : reverse(size(M))
+    _size(t::Char, V::AbstractVector) = t == 'N' ? (size(V, 1), 1) : (1, size(V, 1))
+    _str(M::AbstractMatrix) = string("[", size(M, 1), ", ", size(M, 2), "]")
+    _str(V::AbstractVector) = string("[", size(V, 1), "]")
+    _t(t) = t == 'T' ? "ᵀ" : t == 'C' ? "ᴴ" : t == 'N' ? "" : "ERROR"
 
-
-# Checks sizes for the multiplication C <- A * B
-function _check_mat_mult_matvec(C, A, B, tA)
-    _size(v::AbstractMatrix) = size(v)
-    _size(v::AbstractVector) = (size(v,1), 1)
-    _str(v::AbstractMatrix) = string("[", size(v,1), ", ", size(v,2), "]")
-    _str(v::AbstractVector) = string("[", size(v,1), "]")
-    mA, nA = mkl_size(tA, A)
-    mB, nB = _size(B)
-    mC, nC = _size(C)
+    mA, nA = _size(tA, A)
+    mB, nB = _size(tB, B)
+    mC, nC = _size('N', C)
     if nA != mB || mC != mA || nC != nB
-        t = ""
-        if tA == 'T'; t = ".\'"; end
-        if tA == 'C'; t = "\'"; end
-        str = string("arrays had inconsistent dimensions for C <- A", t, " * B: ", _str(C), " <- ", _str(A), t, " * ", _str(B))
+        str = string("arrays had inconsistent dimensions for C = A", _t(tA), " * B", _t(tB), ": ",
+                     _str(C), " = ", _str(A), _t(tA), " * ", _str(B), _t(tB))
         throw(DimensionMismatch(str))
     end
+end
+
+# MKL convention by annotating the type of numeric arguments in method names
+mkl_typespec(::Type{T}) where T =
+    T == Float32 ? "s" :
+    T == Float64 ? "d" :
+    T == ComplexF32 ? "c" :
+    T == ComplexF64 ? "z" :
+    throw(ArgumentError("Unsupported type $(T)"))
+
+# calls MKL function with the name template F (e.g. :mkl_Tcscmm),
+# with 'T' char replaced by a type-specifier corresponding to the input type T,
+# (e.g. 's' for Float32), so the function called is :mkl_scscmm
+@inline @generated function mkl_call(::Val{F}, ::Type{T}, args...) where {F, T}
+    fname = Symbol(replace(String(F), "T" => mkl_typespec(T)))
+    quote
+        _log_mklsparse_call($fname)
+        $fname(args...)
+    end
+end
+
+# same but doesn't log the call
+@inline @generated function mkl_call_nolog(::Val{F}, ::Type{T}, args...) where {F, T}
+    fname = Symbol(replace(String(F), "T" => mkl_typespec(T)))
+    :($fname(args...))
 end
 
 function cscmv!(transa::Char, α::T, matdescra::String,
                 A::SparseMatrixCSC{T, BlasInt}, x::StridedVector{T},
                 β::T, y::StridedVector{T}) where {T <: BlasFloat}
     _check_transa(transa)
-    _check_mat_mult_matvec(y, A, x, transa)
-    __counter[] += 1
+    _check_mat_mult_matvec(y, A, transa, x, 'N')
 
-    T == Float32    && (mkl_scscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
-    T == Float64    && (mkl_dcscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
-    T == ComplexF32 && (mkl_ccscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
-    T == ComplexF64 && (mkl_zcscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
+    mkl_call(Val(:mkl_Tcscmv), T, transa, A.m, A.n, α, matdescra,
+             A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y)
     return y
 end
 
@@ -45,14 +62,12 @@ function cscmm!(transa::Char, α::T, matdescra::String,
                 A::SparseMatrixCSC{T, BlasInt}, B::StridedMatrix{T},
                 β::T, C::StridedMatrix{T}) where {T <: BlasFloat}
     _check_transa(transa)
-    _check_mat_mult_matvec(C, A, B, transa)
+    _check_mat_mult_matvec(C, A, transa, B, 'N')
     mB, nB = size(B)
     mC, nC = size(C)
-    __counter[] += 1
-    T == Float32    && (mkl_scscmm(transa, A.m, nC, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC))
-    T == Float64    && (mkl_dcscmm(transa, A.m, nC, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC))
-    T == ComplexF32 && (mkl_ccscmm(transa, A.m, nC, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC))
-    T == ComplexF64 && (mkl_zcscmm(transa, A.m, nC, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC))
+
+    mkl_call(Val(:mkl_Tcscmm), T, transa, A.m, nC, A.n, α, matdescra,
+             A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC)
     return C
 end
 
@@ -61,12 +76,10 @@ function cscsv!(transa::Char, α::T, matdescra::String,
                 y::StridedVector{T}) where {T <: BlasFloat}
     n = checksquare(A)
     _check_transa(transa)
-    _check_mat_mult_matvec(y, A, x, transa)
-    __counter[] += 1
-    T == Float32    && (mkl_scscsv(transa, A.m, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y))
-    T == Float64    && (mkl_dcscsv(transa, A.m, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y))
-    T == ComplexF32 && (mkl_ccscsv(transa, A.m, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y))
-    T == ComplexF64 && (mkl_zcscsv(transa, A.m, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y))
+    _check_mat_mult_matvec(y, A, transa, x, 'N')
+
+    mkl_call(Val(:mkl_Tcscsv), T, transa, A.m, α, matdescra,
+             A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y)
     return y
 end
 
@@ -77,11 +90,54 @@ function cscsm!(transa::Char, α::T, matdescra::String,
     mC, nC = size(C)
     n = checksquare(A)
     _check_transa(transa)
-    _check_mat_mult_matvec(C, A, B, transa)
-    __counter[] += 1
-    T == Float32    && (mkl_scscsm(transa, A.n, nC, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC))
-    T == Float64    && (mkl_dcscsm(transa, A.n, nC, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC))
-    T == ComplexF32 && (mkl_ccscsm(transa, A.n, nC, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC))
-    T == ComplexF64 && (mkl_zcscsm(transa, A.n, nC, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC))
+    _check_mat_mult_matvec(C, A, transa, B, 'N')
+
+    mkl_call(Val(:mkl_Tcscsm), T, transa, A.n, nC, α, matdescra,
+             A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC)
+    return C
+end
+
+# creates MKL sparse_matrix handle
+mkl_sparse_create(A::SparseMatrixCSC; as_CSR::Bool=false) =
+    as_CSR ? mkl_sparse_create_csr(A) : mkl_sparse_create_csc(A)
+
+function mkl_sparse_create_csr(A::SparseMatrixCSC{T}) where {T <: BlasFloat}
+    h = Ref{sparse_matrix_t}()
+    res = mkl_call_nolog(Val(:mkl_sparse_T_create_csr), T,
+        h, SPARSE_INDEX_BASE_ONE, A.n, A.m,
+        A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval)
+    @assert res == SPARSE_STATUS_SUCCESS
+    return h[]
+end
+
+function mkl_sparse_create_csc(A::SparseMatrixCSC{T}) where {T <: BlasFloat}
+    h = Ref{sparse_matrix_t}()
+    res = mkl_call_nolog(Val(:mkl_sparse_T_create_csc), T,
+        h, SPARSE_INDEX_BASE_ONE, A.m, A.n,
+        A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval)
+    @assert res == SPARSE_STATUS_SUCCESS
+    return h[]
+end
+
+# ColMajorRes = ColMajorMtx*SparseMatrixCSC is implemented via RowMajorRes = SparseMatrixCSR*RowMajorMtx Sparse MKL BLAS calls
+
+function cscmm!(transb::Char, α::T,
+                A::StridedMatrix{T},
+                matdescrb::String, B::SparseMatrixCSC{T, BlasInt},
+                β::T, C::StridedMatrix{T}) where {T <: BlasFloat}
+    _check_transa(transb)
+    _check_mat_mult_matvec(C, A, 'N', B, transb)
+    mA, nA = size(A)
+    mC, nC = size(C)
+
+    mklB = mkl_sparse_create_csr(B)
+    res = mkl_call(Val(:mkl_sparse_T_mm), T,
+        convert(sparse_operation_t, transb),
+        α, mklB,
+        convert(matrix_descr, matdescrb), SPARSE_LAYOUT_ROW_MAJOR,
+        A, mC, mA, β, C, mC)
+    delres = mkl_sparse_destroy(mklB)
+    @assert res == SPARSE_STATUS_SUCCESS
+    @assert delres == SPARSE_STATUS_SUCCESS
     return C
 end
