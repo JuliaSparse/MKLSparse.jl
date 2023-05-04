@@ -22,17 +22,39 @@ function _check_mat_mult_matvec(C, A, tA, B, tB)
     end
 end
 
+# MKL convention by annotating the type of numeric arguments in method names
+mkl_typespec(::Type{T}) where T =
+    T == Float32 ? "s" :
+    T == Float64 ? "d" :
+    T == ComplexF32 ? "c" :
+    T == ComplexF64 ? "z" :
+    throw(ArgumentError("Unsupported type $(T)"))
+
+# calls MKL function with the name template F (e.g. :mkl_Tcscmm),
+# with 'T' char replaced by a type-specifier corresponding to the input type T,
+# (e.g. 's' for Float32), so the function called is :mkl_scscmm
+@inline @generated function mkl_call(::Val{F}, ::Type{T}, args...) where {F, T}
+    fname = Symbol(replace(String(F), "T" => mkl_typespec(T)))
+    quote
+        __counter[] += 1
+        $fname(args...)
+    end
+end
+
+# same but doesn't log the call
+@inline @generated function mkl_call_nolog(::Val{F}, ::Type{T}, args...) where {F, T}
+    fname = Symbol(replace(String(F), "T" => mkl_typespec(T)))
+    :($fname(args...))
+end
+
 function cscmv!(transa::Char, α::T, matdescra::String,
                 A::SparseMatrixCSC{T, BlasInt}, x::StridedVector{T},
                 β::T, y::StridedVector{T}) where {T <: BlasFloat}
     _check_transa(transa)
     _check_mat_mult_matvec(y, A, transa, x, 'N')
-    __counter[] += 1
 
-    T == Float32    && (mkl_scscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
-    T == Float64    && (mkl_dcscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
-    T == ComplexF32 && (mkl_ccscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
-    T == ComplexF64 && (mkl_zcscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
+    mkl_call(Val(:mkl_Tcscmv), T, transa, A.m, A.n, α, matdescra,
+             A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y)
     return y
 end
 
@@ -43,12 +65,9 @@ function cscmm!(transa::Char, α::T, matdescra::String,
     _check_mat_mult_matvec(C, A, transa, B, 'N')
     mB, nB = size(B)
     mC, nC = size(C)
-    __counter[] += 1
 
-    T == Float32    && (mkl_scscmm(transa, A.m, nC, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC))
-    T == Float64    && (mkl_dcscmm(transa, A.m, nC, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC))
-    T == ComplexF32 && (mkl_ccscmm(transa, A.m, nC, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC))
-    T == ComplexF64 && (mkl_zcscmm(transa, A.m, nC, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC))
+    mkl_call(Val(:mkl_Tcscmm), T, transa, A.m, nC, A.n, α, matdescra,
+             A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC)
     return C
 end
 
@@ -58,12 +77,9 @@ function cscsv!(transa::Char, α::T, matdescra::String,
     n = checksquare(A)
     _check_transa(transa)
     _check_mat_mult_matvec(y, A, transa, x, 'N')
-    __counter[] += 1
 
-    T == Float32    && (mkl_scscsv(transa, A.m, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y))
-    T == Float64    && (mkl_dcscsv(transa, A.m, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y))
-    T == ComplexF32 && (mkl_ccscsv(transa, A.m, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y))
-    T == ComplexF64 && (mkl_zcscsv(transa, A.m, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y))
+    mkl_call(Val(:mkl_Tcscsv), T, transa, A.m, α, matdescra,
+             A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y)
     return y
 end
 
@@ -75,11 +91,8 @@ function cscsm!(transa::Char, α::T, matdescra::String,
     n = checksquare(A)
     _check_transa(transa)
     _check_mat_mult_matvec(C, A, transa, B, 'N')
-    __counter[] += 1
 
-    T == Float32    && (mkl_scscsm(transa, A.n, nC, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC))
-    T == Float64    && (mkl_dcscsm(transa, A.n, nC, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC))
-    T == ComplexF32 && (mkl_ccscsm(transa, A.n, nC, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC))
-    T == ComplexF64 && (mkl_zcscsm(transa, A.n, nC, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC))
+    mkl_call(Val(:mkl_Tcscsm), T, transa, A.n, nC, α, matdescra,
+             A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC)
     return C
 end
