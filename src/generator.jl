@@ -96,3 +96,26 @@ function cscsm!(transa::Char, α::T, matdescra::String,
              A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC)
     return C
 end
+
+# creates MKL sparse_matrix handle
+mkl_sparse_create(A::SparseMatrixCSC; as_CSR::Bool=false) =
+    as_CSR ? mkl_sparse_create_csr(A) : mkl_sparse_create_csc(A)
+
+function mkl_sparse_create_csr(A::SparseMatrixCSC{T}) where {T <: BlasFloat}
+    h = Ref{sparse_matrix_t}()
+    res = mkl_call_nolog(Val(:mkl_sparse_T_create_csr), T,
+        h, SPARSE_INDEX_BASE_ONE, A.n, A.m,
+        A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval)
+    @assert res == SPARSE_STATUS_SUCCESS
+    return h[]
+end
+
+function mkl_sparse_create_csc(A::SparseMatrixCSC{T}) where {T <: BlasFloat}
+    h = Ref{sparse_matrix_t}()
+    res = mkl_call_nolog(Val(:mkl_sparse_T_create_csc), T,
+        h, SPARSE_INDEX_BASE_ONE, A.m, A.n,
+        A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval)
+    @assert res == SPARSE_STATUS_SUCCESS
+    return h[]
+end
+
