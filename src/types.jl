@@ -138,3 +138,8 @@ function Base.convert(::Type{sparse_memory_usage_t}, memory::String)
         throw(ArgumentError("Unknown memory usage $memory"))
     end
 end
+
+Base.convert(::Type{matrix_descr}, matdescr::AbstractString) =
+    matrix_descr(convert(sparse_matrix_type_t, matdescr[1]),
+                 convert(sparse_fill_mode_t, matdescr[2]),
+                 convert(sparse_diag_type_t, matdescr[3]))
