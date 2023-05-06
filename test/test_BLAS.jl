@@ -125,6 +125,7 @@ end
         n = rand(50:150)
         spA = convert_to_class(sprand(T, n, n, 0.5) + convert(real(T), sqrt(n))*I)
         A = Array(spA)
+        @test spA == A
         B = Bdim == 2 ? rand(T, n, n) : rand(T, n)
         α = rand(T)
 
