@@ -144,7 +144,7 @@ end
         spAclass = Aclass(spA)
         α = rand()
 
-        @test @blas(ldiv!(α, Aclass(spA), B, similar(B))) ≈ α * (Aclass(A) \ B)
+        @test @blas(ldiv!(similar(B), Aclass(spA), B, α)) ≈ α * (Aclass(A) \ B)
         @test @blas(ldiv!(similar(B), Aclass(spA), B)) ≈ Aclass(A) \ B
         @test @blas(Aclass(spA) \ B) ≈ Aclass(A) \ B
     end
