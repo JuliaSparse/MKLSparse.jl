@@ -13,6 +13,16 @@ macro blas(ex)
     end
 end
 
+# special matrix classes to test
+# and the function to create a matrix of that class from a random sparse matrix
+matrix_classes = [
+    Symmetric => sp -> sp + transpose(sp),
+    LowerTriangular => sp -> tril(sp),
+    UpperTriangular => sp -> triu(sp),
+    UnitLowerTriangular => sp -> tril(sp, -1) + I,
+    UnitUpperTriangular => sp -> triu(sp, 1) + I,
+]
+
 @testset "MKLSparse.matdescra()" begin
     sA = sprand(5, 5, 0.01)
     sS = sA'sA
@@ -106,31 +116,37 @@ end
     end
 end
 
-@testset "SparseTriangular{$T} {* /} Vector{$T}" begin
+@testset "$Aclass{SparseMatrixCSC{$T}} * $(ifelse(Bdim == 2, "Matrix", "Vector")){$T}" for Bdim in 1:2,
+        (Aclass, transform_to_class) in matrix_classes
     for _ in 1:10
         n = rand(50:150)
-        spA = sprand(T, n, n, 0.5) + convert(real(T), sqrt(n))*I
+        spA = transform_to_class(sprand(T, n, n, 0.5) + convert(real(T), sqrt(n))*I)
         A = Array(spA)
-        b = rand(T, n)
-        symA = spA + transpose(spA)
-        trilA = tril(spA)
-        triuA = triu(spA)
-        trilUA = tril(spA, -1) + I
-        triuUA = triu(spA, 1)  + I
+        B = Bdim == 2 ? rand(T, n, n) : rand(T, n)
+        α = rand()
 
-        @test @blas(LowerTriangular(trilA) \ b) ≈ Array(LowerTriangular(trilA)) \ b
-        @test @blas(LowerTriangular(trilA) * b) ≈ Array(LowerTriangular(trilA)) * b
+        @test @blas(mul!(similar(B), Aclass(spA), B, α, 0)) ≈ α * Aclass(A) * B
+        @test @blas(mul!(similar(B), Aclass(spA), B)) ≈ Aclass(A) * B
+        @test @blas(Aclass(spA) * B) ≈ Aclass(A) * B
+    end
+end
 
-        @test @blas(UpperTriangular(triuA) \ b) ≈ Array(UpperTriangular(triuA)) \ b
-        @test @blas(UpperTriangular(triuA) * b) ≈ Array(UpperTriangular(triuA)) * b
+@testset "$Aclass{SparseMatrixCSC{$T}} \\ $(ifelse(Bdim == 2, "Matrix", "Vector")){$T}" for Bdim in 1:2,
+    (Aclass, transform_to_class) in matrix_classes
 
-        @test @blas(UnitLowerTriangular(trilUA) \ b) ≈ Array(UnitLowerTriangular(trilUA)) \ b
-        @test @blas(UnitLowerTriangular(trilUA) * b) ≈ Array(UnitLowerTriangular(trilUA)) * b
+    (Aclass == Symmetric) && continue # not implemented in MKLSparse
 
-        @test @blas(UnitUpperTriangular(triuUA) \ b) ≈ Array(UnitUpperTriangular(triuUA)) \ b
-        @test @blas(UnitUpperTriangular(triuUA) * b) ≈ Array(UnitUpperTriangular(triuUA)) * b
+    for _ in 1:10
+        n = rand(50:150)
+        spA = transform_to_class(sprand(T, n, n, 0.5) + convert(real(T), sqrt(n))*I)
+        A = Array(spA)
+        B = Bdim == 2 ? rand(T, n, rand(50:150)) : rand(T, n)
+        spAclass = Aclass(spA)
+        α = rand()
 
-        @test @blas(Symmetric(symA) * b) ≈ Array(Symmetric(symA)) * b
+        @test @blas(ldiv!(α, Aclass(spA), B, similar(B))) ≈ α * (Aclass(A) \ B)
+        @test @blas(ldiv!(similar(B), Aclass(spA), B)) ≈ Aclass(A) \ B
+        @test @blas(Aclass(spA) \ B) ≈ Aclass(A) \ B
     end
 end
 
