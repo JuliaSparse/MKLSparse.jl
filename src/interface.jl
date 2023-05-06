@@ -49,14 +49,16 @@ for T in (:Float32, :Float64, :ComplexF32, :ComplexF64)
               return mm!($transa, $T(alpha), $(untrianglea(unwrapa(:A))), $matrixdescra(A), B, $T(beta), C)
           end
 
-          function LinearAlgebra.ldiv!(y::StridedVector{$T}, A::$TypeA, x::StridedVector{$T})
-            # return cscsv!($transa, one($T), $matdescra(A), $(untrianglea(unwrapa(:A))), x, y)
-            return trsv!($transa, one($T), $(untrianglea(unwrapa(:A))), $matrixdescra(A), x, y)
+          # define 4-arg ldiv!(C, A, B, a) (C := alpha*inv(A)*B) that is not present in standard LinearAlgrebra
+          # redefine 3-arg ldiv!(C, A, B) using 4-arg ldiv!(C, A, B, 1)
+          function LinearAlgebra.ldiv!(y::StridedVector{$T}, A::$TypeA, x::StridedVector{$T}, alpha::Number = one($T))
+            # return cscsv!($transa, alpha, $matdescra(A), $(untrianglea(unwrapa(:A))), x, y)
+            return trsv!($transa, alpha, $(untrianglea(unwrapa(:A))), $matrixdescra(A), x, y)
           end
 
-          function LinearAlgebra.ldiv!(C::StridedMatrix{$T}, A::$TypeA, B::StridedMatrix{$T})
-            # return cscsm!($transa, one($T), $matdescra(A), $(untrianglea(unwrapa(:A))), B, C)
-            return trsm!($transa, one($T), $(untrianglea(unwrapa(:A))), $matrixdescra(A), B, C)
+          function LinearAlgebra.ldiv!(C::StridedMatrix{$T}, A::$TypeA, B::StridedMatrix{$T}, alpha::Number = one($T))
+            # return cscsm!($transa, alpha, $matdescra(A), $(untrianglea(unwrapa(:A))), B, C)
+            return trsm!($transa, alpha, $(untrianglea(unwrapa(:A))), $matrixdescra(A), B, C)
           end
 
           function (*)(A::$TypeA, x::StridedVector{$T})
