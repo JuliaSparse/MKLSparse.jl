@@ -35,7 +35,7 @@ matrix_classes = [
     @test MKLSparse.matdescra(UpperTriangular(sTu)) == "TUNF"
     @test MKLSparse.matdescra(UnitLowerTriangular(sTl)) == "TLUF"
     @test MKLSparse.matdescra(UnitUpperTriangular(sTu)) == "TUUF"
-    @test MKLSparse.matdescra(sA) == "GUUF"
+    @test MKLSparse.matdescra(sA) == "GFNF"
 end
 
 @testset "SparseBLAS for $T matrices and vectors" for T in (Float32, Float64, ComplexF32, ComplexF64)
