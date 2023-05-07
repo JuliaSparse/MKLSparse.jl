@@ -16,6 +16,23 @@ using Test, SparseArrays, LinearAlgebra
     @test MKLSparse.matdescra(sA) == "GFNF"
 end
 
+@testset "convert(MKLSparse.matrix_descr, matdescr::AbstractString)" begin
+    @test convert(MKLSparse.matrix_descr, "SLNF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_SYMMETRIC, MKLSparse.SPARSE_FILL_MODE_LOWER, MKLSparse.SPARSE_DIAG_NON_UNIT)
+    @test convert(MKLSparse.matrix_descr, "SUNF") == MKLSparse.matrix_descr(
+            MKLSparse.SPARSE_MATRIX_TYPE_SYMMETRIC, MKLSparse.SPARSE_FILL_MODE_UPPER, MKLSparse.SPARSE_DIAG_NON_UNIT)
+    @test convert(MKLSparse.matrix_descr, "TLNF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_TRIANGULAR, MKLSparse.SPARSE_FILL_MODE_LOWER, MKLSparse.SPARSE_DIAG_NON_UNIT)
+    @test convert(MKLSparse.matrix_descr, "TUNF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_TRIANGULAR, MKLSparse.SPARSE_FILL_MODE_UPPER, MKLSparse.SPARSE_DIAG_NON_UNIT)
+    @test convert(MKLSparse.matrix_descr, "TLUF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_TRIANGULAR, MKLSparse.SPARSE_FILL_MODE_LOWER, MKLSparse.SPARSE_DIAG_UNIT)
+    @test convert(MKLSparse.matrix_descr, "TUUF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_TRIANGULAR, MKLSparse.SPARSE_FILL_MODE_UPPER, MKLSparse.SPARSE_DIAG_UNIT)
+    @test convert(MKLSparse.matrix_descr, "GFNF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_GENERAL, MKLSparse.SPARSE_FILL_MODE_FULL, MKLSparse.SPARSE_DIAG_NON_UNIT)
+end
+
 # evaluates ex and checks whether it has called any SparseBLAS MKL method
 macro blas(ex)
     quote
