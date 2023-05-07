@@ -38,6 +38,23 @@ matrix_classes = [
     @test MKLSparse.matdescra(sA) == "GFNF"
 end
 
+@testset "convert(MKLSparse.matrix_descr, matdescr::AbstractString)" begin
+    @test convert(MKLSparse.matrix_descr, "SLNF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_SYMMETRIC, MKLSparse.SPARSE_FILL_MODE_LOWER, MKLSparse.SPARSE_DIAG_NON_UNIT)
+    @test convert(MKLSparse.matrix_descr, "SUNF") == MKLSparse.matrix_descr(
+            MKLSparse.SPARSE_MATRIX_TYPE_SYMMETRIC, MKLSparse.SPARSE_FILL_MODE_UPPER, MKLSparse.SPARSE_DIAG_NON_UNIT)
+    @test convert(MKLSparse.matrix_descr, "TLNF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_TRIANGULAR, MKLSparse.SPARSE_FILL_MODE_LOWER, MKLSparse.SPARSE_DIAG_NON_UNIT)
+    @test convert(MKLSparse.matrix_descr, "TUNF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_TRIANGULAR, MKLSparse.SPARSE_FILL_MODE_UPPER, MKLSparse.SPARSE_DIAG_NON_UNIT)
+    @test convert(MKLSparse.matrix_descr, "TLUF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_TRIANGULAR, MKLSparse.SPARSE_FILL_MODE_LOWER, MKLSparse.SPARSE_DIAG_UNIT)
+    @test convert(MKLSparse.matrix_descr, "TUUF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_TRIANGULAR, MKLSparse.SPARSE_FILL_MODE_UPPER, MKLSparse.SPARSE_DIAG_UNIT)
+    @test convert(MKLSparse.matrix_descr, "GFNF") == MKLSparse.matrix_descr(
+        MKLSparse.SPARSE_MATRIX_TYPE_GENERAL, MKLSparse.SPARSE_FILL_MODE_FULL, MKLSparse.SPARSE_DIAG_NON_UNIT)
+end
+
 @testset "SparseBLAS for $T matrices and vectors" for T in (Float32, Float64, ComplexF32, ComplexF64)
 
 local atol::real(T) = 100*eps(real(one(T))) # absolute tolerance for SparseBLAS results
