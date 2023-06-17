@@ -1,7 +1,9 @@
 using MKLSparse
-using Test, SparseArrays, LinearAlgebra
+using Test, Random, SparseArrays, LinearAlgebra
 
 @testset "MKLSparse.matdescra()" begin
+    Random.seed!(100500)
+
     sA = sprand(5, 5, 0.01)
     sS = sA'sA
     sTl = tril(sS)
@@ -63,6 +65,8 @@ matrix_classes = [
 local atol::real(T) = 100*eps(real(one(T))) # absolute tolerance for SparseBLAS results
 
 @testset "SparseMatrixCSC{$T,$IT} * Vector{$T}" begin
+    Random.seed!(100500)
+
     for _ in 1:10
         spA = convert(SpraseMatrixCSC{T, IT}, sprand(T, 10, 5, 0.5))
         a = Array(spA)
@@ -80,6 +84,8 @@ local atol::real(T) = 100*eps(real(one(T))) # absolute tolerance for SparseBLAS 
 end
 
 @testset "Vector{$T} * SparseMatrixCSC{$T,$IT}" begin
+    Random.seed!(100500)
+
     for _ in 1:10
         spA = convert(SparseMatrixCSC{T, IT}, sprand(T, 10, 5, 0.5))
         a = Array(spA)
@@ -104,6 +110,8 @@ end
 end
 
 @testset "SparseMatrixCSC{$T,$IT} * Matrix{$T}" begin
+    Random.seed!(100500)
+
     for _ in 1:10
         spA = convert(SparseMatrixCSC{T,IT}, sprand(T, 10, 5, 0.5))
         a = Array(spA)
@@ -138,6 +146,8 @@ end
 
 @testset "$Aclass{SparseMatrixCSC{$T}} * $(ifelse(Bdim == 2, "Matrix", "Vector")){$T}" for Bdim in 1:2,
         (Aclass, convert_to_class) in matrix_classes
+    Random.seed!(100500)
+
     for _ in 1:10
         n = rand(50:150)
         spA = convert_to_class(sprand(T, n, n, 0.5) + convert(real(T), sqrt(n))*I)
@@ -156,6 +166,8 @@ end
     (Aclass, convert_to_class) in matrix_classes
 
     (Aclass == Symmetric || Aclass == Hermitian) && continue # not implemented in MKLSparse
+
+    Random.seed!(100500)
 
     for _ in 1:10
         n = rand(50:150)
