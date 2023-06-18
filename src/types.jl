@@ -64,20 +64,12 @@ function Base.convert(::Type{sparse_matrix_type_t}, mattype::Char)
 end
 
 function Base.convert(::Type{sparse_matrix_type_t}, mattype::String)
-    if mattype == "G"
-        SPARSE_MATRIX_TYPE_GENERAL
-    elseif mattype == "S"
-        SPARSE_MATRIX_TYPE_SYMMETRIC
-    elseif mattype == "H"
-        SPARSE_MATRIX_TYPE_HERMITIAN
-    elseif mattype == "T"
-        SPARSE_MATRIX_TYPE_TRIANGULAR
-    elseif mattype == "D"
-        SPARSE_MATRIX_TYPE_DIAGONAL
+    if length(mattype) == 1
+        return convert(sparse_matrix_type_t, mattype[1])
     elseif mattype == "BT"
-        SPARSE_MATRIX_TYPE_BLOCK_TRIANGULAR
+        return SPARSE_MATRIX_TYPE_BLOCK_TRIANGULAR
     elseif mattype == "BD"
-        SPARSE_MATRIX_TYPE_BLOCK_DIAGONAL
+        return SPARSE_MATRIX_TYPE_BLOCK_DIAGONAL
     else
         throw(ArgumentError("Unknown matrix type $mattype"))
     end
