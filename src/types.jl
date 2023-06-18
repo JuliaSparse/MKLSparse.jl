@@ -12,6 +12,13 @@ function Base.convert(::Type{sparse_operation_t}, trans::Char)
     end
 end
 
+# converts julia matrix transformation into MKL sparse operation code
+mkl_operation_code(op) =
+    isnothing(op) ? 'N' :
+    op == :Adjoint ? 'C' :
+    op == :Transpose ? 'T' :
+    throw(ArgumentError("Unsupported matrix operation: $op"))
+
 function Base.convert(::Type{sparse_matrix_type_t}, mattype::Char)
     if mattype == 'G'
         SPARSE_MATRIX_TYPE_GENERAL
@@ -29,20 +36,12 @@ function Base.convert(::Type{sparse_matrix_type_t}, mattype::Char)
 end
 
 function Base.convert(::Type{sparse_matrix_type_t}, mattype::String)
-    if mattype == "G"
-        SPARSE_MATRIX_TYPE_GENERAL
-    elseif mattype == "S"
-        SPARSE_MATRIX_TYPE_SYMMETRIC
-    elseif mattype == "H"
-        SPARSE_MATRIX_TYPE_HERMITIAN
-    elseif mattype == "T"
-        SPARSE_MATRIX_TYPE_TRIANGULAR
-    elseif mattype == "D"
-        SPARSE_MATRIX_TYPE_DIAGONAL
+    if length(mattype) == 1
+        return convert(sparse_matrix_type_t, mattype[1])
     elseif mattype == "BT"
-        SPARSE_MATRIX_TYPE_BLOCK_TRIANGULAR
+        return SPARSE_MATRIX_TYPE_BLOCK_TRIANGULAR
     elseif mattype == "BD"
-        SPARSE_MATRIX_TYPE_BLOCK_DIAGONAL
+        return SPARSE_MATRIX_TYPE_BLOCK_DIAGONAL
     else
         throw(ArgumentError("Unknown matrix type $mattype"))
     end
@@ -111,3 +110,8 @@ function Base.convert(::Type{sparse_memory_usage_t}, memory::String)
         throw(ArgumentError("Unknown memory usage $memory"))
     end
 end
+
+Base.convert(::Type{matrix_descr}, matdescr::AbstractString) =
+    matrix_descr(convert(sparse_matrix_type_t, matdescr[1]),
+                 convert(sparse_fill_mode_t, matdescr[2]),
+                 convert(sparse_diag_type_t, matdescr[3]))
