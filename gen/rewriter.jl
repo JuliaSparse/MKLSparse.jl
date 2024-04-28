@@ -1,15 +1,12 @@
-type_modifications = Dict("Cint"            => "BlasInt",
-                          "Cfloat"          => "Float32",
-                          "Cdouble"         => "Float64",
-                          "MKL_Complex8"    => "ComplexF32",
-                          "MKL_Complex16"   => "ComplexF64")
+type_modifications = Dict("Cint"          => "BlasInt",
+                          "Cfloat"        => "Float32",
+                          "Cdouble"       => "Float64",
+                          "MKL_Complex8"  => "ComplexF32",
+                          "MKL_Complex16" => "ComplexF64")
 
 function rewrite!(path::String)
   text = read(path, String)
   for (keys, vals) in type_modifications
-    text = replace(text, keys => vals)
-  end
-  for (keys, vals) in cstring_modifications
     text = replace(text, keys => vals)
   end
   # Note: `job` and `idiag` are vectors in some cases, we must be careful with these two arguments.
