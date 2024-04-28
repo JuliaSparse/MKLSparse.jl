@@ -3413,6 +3413,7 @@ end
 
 function mkl_sparse_s_create_coo_64(A, indexing, rows, cols, nnz, row_indx, col_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_create_coo_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3423,6 +3424,7 @@ end
 
 function mkl_sparse_d_create_coo_64(A, indexing, rows, cols, nnz, row_indx, col_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_create_coo_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3433,6 +3435,7 @@ end
 
 function mkl_sparse_c_create_coo_64(A, indexing, rows, cols, nnz, row_indx, col_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_create_coo_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3443,6 +3446,7 @@ end
 
 function mkl_sparse_z_create_coo_64(A, indexing, rows, cols, nnz, row_indx, col_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_create_coo_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3489,6 +3493,7 @@ end
 
 function mkl_sparse_s_create_csr_64(A, indexing, rows, cols, rows_start, rows_end, col_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_create_csr_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3500,6 +3505,7 @@ end
 
 function mkl_sparse_d_create_csr_64(A, indexing, rows, cols, rows_start, rows_end, col_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_create_csr_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3511,6 +3517,7 @@ end
 
 function mkl_sparse_c_create_csr_64(A, indexing, rows, cols, rows_start, rows_end, col_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_create_csr_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3522,6 +3529,7 @@ end
 
 function mkl_sparse_z_create_csr_64(A, indexing, rows, cols, rows_start, rows_end, col_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_create_csr_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3569,6 +3577,7 @@ end
 
 function mkl_sparse_s_create_csc_64(A, indexing, rows, cols, cols_start, cols_end, row_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_create_csc_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3580,6 +3589,7 @@ end
 
 function mkl_sparse_d_create_csc_64(A, indexing, rows, cols, cols_start, cols_end, row_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_create_csc_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3591,6 +3601,7 @@ end
 
 function mkl_sparse_c_create_csc_64(A, indexing, rows, cols, cols_start, cols_end, row_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_create_csc_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3602,6 +3613,7 @@ end
 
 function mkl_sparse_z_create_csc_64(A, indexing, rows, cols, cols_start, cols_end, row_indx,
                                     values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_create_csc_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 rows::Clonglong, cols::Clonglong,
@@ -3657,6 +3669,7 @@ end
 
 function mkl_sparse_s_create_bsr_64(A, indexing, block_layout, rows, cols, block_size,
                                     rows_start, rows_end, col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_create_bsr_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 block_layout::sparse_layout_t,
@@ -3670,6 +3683,7 @@ end
 
 function mkl_sparse_d_create_bsr_64(A, indexing, block_layout, rows, cols, block_size,
                                     rows_start, rows_end, col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_create_bsr_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 block_layout::sparse_layout_t,
@@ -3683,6 +3697,7 @@ end
 
 function mkl_sparse_c_create_bsr_64(A, indexing, block_layout, rows, cols, block_size,
                                     rows_start, rows_end, col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_create_bsr_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 block_layout::sparse_layout_t,
@@ -3696,6 +3711,7 @@ end
 
 function mkl_sparse_z_create_bsr_64(A, indexing, block_layout, rows, cols, block_size,
                                     rows_start, rows_end, col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_create_bsr_64(A::Ptr{sparse_matrix_t},
                                                 indexing::sparse_index_base_t,
                                                 block_layout::sparse_layout_t,
@@ -3713,6 +3729,7 @@ function mkl_sparse_copy(source, descr, dest)
 end
 
 function mkl_sparse_copy_64(source, descr, dest)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_copy_64(source::sparse_matrix_t, descr::matrix_descr,
                                         dest::Ptr{sparse_matrix_t})::sparse_status_t
 end
@@ -3722,6 +3739,7 @@ function mkl_sparse_destroy(A)
 end
 
 function mkl_sparse_destroy_64(A)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_destroy_64(A::sparse_matrix_t)::sparse_status_t
 end
 
@@ -3731,6 +3749,7 @@ function mkl_sparse_get_error_info(A, info)
 end
 
 function mkl_sparse_get_error_info_64(A, info)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_get_error_info_64(A::sparse_matrix_t,
                                                   info::Ptr{Clonglong})::sparse_status_t
 end
@@ -3749,12 +3768,14 @@ function mkl_sparse_convert_bsr(source, block_size, block_layout, operation, des
 end
 
 function mkl_sparse_convert_csr_64(source, operation, dest)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_convert_csr_64(source::sparse_matrix_t,
                                                operation::sparse_operation_t,
                                                dest::Ptr{sparse_matrix_t})::sparse_status_t
 end
 
 function mkl_sparse_convert_bsr_64(source, block_size, block_layout, operation, dest)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_convert_bsr_64(source::sparse_matrix_t,
                                                block_size::Clonglong,
                                                block_layout::sparse_layout_t,
@@ -3816,6 +3837,7 @@ end
 
 function mkl_sparse_s_export_bsr_64(source, indexing, block_layout, rows, cols, block_size,
                                     rows_start, rows_end, col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_export_bsr_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 block_layout::Ptr{sparse_layout_t},
@@ -3829,6 +3851,7 @@ end
 
 function mkl_sparse_d_export_bsr_64(source, indexing, block_layout, rows, cols, block_size,
                                     rows_start, rows_end, col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_export_bsr_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 block_layout::Ptr{sparse_layout_t},
@@ -3842,6 +3865,7 @@ end
 
 function mkl_sparse_c_export_bsr_64(source, indexing, block_layout, rows, cols, block_size,
                                     rows_start, rows_end, col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_export_bsr_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 block_layout::Ptr{sparse_layout_t},
@@ -3855,6 +3879,7 @@ end
 
 function mkl_sparse_z_export_bsr_64(source, indexing, block_layout, rows, cols, block_size,
                                     rows_start, rows_end, col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_export_bsr_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 block_layout::Ptr{sparse_layout_t},
@@ -3912,6 +3937,7 @@ end
 
 function mkl_sparse_s_export_csr_64(source, indexing, rows, cols, rows_start, rows_end,
                                     col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_export_csr_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 rows::Ptr{Clonglong}, cols::Ptr{Clonglong},
@@ -3923,6 +3949,7 @@ end
 
 function mkl_sparse_d_export_csr_64(source, indexing, rows, cols, rows_start, rows_end,
                                     col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_export_csr_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 rows::Ptr{Clonglong}, cols::Ptr{Clonglong},
@@ -3934,6 +3961,7 @@ end
 
 function mkl_sparse_c_export_csr_64(source, indexing, rows, cols, rows_start, rows_end,
                                     col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_export_csr_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 rows::Ptr{Clonglong}, cols::Ptr{Clonglong},
@@ -3945,6 +3973,7 @@ end
 
 function mkl_sparse_z_export_csr_64(source, indexing, rows, cols, rows_start, rows_end,
                                     col_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_export_csr_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 rows::Ptr{Clonglong}, cols::Ptr{Clonglong},
@@ -4000,6 +4029,7 @@ end
 
 function mkl_sparse_s_export_csc_64(source, indexing, rows, cols, cols_start, cols_end,
                                     row_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_export_csc_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 rows::Ptr{Clonglong}, cols::Ptr{Clonglong},
@@ -4011,6 +4041,7 @@ end
 
 function mkl_sparse_d_export_csc_64(source, indexing, rows, cols, cols_start, cols_end,
                                     row_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_export_csc_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 rows::Ptr{Clonglong}, cols::Ptr{Clonglong},
@@ -4022,6 +4053,7 @@ end
 
 function mkl_sparse_c_export_csc_64(source, indexing, rows, cols, cols_start, cols_end,
                                     row_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_export_csc_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 rows::Ptr{Clonglong}, cols::Ptr{Clonglong},
@@ -4033,6 +4065,7 @@ end
 
 function mkl_sparse_z_export_csc_64(source, indexing, rows, cols, cols_start, cols_end,
                                     row_indx, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_export_csc_64(source::sparse_matrix_t,
                                                 indexing::Ptr{sparse_index_base_t},
                                                 rows::Ptr{Clonglong}, cols::Ptr{Clonglong},
@@ -4063,24 +4096,28 @@ function mkl_sparse_z_set_value(A, row, col, value)
 end
 
 function mkl_sparse_s_set_value_64(A, row, col, value)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_set_value_64(A::sparse_matrix_t, row::Clonglong,
                                                col::Clonglong,
                                                value::Float32)::sparse_status_t
 end
 
 function mkl_sparse_d_set_value_64(A, row, col, value)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_set_value_64(A::sparse_matrix_t, row::Clonglong,
                                                col::Clonglong,
                                                value::Float64)::sparse_status_t
 end
 
 function mkl_sparse_c_set_value_64(A, row, col, value)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_set_value_64(A::sparse_matrix_t, row::Clonglong,
                                                col::Clonglong,
                                                value::ComplexF32)::sparse_status_t
 end
 
 function mkl_sparse_z_set_value_64(A, row, col, value)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_set_value_64(A::sparse_matrix_t, row::Clonglong,
                                                col::Clonglong,
                                                value::ComplexF64)::sparse_status_t
@@ -4111,6 +4148,7 @@ function mkl_sparse_z_update_values(A, nvalues, indx, indy, values)
 end
 
 function mkl_sparse_s_update_values_64(A, nvalues, indx, indy, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_update_values_64(A::sparse_matrix_t, nvalues::Clonglong,
                                                    indx::Ptr{Clonglong},
                                                    indy::Ptr{Clonglong},
@@ -4118,6 +4156,7 @@ function mkl_sparse_s_update_values_64(A, nvalues, indx, indy, values)
 end
 
 function mkl_sparse_d_update_values_64(A, nvalues, indx, indy, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_update_values_64(A::sparse_matrix_t, nvalues::Clonglong,
                                                    indx::Ptr{Clonglong},
                                                    indy::Ptr{Clonglong},
@@ -4125,6 +4164,7 @@ function mkl_sparse_d_update_values_64(A, nvalues, indx, indy, values)
 end
 
 function mkl_sparse_c_update_values_64(A, nvalues, indx, indy, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_update_values_64(A::sparse_matrix_t, nvalues::Clonglong,
                                                    indx::Ptr{Clonglong},
                                                    indy::Ptr{Clonglong},
@@ -4132,6 +4172,7 @@ function mkl_sparse_c_update_values_64(A, nvalues, indx, indy, values)
 end
 
 function mkl_sparse_z_update_values_64(A, nvalues, indx, indy, values)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_update_values_64(A::sparse_matrix_t, nvalues::Clonglong,
                                                    indx::Ptr{Clonglong},
                                                    indy::Ptr{Clonglong},
@@ -4143,6 +4184,7 @@ function mkl_sparse_set_verbose_mode(verbose)
 end
 
 function mkl_sparse_set_verbose_mode_64(verbose)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_set_verbose_mode_64(verbose::verbose_mode_t)::sparse_status_t
 end
 
@@ -4154,6 +4196,7 @@ function mkl_sparse_set_mv_hint(A, operation, descr, expected_calls)
 end
 
 function mkl_sparse_set_mv_hint_64(A, operation, descr, expected_calls)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_set_mv_hint_64(A::sparse_matrix_t,
                                                operation::sparse_operation_t,
                                                descr::matrix_descr,
@@ -4168,6 +4211,7 @@ function mkl_sparse_set_dotmv_hint(A, operation, descr, expectedCalls)
 end
 
 function mkl_sparse_set_dotmv_hint_64(A, operation, descr, expectedCalls)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_set_dotmv_hint_64(A::sparse_matrix_t,
                                                   operation::sparse_operation_t,
                                                   descr::matrix_descr,
@@ -4185,6 +4229,7 @@ end
 
 function mkl_sparse_set_mm_hint_64(A, operation, descr, layout, dense_matrix_size,
                                    expected_calls)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_set_mm_hint_64(A::sparse_matrix_t,
                                                operation::sparse_operation_t,
                                                descr::matrix_descr, layout::sparse_layout_t,
@@ -4200,6 +4245,7 @@ function mkl_sparse_set_sv_hint(A, operation, descr, expected_calls)
 end
 
 function mkl_sparse_set_sv_hint_64(A, operation, descr, expected_calls)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_set_sv_hint_64(A::sparse_matrix_t,
                                                operation::sparse_operation_t,
                                                descr::matrix_descr,
@@ -4217,6 +4263,7 @@ end
 
 function mkl_sparse_set_sm_hint_64(A, operation, descr, layout, dense_matrix_size,
                                    expected_calls)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_set_sm_hint_64(A::sparse_matrix_t,
                                                operation::sparse_operation_t,
                                                descr::matrix_descr, layout::sparse_layout_t,
@@ -4232,6 +4279,7 @@ function mkl_sparse_set_symgs_hint(A, operation, descr, expected_calls)
 end
 
 function mkl_sparse_set_symgs_hint_64(A, operation, descr, expected_calls)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_set_symgs_hint_64(A::sparse_matrix_t,
                                                   operation::sparse_operation_t,
                                                   descr::matrix_descr,
@@ -4246,6 +4294,7 @@ function mkl_sparse_set_lu_smoother_hint(A, operation, descr, expectedCalls)
 end
 
 function mkl_sparse_set_lu_smoother_hint_64(A, operation, descr, expectedCalls)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_set_lu_smoother_hint_64(A::sparse_matrix_t,
                                                         operation::sparse_operation_t,
                                                         descr::matrix_descr,
@@ -4259,6 +4308,7 @@ function mkl_sparse_set_sorv_hint(type, A, descr, expectedCalls)
 end
 
 function mkl_sparse_set_sorv_hint_64(type, A, descr, expectedCalls)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_set_sorv_hint_64(type::sparse_sor_type_t,
                                                  A::sparse_matrix_t, descr::matrix_descr,
                                                  expectedCalls::Clonglong)::sparse_status_t
@@ -4270,6 +4320,7 @@ function mkl_sparse_set_memory_hint(A, policy)
 end
 
 function mkl_sparse_set_memory_hint_64(A, policy)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_set_memory_hint_64(A::sparse_matrix_t,
                                                    policy::sparse_memory_usage_t)::sparse_status_t
 end
@@ -4279,6 +4330,7 @@ function mkl_sparse_optimize(A)
 end
 
 function mkl_sparse_optimize_64(A)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_optimize_64(A::sparse_matrix_t)::sparse_status_t
 end
 
@@ -4287,6 +4339,7 @@ function mkl_sparse_order(A)
 end
 
 function mkl_sparse_order_64(A)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_order_64(A::sparse_matrix_t)::sparse_status_t
 end
 
@@ -4319,6 +4372,7 @@ function mkl_sparse_z_mv(operation, alpha, A, descr, x, beta, y)
 end
 
 function mkl_sparse_s_mv_64(operation, alpha, A, descr, x, beta, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_mv_64(operation::sparse_operation_t, alpha::Float32,
                                         A::sparse_matrix_t, descr::matrix_descr,
                                         x::Ptr{Float32}, beta::Float32,
@@ -4326,6 +4380,7 @@ function mkl_sparse_s_mv_64(operation, alpha, A, descr, x, beta, y)
 end
 
 function mkl_sparse_d_mv_64(operation, alpha, A, descr, x, beta, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_mv_64(operation::sparse_operation_t, alpha::Float64,
                                         A::sparse_matrix_t, descr::matrix_descr,
                                         x::Ptr{Float64}, beta::Float64,
@@ -4333,6 +4388,7 @@ function mkl_sparse_d_mv_64(operation, alpha, A, descr, x, beta, y)
 end
 
 function mkl_sparse_c_mv_64(operation, alpha, A, descr, x, beta, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_mv_64(operation::sparse_operation_t, alpha::ComplexF32,
                                         A::sparse_matrix_t, descr::matrix_descr,
                                         x::Ptr{ComplexF32}, beta::ComplexF32,
@@ -4340,6 +4396,7 @@ function mkl_sparse_c_mv_64(operation, alpha, A, descr, x, beta, y)
 end
 
 function mkl_sparse_z_mv_64(operation, alpha, A, descr, x, beta, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_mv_64(operation::sparse_operation_t, alpha::ComplexF64,
                                         A::sparse_matrix_t, descr::matrix_descr,
                                         x::Ptr{ComplexF64}, beta::ComplexF64,
@@ -4377,6 +4434,7 @@ function mkl_sparse_z_dotmv(transA, alpha, A, descr, x, beta, y, d)
 end
 
 function mkl_sparse_s_dotmv_64(transA, alpha, A, descr, x, beta, y, d)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_dotmv_64(transA::sparse_operation_t, alpha::Float32,
                                            A::sparse_matrix_t, descr::matrix_descr,
                                            x::Ptr{Float32}, beta::Float32, y::Ptr{Float32},
@@ -4384,6 +4442,7 @@ function mkl_sparse_s_dotmv_64(transA, alpha, A, descr, x, beta, y, d)
 end
 
 function mkl_sparse_d_dotmv_64(transA, alpha, A, descr, x, beta, y, d)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_dotmv_64(transA::sparse_operation_t, alpha::Float64,
                                            A::sparse_matrix_t, descr::matrix_descr,
                                            x::Ptr{Float64}, beta::Float64, y::Ptr{Float64},
@@ -4391,6 +4450,7 @@ function mkl_sparse_d_dotmv_64(transA, alpha, A, descr, x, beta, y, d)
 end
 
 function mkl_sparse_c_dotmv_64(transA, alpha, A, descr, x, beta, y, d)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_dotmv_64(transA::sparse_operation_t, alpha::ComplexF32,
                                            A::sparse_matrix_t, descr::matrix_descr,
                                            x::Ptr{ComplexF32}, beta::ComplexF32,
@@ -4399,6 +4459,7 @@ function mkl_sparse_c_dotmv_64(transA, alpha, A, descr, x, beta, y, d)
 end
 
 function mkl_sparse_z_dotmv_64(transA, alpha, A, descr, x, beta, y, d)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_dotmv_64(transA::sparse_operation_t, alpha::ComplexF64,
                                            A::sparse_matrix_t, descr::matrix_descr,
                                            x::Ptr{ComplexF64}, beta::ComplexF64,
@@ -4433,18 +4494,21 @@ function mkl_sparse_z_trsv(operation, alpha, A, descr, x, y)
 end
 
 function mkl_sparse_s_trsv_64(operation, alpha, A, descr, x, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_trsv_64(operation::sparse_operation_t, alpha::Float32,
                                           A::sparse_matrix_t, descr::matrix_descr,
                                           x::Ptr{Float32}, y::Ptr{Float32})::sparse_status_t
 end
 
 function mkl_sparse_d_trsv_64(operation, alpha, A, descr, x, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_trsv_64(operation::sparse_operation_t, alpha::Float64,
                                           A::sparse_matrix_t, descr::matrix_descr,
                                           x::Ptr{Float64}, y::Ptr{Float64})::sparse_status_t
 end
 
 function mkl_sparse_c_trsv_64(operation, alpha, A, descr, x, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_trsv_64(operation::sparse_operation_t,
                                           alpha::ComplexF32, A::sparse_matrix_t,
                                           descr::matrix_descr, x::Ptr{ComplexF32},
@@ -4452,6 +4516,7 @@ function mkl_sparse_c_trsv_64(operation, alpha, A, descr, x, y)
 end
 
 function mkl_sparse_z_trsv_64(operation, alpha, A, descr, x, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_trsv_64(operation::sparse_operation_t,
                                           alpha::ComplexF64, A::sparse_matrix_t,
                                           descr::matrix_descr, x::Ptr{ComplexF64},
@@ -4485,12 +4550,14 @@ function mkl_sparse_z_symgs(op, A, descr, alpha, b, x)
 end
 
 function mkl_sparse_s_symgs_64(op, A, descr, alpha, b, x)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_symgs_64(op::sparse_operation_t, A::sparse_matrix_t,
                                            descr::matrix_descr, alpha::Float32,
                                            b::Ptr{Float32}, x::Ptr{Float32})::sparse_status_t
 end
 
 function mkl_sparse_d_symgs_64(op, A, descr, alpha, b, x)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_symgs_64(op::sparse_operation_t, A::sparse_matrix_t,
                                            descr::matrix_descr, alpha::Float64,
                                            b::Ptr{Float64},
@@ -4498,6 +4565,7 @@ function mkl_sparse_d_symgs_64(op, A, descr, alpha, b, x)
 end
 
 function mkl_sparse_c_symgs_64(op, A, descr, alpha, b, x)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_symgs_64(op::sparse_operation_t, A::sparse_matrix_t,
                                            descr::matrix_descr, alpha::ComplexF32,
                                            b::Ptr{ComplexF32},
@@ -4505,6 +4573,7 @@ function mkl_sparse_c_symgs_64(op, A, descr, alpha, b, x)
 end
 
 function mkl_sparse_z_symgs_64(op, A, descr, alpha, b, x)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_symgs_64(op::sparse_operation_t, A::sparse_matrix_t,
                                            descr::matrix_descr, alpha::ComplexF64,
                                            b::Ptr{ComplexF64},
@@ -4540,6 +4609,7 @@ function mkl_sparse_z_symgs_mv(op, A, descr, alpha, b, x, y)
 end
 
 function mkl_sparse_s_symgs_mv_64(op, A, descr, alpha, b, x, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_symgs_mv_64(op::sparse_operation_t, A::sparse_matrix_t,
                                               descr::matrix_descr, alpha::Float32,
                                               b::Ptr{Float32}, x::Ptr{Float32},
@@ -4547,6 +4617,7 @@ function mkl_sparse_s_symgs_mv_64(op, A, descr, alpha, b, x, y)
 end
 
 function mkl_sparse_d_symgs_mv_64(op, A, descr, alpha, b, x, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_symgs_mv_64(op::sparse_operation_t, A::sparse_matrix_t,
                                               descr::matrix_descr, alpha::Float64,
                                               b::Ptr{Float64}, x::Ptr{Float64},
@@ -4554,6 +4625,7 @@ function mkl_sparse_d_symgs_mv_64(op, A, descr, alpha, b, x, y)
 end
 
 function mkl_sparse_c_symgs_mv_64(op, A, descr, alpha, b, x, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_symgs_mv_64(op::sparse_operation_t, A::sparse_matrix_t,
                                               descr::matrix_descr, alpha::ComplexF32,
                                               b::Ptr{ComplexF32}, x::Ptr{ComplexF32},
@@ -4561,6 +4633,7 @@ function mkl_sparse_c_symgs_mv_64(op, A, descr, alpha, b, x, y)
 end
 
 function mkl_sparse_z_symgs_mv_64(op, A, descr, alpha, b, x, y)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_symgs_mv_64(op::sparse_operation_t, A::sparse_matrix_t,
                                               descr::matrix_descr, alpha::ComplexF64,
                                               b::Ptr{ComplexF64}, x::Ptr{ComplexF64},
@@ -4600,6 +4673,7 @@ function mkl_sparse_z_lu_smoother(op, A, descr, diag, approx_diag_inverse, x, rh
 end
 
 function mkl_sparse_s_lu_smoother_64(op, A, descr, diag, approx_diag_inverse, x, rhs)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_lu_smoother_64(op::sparse_operation_t, A::sparse_matrix_t,
                                                  descr::matrix_descr, diag::Ptr{Float32},
                                                  approx_diag_inverse::Ptr{Float32},
@@ -4608,6 +4682,7 @@ function mkl_sparse_s_lu_smoother_64(op, A, descr, diag, approx_diag_inverse, x,
 end
 
 function mkl_sparse_d_lu_smoother_64(op, A, descr, diag, approx_diag_inverse, x, rhs)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_lu_smoother_64(op::sparse_operation_t, A::sparse_matrix_t,
                                                  descr::matrix_descr, diag::Ptr{Float64},
                                                  approx_diag_inverse::Ptr{Float64},
@@ -4616,6 +4691,7 @@ function mkl_sparse_d_lu_smoother_64(op, A, descr, diag, approx_diag_inverse, x,
 end
 
 function mkl_sparse_c_lu_smoother_64(op, A, descr, diag, approx_diag_inverse, x, rhs)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_lu_smoother_64(op::sparse_operation_t, A::sparse_matrix_t,
                                                  descr::matrix_descr,
                                                  diag::Ptr{ComplexF32},
@@ -4625,6 +4701,7 @@ function mkl_sparse_c_lu_smoother_64(op, A, descr, diag, approx_diag_inverse, x,
 end
 
 function mkl_sparse_z_lu_smoother_64(op, A, descr, diag, approx_diag_inverse, x, rhs)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_lu_smoother_64(op::sparse_operation_t, A::sparse_matrix_t,
                                                  descr::matrix_descr,
                                                  diag::Ptr{ComplexF64},
@@ -4667,6 +4744,7 @@ end
 
 function mkl_sparse_s_mm_64(operation, alpha, A, descr, layout, x, columns, ldx, beta, y,
                             ldy)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_mm_64(operation::sparse_operation_t, alpha::Float32,
                                         A::sparse_matrix_t, descr::matrix_descr,
                                         layout::sparse_layout_t, x::Ptr{Float32},
@@ -4676,6 +4754,7 @@ end
 
 function mkl_sparse_d_mm_64(operation, alpha, A, descr, layout, x, columns, ldx, beta, y,
                             ldy)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_mm_64(operation::sparse_operation_t, alpha::Float64,
                                         A::sparse_matrix_t, descr::matrix_descr,
                                         layout::sparse_layout_t, x::Ptr{Float64},
@@ -4685,6 +4764,7 @@ end
 
 function mkl_sparse_c_mm_64(operation, alpha, A, descr, layout, x, columns, ldx, beta, y,
                             ldy)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_mm_64(operation::sparse_operation_t, alpha::ComplexF32,
                                         A::sparse_matrix_t, descr::matrix_descr,
                                         layout::sparse_layout_t, x::Ptr{ComplexF32},
@@ -4695,6 +4775,7 @@ end
 
 function mkl_sparse_z_mm_64(operation, alpha, A, descr, layout, x, columns, ldx, beta, y,
                             ldy)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_mm_64(operation::sparse_operation_t, alpha::ComplexF64,
                                         A::sparse_matrix_t, descr::matrix_descr,
                                         layout::sparse_layout_t, x::Ptr{ComplexF64},
@@ -4736,6 +4817,7 @@ function mkl_sparse_z_trsm(operation, alpha, A, descr, layout, x, columns, ldx, 
 end
 
 function mkl_sparse_s_trsm_64(operation, alpha, A, descr, layout, x, columns, ldx, y, ldy)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_trsm_64(operation::sparse_operation_t, alpha::Float32,
                                           A::sparse_matrix_t, descr::matrix_descr,
                                           layout::sparse_layout_t, x::Ptr{Float32},
@@ -4744,6 +4826,7 @@ function mkl_sparse_s_trsm_64(operation, alpha, A, descr, layout, x, columns, ld
 end
 
 function mkl_sparse_d_trsm_64(operation, alpha, A, descr, layout, x, columns, ldx, y, ldy)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_trsm_64(operation::sparse_operation_t, alpha::Float64,
                                           A::sparse_matrix_t, descr::matrix_descr,
                                           layout::sparse_layout_t, x::Ptr{Float64},
@@ -4752,6 +4835,7 @@ function mkl_sparse_d_trsm_64(operation, alpha, A, descr, layout, x, columns, ld
 end
 
 function mkl_sparse_c_trsm_64(operation, alpha, A, descr, layout, x, columns, ldx, y, ldy)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_trsm_64(operation::sparse_operation_t,
                                           alpha::ComplexF32, A::sparse_matrix_t,
                                           descr::matrix_descr, layout::sparse_layout_t,
@@ -4761,6 +4845,7 @@ function mkl_sparse_c_trsm_64(operation, alpha, A, descr, layout, x, columns, ld
 end
 
 function mkl_sparse_z_trsm_64(operation, alpha, A, descr, layout, x, columns, ldx, y, ldy)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_trsm_64(operation::sparse_operation_t,
                                           alpha::ComplexF64, A::sparse_matrix_t,
                                           descr::matrix_descr, layout::sparse_layout_t,
@@ -4794,24 +4879,28 @@ function mkl_sparse_z_add(operation, A, alpha, B, C)
 end
 
 function mkl_sparse_s_add_64(operation, A, alpha, B, C)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_add_64(operation::sparse_operation_t, A::sparse_matrix_t,
                                          alpha::Float32, B::sparse_matrix_t,
                                          C::Ptr{sparse_matrix_t})::sparse_status_t
 end
 
 function mkl_sparse_d_add_64(operation, A, alpha, B, C)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_add_64(operation::sparse_operation_t, A::sparse_matrix_t,
                                          alpha::Float64, B::sparse_matrix_t,
                                          C::Ptr{sparse_matrix_t})::sparse_status_t
 end
 
 function mkl_sparse_c_add_64(operation, A, alpha, B, C)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_add_64(operation::sparse_operation_t, A::sparse_matrix_t,
                                          alpha::ComplexF32, B::sparse_matrix_t,
                                          C::Ptr{sparse_matrix_t})::sparse_status_t
 end
 
 function mkl_sparse_z_add_64(operation, A, alpha, B, C)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_add_64(operation::sparse_operation_t, A::sparse_matrix_t,
                                          alpha::ComplexF64, B::sparse_matrix_t,
                                          C::Ptr{sparse_matrix_t})::sparse_status_t
@@ -4824,6 +4913,7 @@ function mkl_sparse_spmm(operation, A, B, C)
 end
 
 function mkl_sparse_spmm_64(operation, A, B, C)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_spmm_64(operation::sparse_operation_t, A::sparse_matrix_t,
                                         B::sparse_matrix_t,
                                         C::Ptr{sparse_matrix_t})::sparse_status_t
@@ -4838,6 +4928,7 @@ function mkl_sparse_sp2m(transA, descrA, A, transB, descrB, B, request, C)
 end
 
 function mkl_sparse_sp2m_64(transA, descrA, A, transB, descrB, B, request, C)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_sp2m_64(transA::sparse_operation_t, descrA::matrix_descr,
                                         A::sparse_matrix_t, transB::sparse_operation_t,
                                         descrB::matrix_descr, B::sparse_matrix_t,
@@ -4851,6 +4942,7 @@ function mkl_sparse_syrk(operation, A, C)
 end
 
 function mkl_sparse_syrk_64(operation, A, C)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_syrk_64(operation::sparse_operation_t, A::sparse_matrix_t,
                                         C::Ptr{sparse_matrix_t})::sparse_status_t
 end
@@ -4863,6 +4955,7 @@ function mkl_sparse_sypr(transA, A, B, descrB, C, request)
 end
 
 function mkl_sparse_sypr_64(transA, A, B, descrB, C, request)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_sypr_64(transA::sparse_operation_t, A::sparse_matrix_t,
                                         B::sparse_matrix_t, descrB::matrix_descr,
                                         C::Ptr{sparse_matrix_t},
@@ -4903,6 +4996,7 @@ function mkl_sparse_z_syprd(op, A, B, layoutB, ldb, alpha, beta, C, layoutC, ldc
 end
 
 function mkl_sparse_s_syprd_64(op, A, B, layoutB, ldb, alpha, beta, C, layoutC, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_syprd_64(op::sparse_operation_t, A::sparse_matrix_t,
                                            B::Ptr{Float32}, layoutB::sparse_layout_t,
                                            ldb::Clonglong, alpha::Float32, beta::Float32,
@@ -4911,6 +5005,7 @@ function mkl_sparse_s_syprd_64(op, A, B, layoutB, ldb, alpha, beta, C, layoutC, 
 end
 
 function mkl_sparse_d_syprd_64(op, A, B, layoutB, ldb, alpha, beta, C, layoutC, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_syprd_64(op::sparse_operation_t, A::sparse_matrix_t,
                                            B::Ptr{Float64}, layoutB::sparse_layout_t,
                                            ldb::Clonglong, alpha::Float64, beta::Float64,
@@ -4919,6 +5014,7 @@ function mkl_sparse_d_syprd_64(op, A, B, layoutB, ldb, alpha, beta, C, layoutC, 
 end
 
 function mkl_sparse_c_syprd_64(op, A, B, layoutB, ldb, alpha, beta, C, layoutC, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_syprd_64(op::sparse_operation_t, A::sparse_matrix_t,
                                            B::Ptr{ComplexF32}, layoutB::sparse_layout_t,
                                            ldb::Clonglong, alpha::ComplexF32,
@@ -4928,6 +5024,7 @@ function mkl_sparse_c_syprd_64(op, A, B, layoutB, ldb, alpha, beta, C, layoutC, 
 end
 
 function mkl_sparse_z_syprd_64(op, A, B, layoutB, ldb, alpha, beta, C, layoutC, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_syprd_64(op::sparse_operation_t, A::sparse_matrix_t,
                                            B::Ptr{ComplexF64}, layoutB::sparse_layout_t,
                                            ldb::Clonglong, alpha::ComplexF64,
@@ -4961,6 +5058,7 @@ function mkl_sparse_z_spmmd(operation, A, B, layout, C, ldc)
 end
 
 function mkl_sparse_s_spmmd_64(operation, A, B, layout, C, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_spmmd_64(operation::sparse_operation_t,
                                            A::sparse_matrix_t, B::sparse_matrix_t,
                                            layout::sparse_layout_t, C::Ptr{Float32},
@@ -4968,6 +5066,7 @@ function mkl_sparse_s_spmmd_64(operation, A, B, layout, C, ldc)
 end
 
 function mkl_sparse_d_spmmd_64(operation, A, B, layout, C, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_spmmd_64(operation::sparse_operation_t,
                                            A::sparse_matrix_t, B::sparse_matrix_t,
                                            layout::sparse_layout_t, C::Ptr{Float64},
@@ -4975,6 +5074,7 @@ function mkl_sparse_d_spmmd_64(operation, A, B, layout, C, ldc)
 end
 
 function mkl_sparse_c_spmmd_64(operation, A, B, layout, C, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_spmmd_64(operation::sparse_operation_t,
                                            A::sparse_matrix_t, B::sparse_matrix_t,
                                            layout::sparse_layout_t, C::Ptr{ComplexF32},
@@ -4982,6 +5082,7 @@ function mkl_sparse_c_spmmd_64(operation, A, B, layout, C, ldc)
 end
 
 function mkl_sparse_z_spmmd_64(operation, A, B, layout, C, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_spmmd_64(operation::sparse_operation_t,
                                            A::sparse_matrix_t, B::sparse_matrix_t,
                                            layout::sparse_layout_t, C::Ptr{ComplexF64},
@@ -5028,6 +5129,7 @@ end
 
 function mkl_sparse_s_sp2md_64(transA, descrA, A, transB, descrB, B, alpha, beta, C, layout,
                                ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_sp2md_64(transA::sparse_operation_t, descrA::matrix_descr,
                                            A::sparse_matrix_t, transB::sparse_operation_t,
                                            descrB::matrix_descr, B::sparse_matrix_t,
@@ -5038,6 +5140,7 @@ end
 
 function mkl_sparse_d_sp2md_64(transA, descrA, A, transB, descrB, B, alpha, beta, C, layout,
                                ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_sp2md_64(transA::sparse_operation_t, descrA::matrix_descr,
                                            A::sparse_matrix_t, transB::sparse_operation_t,
                                            descrB::matrix_descr, B::sparse_matrix_t,
@@ -5048,6 +5151,7 @@ end
 
 function mkl_sparse_c_sp2md_64(transA, descrA, A, transB, descrB, B, alpha, beta, C, layout,
                                ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_sp2md_64(transA::sparse_operation_t, descrA::matrix_descr,
                                            A::sparse_matrix_t, transB::sparse_operation_t,
                                            descrB::matrix_descr, B::sparse_matrix_t,
@@ -5058,6 +5162,7 @@ end
 
 function mkl_sparse_z_sp2md_64(transA, descrA, A, transB, descrB, B, alpha, beta, C, layout,
                                ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_sp2md_64(transA::sparse_operation_t, descrA::matrix_descr,
                                            A::sparse_matrix_t, transB::sparse_operation_t,
                                            descrB::matrix_descr, B::sparse_matrix_t,
@@ -5093,6 +5198,7 @@ function mkl_sparse_z_syrkd(operation, A, alpha, beta, C, layout, ldc)
 end
 
 function mkl_sparse_s_syrkd_64(operation, A, alpha, beta, C, layout, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_syrkd_64(operation::sparse_operation_t,
                                            A::sparse_matrix_t, alpha::Float32, beta::Float32,
                                            C::Ptr{Float32}, layout::sparse_layout_t,
@@ -5100,6 +5206,7 @@ function mkl_sparse_s_syrkd_64(operation, A, alpha, beta, C, layout, ldc)
 end
 
 function mkl_sparse_d_syrkd_64(operation, A, alpha, beta, C, layout, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_syrkd_64(operation::sparse_operation_t,
                                            A::sparse_matrix_t, alpha::Float64,
                                            beta::Float64, C::Ptr{Float64},
@@ -5108,6 +5215,7 @@ function mkl_sparse_d_syrkd_64(operation, A, alpha, beta, C, layout, ldc)
 end
 
 function mkl_sparse_c_syrkd_64(operation, A, alpha, beta, C, layout, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_c_syrkd_64(operation::sparse_operation_t,
                                            A::sparse_matrix_t, alpha::ComplexF32,
                                            beta::ComplexF32, C::Ptr{ComplexF32},
@@ -5116,6 +5224,7 @@ function mkl_sparse_c_syrkd_64(operation, A, alpha, beta, C, layout, ldc)
 end
 
 function mkl_sparse_z_syrkd_64(operation, A, alpha, beta, C, layout, ldc)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_z_syrkd_64(operation::sparse_operation_t,
                                            A::sparse_matrix_t, alpha::ComplexF64,
                                            beta::ComplexF64, C::Ptr{ComplexF64},
@@ -5136,12 +5245,14 @@ function mkl_sparse_d_sorv(type, descrA, A, omega, alpha, x, b)
 end
 
 function mkl_sparse_s_sorv_64(type, descrA, A, omega, alpha, x, b)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_s_sorv_64(type::sparse_sor_type_t, descrA::matrix_descr,
                                           A::sparse_matrix_t, omega::Float32, alpha::Float32,
                                           x::Ptr{Float32}, b::Ptr{Float32})::sparse_status_t
 end
 
 function mkl_sparse_d_sorv_64(type, descrA, A, omega, alpha, x, b)
+    Sys.isapple() && error("This routine is not supported on Mac.")
     @ccall libmkl_rt.mkl_sparse_d_sorv_64(type::sparse_sor_type_t, descrA::matrix_descr,
                                           A::sparse_matrix_t, omega::Float64,
                                           alpha::Float64, x::Ptr{Float64},
