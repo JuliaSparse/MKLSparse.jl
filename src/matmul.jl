@@ -93,4 +93,5 @@ for (tchar, ttype) in (('N', :()),
     end
 end
 end # mat
+end # INT
 end # T
