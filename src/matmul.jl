@@ -6,23 +6,18 @@ _get_data(A::UpperTriangular) = triu(A.data)
 _get_data(A::UnitLowerTriangular) = tril(A.data)
 _get_data(A::UnitUpperTriangular) = triu(A.data)
 _get_data(A::Symmetric) = A.data
+_get_data(A::Hermitian) = A.data
 
 _unwrap_adj(x::Union{Adjoint,Transpose}) = parent(x)
 _unwrap_adj(x) = x
 
-const SparseMatrices{T} = Union{SparseMatrixCSC{T,BlasInt},
-                        Symmetric{T,SparseMatrixCSC{T,BlasInt}},
-                        LowerTriangular{T, SparseMatrixCSC{T,BlasInt}},
-                        UnitLowerTriangular{T, SparseMatrixCSC{T,BlasInt}},
-                        UpperTriangular{T, SparseMatrixCSC{T,BlasInt}},
-                        UnitUpperTriangular{T, SparseMatrixCSC{T,BlasInt}}}
-
-for T in [Complex{Float32}, Complex{Float64}, Float32, Float64]
+for T in [Float32, Float64, Complex{Float32}, Complex{Float64}]
+for INT in [Int32, Int64]
 for mat in (:StridedVector, :StridedMatrix)
 for (tchar, ttype) in (('N', :()),
                        ('C', :Adjoint),
                        ('T', :Transpose))
-    AT = tchar == 'N' ? :(SparseMatrixCSC{$T,BlasInt}) : :($ttype{$T,SparseMatrixCSC{$T,BlasInt}})
+    AT = tchar == 'N' ? :(SparseMatrixCSC{$T,$INT}) : :($ttype{$T,SparseMatrixCSC{$T,$INT}})
     @eval begin
         function mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}, α::Number, β::Number)
             A = _unwrap_adj(adjA)
@@ -45,10 +40,10 @@ for (tchar, ttype) in (('N', :()),
         end
     end
 
-    for w in (:Symmetric, :LowerTriangular, :UnitLowerTriangular, :UpperTriangular, :UnitUpperTriangular)
+    for w in (:Symmetric, :Hermitian, :LowerTriangular, :UnitLowerTriangular, :UpperTriangular, :UnitUpperTriangular)
         AT = tchar == 'N' ?
-            :($w{$T,SparseMatrixCSC{$T,BlasInt}}) :
-            :($ttype{$T,$w{$T,SparseMatrixCSC{$T,BlasInt}}})
+            :($w{$T,SparseMatrixCSC{$T,$INT}}) :
+            :($ttype{$T,$w{$T,SparseMatrixCSC{$T,$INT}}})
         @eval begin
             function mul!(C::$mat{$T}, adjA::$AT, B::$mat{$T}, α::Number, β::Number)
                 A = _unwrap_adj(adjA)
@@ -71,7 +66,7 @@ for (tchar, ttype) in (('N', :()),
             end
         end
 
-        if w != :Symmetric
+        if w != :Symmetric && w != :Hermitian
             @eval begin
                 function ldiv!(α::Number, adjA::$AT,
                                B::$mat{$T}, C::$mat{$T})

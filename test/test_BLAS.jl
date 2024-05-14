@@ -2,17 +2,19 @@ using MKLSparse
 using Test, SparseArrays, LinearAlgebra
 
 sA = sprand(5, 5, 0.01)
-sS = sA'sA
+sS = sA' * sA
 sTl = tril(sS)
 sTu = triu(sS)
 
 @test MKLSparse.matdescra(Symmetric(sTl,:L)) == "SLNF"
 @test MKLSparse.matdescra(Symmetric(sTu,:U)) == "SUNF"
+@test MKLSparse.matdescra(Hermitian(sTl,:L)) == "HLNF"
+@test MKLSparse.matdescra(Hermitian(sTu,:U)) == "HUNF"
 @test MKLSparse.matdescra(LowerTriangular(sTl)) == "TLNF"
 @test MKLSparse.matdescra(UpperTriangular(sTu)) == "TUNF"
 @test MKLSparse.matdescra(UnitLowerTriangular(sTl)) == "TLUF"
 @test MKLSparse.matdescra(UnitUpperTriangular(sTu)) == "TUUF"
-@test MKLSparse.matdescra(sA) == "GUUF"
+@test MKLSparse.matdescra(sA) == "GFNF"
 
 macro test_blas(ex)
     return quote
@@ -92,4 +94,5 @@ end
     @test_blas UnitUpperTriangular(triuUA) * b ≈ Array(UnitUpperTriangular(triuUA)) * b
 
     @test_blas Symmetric(symA) * b ≈ Array(Symmetric(symA)) * b
+    @test_blas Hermitian(symA) * b ≈ Array(Hermitian(symA)) * b
 end
