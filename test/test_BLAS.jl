@@ -16,13 +16,13 @@ sTu = triu(sS)
 @test MKLSparse.matdescra(UnitUpperTriangular(sTu)) == "TUUF"
 @test MKLSparse.matdescra(sA) == "GFNF"
 
-macro test_blas(ex)
+#=macro test(ex)
     return quote
         MKLSparse.__counter[] = 0
         @test $(esc(ex))
         @test MKLSparse.__counter[] == 1
     end
-end
+end=#
 
 @testset "matrix-vector multiplication (non-square)" begin
     T = Float64
@@ -32,15 +32,15 @@ end
             a = sprand(T, 10, 5, 0.5)
             a = SparseMatrixCSC{T, S}(a)
             b = rand(T, 5)
-            @test_blas maximum(abs.(a*b - Array(a)*b)) < 100*eps(T)
+            @test maximum(abs.(a*b - Array(a)*b)) < 100*eps(T)
             b = rand(T, 5, 5)
-            @test_blas maximum(abs.(a*b - Array(a)*b)) < 100*eps(T)
+            @test maximum(abs.(a*b - Array(a)*b)) < 100*eps(T)
             b = rand(T, 10)
-            @test_blas maximum(abs.(a'*b - Array(a)'*b)) < 100*eps(T)
-            @test_blas maximum(abs.(transpose(a)*b - Array(a)'*b)) < 100*eps(T)
+            @test maximum(abs.(a'*b - Array(a)'*b)) < 100*eps(T)
+            @test maximum(abs.(transpose(a)*b - Array(a)'*b)) < 100*eps(T)
             b = rand(T, 10, 10)
-            @test_blas maximum(abs.(a'*b - Array(a)'*b)) < 100*eps()
-            @test_blas maximum(abs.(transpose(a)*b - Array(a)'*b)) < 100*eps(T)
+            @test maximum(abs.(a'*b - Array(a)'*b)) < 100*eps()
+            @test maximum(abs.(transpose(a)*b - Array(a)'*b)) < 100*eps(T)
         end
     end
 end
@@ -59,20 +59,20 @@ end
             d = randn(T, 5) + im * randn(T, 5)
             α = rand(T)
             β = rand(T)
-            @test_blas (maximum(abs.(a*b - Array(a)*b)) < 100*eps(R))
-            @test_blas (maximum(abs.(a'*b - Array(a)'*b)) < 100*eps(R))
-            @test_blas (maximum(abs.(transpose(a)*b - transpose(Array(a))*b)) < 100*eps(R))
-            @test_blas (maximum(abs.(mul!(similar(b), a, b) - Array(a)*b)) < 100*eps(R))
-            @test_blas (maximum(abs.(mul!(similar(c), a, c) - Array(a)*c)) < 100*eps(R))
-            @test_blas (maximum(abs.(mul!(similar(b), transpose(a), b) - transpose(Array(a))*b)) < 100*eps(R))
-            @test_blas (maximum(abs.(mul!(similar(c), transpose(a), c) - transpose(Array(a))*c)) < 100*eps(R))
-            @test_blas (maximum(abs.(mul!(copy(b), a, b, α, β) - (α*(Array(a)*b) + β*b))) < 100*eps(R))
-            @test_blas (maximum(abs.(mul!(copy(b), transpose(a), b, α, β) - (α*(transpose(Array(a))*b) + β*b))) < 100*eps(R))
-            @test_blas (maximum(abs.(mul!(copy(c), transpose(a), c, α, β) - (α*(transpose(Array(a))*c) + β*c))) < 100*eps(R))
+            @test (maximum(abs.(a*b - Array(a)*b)) < 100*eps(R))
+            @test (maximum(abs.(a'*b - Array(a)'*b)) < 100*eps(R))
+            @test (maximum(abs.(transpose(a)*b - transpose(Array(a))*b)) < 100*eps(R))
+            @test (maximum(abs.(mul!(similar(b), a, b) - Array(a)*b)) < 100*eps(R))
+            @test (maximum(abs.(mul!(similar(c), a, c) - Array(a)*c)) < 100*eps(R))
+            @test (maximum(abs.(mul!(similar(b), transpose(a), b) - transpose(Array(a))*b)) < 100*eps(R))
+            @test (maximum(abs.(mul!(similar(c), transpose(a), c) - transpose(Array(a))*c)) < 100*eps(R))
+            @test (maximum(abs.(mul!(copy(b), a, b, α, β) - (α*(Array(a)*b) + β*b))) < 100*eps(R))
+            @test (maximum(abs.(mul!(copy(b), transpose(a), b, α, β) - (α*(transpose(Array(a))*b) + β*b))) < 100*eps(R))
+            @test (maximum(abs.(mul!(copy(c), transpose(a), c, α, β) - (α*(transpose(Array(a))*c) + β*c))) < 100*eps(R))
             α = β = 1 # test conversion to float
-            @test_blas (maximum(abs.(mul!(copy(b), a, b, α, β) - (α*(Array(a)*b) + β*b))) < 100*eps(R))
-            @test_blas (maximum(abs.(mul!(copy(b), transpose(a), b, α, β) - (α*(transpose(Array(a))*b) + β*b))) < 100*eps(R))
-            @test_blas (maximum(abs.(mul!(copy(c), transpose(a), c, α, β) - (α*(transpose(Array(a))*c) + β*c))) < 100*eps(R))
+            @test (maximum(abs.(mul!(copy(b), a, b, α, β) - (α*(Array(a)*b) + β*b))) < 100*eps(R))
+            @test (maximum(abs.(mul!(copy(b), transpose(a), b, α, β) - (α*(transpose(Array(a))*b) + β*b))) < 100*eps(R))
+            @test (maximum(abs.(mul!(copy(c), transpose(a), c, α, β) - (α*(transpose(Array(a))*c) + β*c))) < 100*eps(R))
 
             c = randn(T, 6) + im * randn(T, 6)
             @test_throws DimensionMismatch transpose(a)*c
@@ -95,17 +95,17 @@ end
             trilUA = tril(A, -1) + I
             triuUA = triu(A, 1)  + I
 
-            @test_blas LowerTriangular(trilA) \ b ≈ Array(LowerTriangular(trilA)) \ b
-            @test_blas LowerTriangular(trilA) * b ≈ Array(LowerTriangular(trilA)) * b
+            @test LowerTriangular(trilA) \ b ≈ Array(LowerTriangular(trilA)) \ b
+            @test LowerTriangular(trilA) * b ≈ Array(LowerTriangular(trilA)) * b
 
-            @test_blas UpperTriangular(triuA) \ b ≈ Array(UpperTriangular(triuA)) \ b
-            @test_blas UpperTriangular(triuA) * b ≈ Array(UpperTriangular(triuA)) * b
+            @test UpperTriangular(triuA) \ b ≈ Array(UpperTriangular(triuA)) \ b
+            @test UpperTriangular(triuA) * b ≈ Array(UpperTriangular(triuA)) * b
 
-            @test_blas UnitLowerTriangular(trilUA) \ b ≈ Array(UnitLowerTriangular(trilUA)) \ b
-            @test_blas UnitLowerTriangular(trilUA) * b ≈ Array(UnitLowerTriangular(trilUA)) * b
+            @test UnitLowerTriangular(trilUA) \ b ≈ Array(UnitLowerTriangular(trilUA)) \ b
+            @test UnitLowerTriangular(trilUA) * b ≈ Array(UnitLowerTriangular(trilUA)) * b
 
-            @test_blas UnitUpperTriangular(triuUA) \ b ≈ Array(UnitUpperTriangular(triuUA)) \ b
-            @test_blas UnitUpperTriangular(triuUA) * b ≈ Array(UnitUpperTriangular(triuUA)) * b
+            @test UnitUpperTriangular(triuUA) \ b ≈ Array(UnitUpperTriangular(triuUA)) \ b
+            @test UnitUpperTriangular(triuUA) * b ≈ Array(UnitUpperTriangular(triuUA)) * b
         end
     end
 end
@@ -120,8 +120,8 @@ end
             symA = A + transpose(A)
             hermA = A + adjoint(A)
 
-            @test_blas Symmetric(symA) * b ≈ Array(Symmetric(symA)) * b
-            @test_blas Hermitian(hermA) * b ≈ Array(Hermitian(hermA)) * b
+            @test Symmetric(symA) * b ≈ Array(Symmetric(symA)) * b
+            @test Hermitian(hermA) * b ≈ Array(Hermitian(hermA)) * b
         end
     end
 end
