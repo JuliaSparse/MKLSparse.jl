@@ -34,7 +34,7 @@ for (fname, T) in ((:mkl_scscmv, :Float32   ),
     @eval begin
         function cscmv!(transa::Char, α::$T, matdescra::String,
                         A::SparseMatrixCSC{$T, Int32}, x::StridedVector{$T},
-                        β::T, y::StridedVector{$T})
+                        β::$T, y::StridedVector{$T})
             _check_transa(transa)
             _check_mat_mult_matvec(y, A, x, transa)
             __counter[] += 1
@@ -44,7 +44,7 @@ for (fname, T) in ((:mkl_scscmv, :Float32   ),
 
         function cscmv!(transa::Char, α::$T, matdescra::String,
                         A::SparseMatrixCSC{$T, Int64}, x::StridedVector{$T},
-                        β::T, y::StridedVector{$T})
+                        β::$T, y::StridedVector{$T})
             _check_transa(transa)
             _check_mat_mult_matvec(y, A, x, transa)
             __counter[] += 1
@@ -154,4 +154,3 @@ for (fname, T) in ((:mkl_scscsm, :Float32   ),
         end
     end
 end
-
