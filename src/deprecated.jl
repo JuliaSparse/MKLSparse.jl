@@ -1,3 +1,14 @@
+matdescra(A::LowerTriangular) = "TLNF"
+matdescra(A::UpperTriangular) = "TUNF"
+matdescra(A::Diagonal) = "DUNF"
+matdescra(A::UnitLowerTriangular) = "TLUF"
+matdescra(A::UnitUpperTriangular) = "TUUF"
+matdescra(A::Symmetric) = string('S', A.uplo, 'N', 'F')
+matdescra(A::Hermitian) = string('H', A.uplo, 'N', 'F')
+matdescra(A::SparseMatrixCSC) = "GUUF"
+matdescra(A::Transpose) = matdescra(A.parent)
+matdescra(A::Adjoint) = matdescra(A.parent)
+
 # The increments to the `__counter` variable is for testing purposes
 
 function _check_transa(t::Char)
@@ -33,7 +44,6 @@ function cscmv!(transa::Char, α::T, matdescra::String,
     _check_transa(transa)
     _check_mat_mult_matvec(y, A, x, transa)
     __counter[] += 1
-
     T == Float32    && (mkl_scscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
     T == Float64    && (mkl_dcscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
     T == ComplexF32 && (mkl_ccscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
