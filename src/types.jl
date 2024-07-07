@@ -14,6 +14,16 @@ function mkl_type_specifier(T::Symbol)
     end
 end
 
+function mkl_integer_specifier(INT::Symbol)
+    if INT == :Int32
+        ""
+    elseif INT == :Int64
+        "_64"
+    else
+        throw(ArgumentError("Unsupported numeric type $INT"))
+    end
+end
+
 matrixdescra(A::LowerTriangular)     = matrix_descr('T','L','N')
 matrixdescra(A::UpperTriangular)     = matrix_descr('T','U','N')
 matrixdescra(A::Diagonal)            = matrix_descr('D','F','N')
