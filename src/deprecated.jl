@@ -39,7 +39,7 @@ function _check_mat_mult_matvec(C, A, B, tA)
 end
 
 function cscmv!(transa::Char, α::T, matdescra::String,
-                A::SparseMatrixCSC{T, BlasInt}, x::StridedVector{T},
+                A::SparseMatrixCSC{T, Int32}, x::StridedVector{T},
                 β::T, y::StridedVector{T}) where {T <: BlasFloat}
     _check_transa(transa)
     _check_mat_mult_matvec(y, A, x, transa)
@@ -52,7 +52,7 @@ function cscmv!(transa::Char, α::T, matdescra::String,
 end
 
 function cscmm!(transa::Char, α::T, matdescra::String,
-                A::SparseMatrixCSC{T, BlasInt}, B::StridedMatrix{T},
+                A::SparseMatrixCSC{T, Int32}, B::StridedMatrix{T},
                 β::T, C::StridedMatrix{T}) where {T <: BlasFloat}
     _check_transa(transa)
     _check_mat_mult_matvec(C, A, B, transa)
@@ -67,7 +67,7 @@ function cscmm!(transa::Char, α::T, matdescra::String,
 end
 
 function cscsv!(transa::Char, α::T, matdescra::String,
-                A::SparseMatrixCSC{T, BlasInt}, x::StridedVector{T},
+                A::SparseMatrixCSC{T, Int32}, x::StridedVector{T},
                 y::StridedVector{T}) where {T <: BlasFloat}
     n = checksquare(A)
     _check_transa(transa)
@@ -81,7 +81,7 @@ function cscsv!(transa::Char, α::T, matdescra::String,
 end
 
 function cscsm!(transa::Char, α::T, matdescra::String,
-                A::SparseMatrixCSC{T, BlasInt}, B::StridedMatrix{T},
+                A::SparseMatrixCSC{T, Int32}, B::StridedMatrix{T},
                 C::StridedMatrix{T}) where {T <: BlasFloat}
     mB, nB = size(B)
     mC, nC = size(C)

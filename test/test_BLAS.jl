@@ -23,64 +23,70 @@ macro test_blas(ex)
 end
 
 for T in (Float64, ComplexF64)
-    @testset "matrix-vector and matrix-matrix multiplications (non-square) -- $T" begin
-        for i = 1:5
-            a = sprand(T, 10, 5, 0.5)
-            b = rand(T, 5)
-            @test_blas a*b ≈ Array(a)*b
-            B = rand(T, 5, 5)
-            @test_blas a*B ≈ Array(a)*B
-            b = rand(T, 10)
-            @test_blas a'*b ≈ Array(a)'*b
-            @test_blas transpose(a)*b ≈ transpose(Array(a))*b
-            B = rand(T, 10, 10)
-            @test_blas a'*B ≈ Array(a)'*B
-            @test_blas transpose(a)*B ≈ transpose(Array(a))*B
+  INT_TYPES = Base.USE_BLAS64 ? (Int32, Int64) : (Int32,)
+  for INT in INT_TYPES
+        @testset "matrix-vector and matrix-matrix multiplications (non-square) -- $T -- $INT" begin
+            for i = 1:5
+                A = sprand(T, 10, 5, 0.5)
+                A = SparseMatrixCSC{T,INT}(A)
+                b = rand(T, 5)
+                @test_blas A*b ≈ Array(A)*b
+                B = rand(T, 5, 5)
+                @test_blas A*B ≈ Array(A)*B
+                b = rand(T, 10)
+                @test_blas A'*b ≈ Array(A)'*b
+                @test_blas transpose(A)*b ≈ transpose(Array(A))*b
+                B = rand(T, 10, 10)
+                @test_blas A'*B ≈ Array(A)'*B
+                @test_blas transpose(A)*B ≈ transpose(Array(A))*B
+            end
         end
-    end
 
-    @testset "Symmetric / Hermitian -- $T" begin
-        n = 10
-        A = sprandn(T, n, n, 0.5) + sqrt(n)*I
-        b = rand(T, n)
-        B = rand(T, n, 3)
-        symA = A + transpose(A)
-        hermA = A + adjoint(A)
-        @test_blas Symmetric(symA) * b ≈ Array(Symmetric(symA)) * b
-        @test_blas Hermitian(hermA) * b ≈ Array(Hermitian(hermA)) * b
-        @test_blas Symmetric(symA) * B ≈ Array(Symmetric(symA)) * B
-        @test_blas Hermitian(hermA) * B ≈ Array(Hermitian(hermA)) * B
-    end
+        @testset "Symmetric / Hermitian -- $T -- $INT" begin
+            n = 10
+            A = sprandn(T, n, n, 0.5) + sqrt(n)*I
+            A = SparseMatrixCSC{T,INT}(A)
+            b = rand(T, n)
+            B = rand(T, n, 3)
+            symA = A + transpose(A)
+            hermA = A + adjoint(A)
+            @test_blas Symmetric(symA) * b ≈ Array(Symmetric(symA)) * b
+            @test_blas Hermitian(hermA) * b ≈ Array(Hermitian(hermA)) * b
+            @test_blas Symmetric(symA) * B ≈ Array(Symmetric(symA)) * B
+            @test_blas Hermitian(hermA) * B ≈ Array(Hermitian(hermA)) * B
+        end
 
-    @testset "triangular -- $T" begin
-        n = 10
-        A = sprandn(T, n, n, 0.5) + sqrt(n)*I
-        b = rand(T, n)
-        B = rand(T, n, 3)
-        trilA = tril(A)
-        triuA = triu(A)
-        trilUA = tril(A, -1) + I
-        triuUA = triu(A, 1)  + I
+        @testset "triangular -- $T -- $INT" begin
+            n = 10
+            A = sprandn(T, n, n, 0.5) + sqrt(n)*I
+            A = SparseMatrixCSC{T,INT}(A)
+            b = rand(T, n)
+            B = rand(T, n, 3)
+            trilA = tril(A)
+            triuA = triu(A)
+            trilUA = tril(A, -1) + I
+            triuUA = triu(A, 1)  + I
 
-        @test_blas LowerTriangular(trilA) \ b ≈ Array(LowerTriangular(trilA)) \ b
-        @test_blas LowerTriangular(trilA) * b ≈ Array(LowerTriangular(trilA)) * b
-        @test_blas LowerTriangular(trilA) \ B ≈ Array(LowerTriangular(trilA)) \ B
-        @test_blas LowerTriangular(trilA) * B ≈ Array(LowerTriangular(trilA)) * B
+            @test_blas LowerTriangular(trilA) \ b ≈ Array(LowerTriangular(trilA)) \ b
+            @test_blas LowerTriangular(trilA) * b ≈ Array(LowerTriangular(trilA)) * b
+            @test_blas LowerTriangular(trilA) \ B ≈ Array(LowerTriangular(trilA)) \ B
+            @test_blas LowerTriangular(trilA) * B ≈ Array(LowerTriangular(trilA)) * B
 
-        @test_blas UpperTriangular(triuA) \ b ≈ Array(UpperTriangular(triuA)) \ b
-        @test_blas UpperTriangular(triuA) * b ≈ Array(UpperTriangular(triuA)) * b
-        @test_blas UpperTriangular(triuA) \ B ≈ Array(UpperTriangular(triuA)) \ B
-        @test_blas UpperTriangular(triuA) * B ≈ Array(UpperTriangular(triuA)) * B
+            @test_blas UpperTriangular(triuA) \ b ≈ Array(UpperTriangular(triuA)) \ b
+            @test_blas UpperTriangular(triuA) * b ≈ Array(UpperTriangular(triuA)) * b
+            @test_blas UpperTriangular(triuA) \ B ≈ Array(UpperTriangular(triuA)) \ B
+            @test_blas UpperTriangular(triuA) * B ≈ Array(UpperTriangular(triuA)) * B
 
-        @test_blas UnitLowerTriangular(trilUA) \ b ≈ Array(UnitLowerTriangular(trilUA)) \ b
-        @test_blas UnitLowerTriangular(trilUA) * b ≈ Array(UnitLowerTriangular(trilUA)) * b
-        @test_blas UnitLowerTriangular(trilUA) \ B ≈ Array(UnitLowerTriangular(trilUA)) \ B
-        @test_blas UnitLowerTriangular(trilUA) * B ≈ Array(UnitLowerTriangular(trilUA)) * B
+            @test_blas UnitLowerTriangular(trilUA) \ b ≈ Array(UnitLowerTriangular(trilUA)) \ b
+            @test_blas UnitLowerTriangular(trilUA) * b ≈ Array(UnitLowerTriangular(trilUA)) * b
+            @test_blas UnitLowerTriangular(trilUA) \ B ≈ Array(UnitLowerTriangular(trilUA)) \ B
+            @test_blas UnitLowerTriangular(trilUA) * B ≈ Array(UnitLowerTriangular(trilUA)) * B
 
-        @test_blas UnitUpperTriangular(triuUA) \ b ≈ Array(UnitUpperTriangular(triuUA)) \ b
-        @test_blas UnitUpperTriangular(triuUA) * b ≈ Array(UnitUpperTriangular(triuUA)) * b
-        @test_blas UnitUpperTriangular(triuUA) \ B ≈ Array(UnitUpperTriangular(triuUA)) \ B
-        @test_blas UnitUpperTriangular(triuUA) * B ≈ Array(UnitUpperTriangular(triuUA)) * B
+            @test_blas UnitUpperTriangular(triuUA) \ b ≈ Array(UnitUpperTriangular(triuUA)) \ b
+            @test_blas UnitUpperTriangular(triuUA) * b ≈ Array(UnitUpperTriangular(triuUA)) * b
+            @test_blas UnitUpperTriangular(triuUA) \ B ≈ Array(UnitUpperTriangular(triuUA)) \ B
+            @test_blas UnitUpperTriangular(triuUA) * B ≈ Array(UnitUpperTriangular(triuUA)) * B
+        end
     end
 end
 
