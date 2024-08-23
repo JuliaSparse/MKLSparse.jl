@@ -1,92 +1,69 @@
 import Base: \, *
 import LinearAlgebra: mul!, ldiv!
 
-for T in (:Float32, :Float64, :ComplexF32, :ComplexF64)
-  INT_TYPES = Base.USE_BLAS64 ? (:Int32, :Int64) : (:Int32,)
-  for INT in INT_TYPES
+MKLSparseMat{T} = Union{SparseArrays.AbstractSparseMatrixCSC{T}, SparseMatrixCSR{T}, SparseMatrixCOO{T}}
 
-    tag_wrappers = ((identity                 , identity          ),
-                    (M -> :(Symmetric{$T, $M}), A -> :(parent($A))),
-                    (M -> :(Hermitian{$T, $M}), A -> :(parent($A))))
+SimpleOrSpecialMat{T, M} = Union{M, LowerTriangular{T,<:M}, UpperTriangular{T,<:M},
+                                 UnitLowerTriangular{T,<:M}, UnitUpperTriangular{T,<:M},
+                                 Symmetric{T,<:M}, Hermitian{T,<:M}}
+SimpleOrSpecialOrAdjMat{T, M} = Union{SimpleOrSpecialMat{T, M},
+                                      Adjoint{T, <:SimpleOrSpecialMat{T, M}},
+                                      Transpose{T, <:SimpleOrSpecialMat{T, M}}}
 
-    triangle_wrappers = ((M -> :(LowerTriangular{$T, $M})    , A -> :(parent($A))),
-                         (M -> :(UnitLowerTriangular{$T, $M}), A -> :(parent($A))),
-                         (M -> :(UpperTriangular{$T, $M})    , A -> :(parent($A))),
-                         (M -> :(UnitUpperTriangular{$T, $M}), A -> :(parent($A))))
+unwrapa(A::AbstractMatrix) = A
+unwrapa(A::Union{LowerTriangular, UpperTriangular,
+                 UnitLowerTriangular, UnitUpperTriangular,
+                 Symmetric, Hermitian}) = parent(A)
 
-    op_wrappers = ((identity                 , 'N', identity          ),
-                   (M -> :(Transpose{$T, $M}), 'T', A -> :(parent($A))),
-                   (M -> :(Adjoint{$T, $M})  , 'C', A -> :(parent($A))))
+# returns a tuple of transa, matdescra and unwrapped A
+describe_and_unwrap(A::AbstractMatrix) = ('N', matrixdescra(A), unwrapa(A))
+describe_and_unwrap(A::Adjoint) = ('C', matrixdescra(A), unwrapa(parent(A)))
+describe_and_unwrap(A::Transpose) = ('T', matrixdescra(A), unwrapa(parent(A)))
 
-    for SparseMatrixType in (:(SparseMatrixCSC{$T, $INT}), :(MKLSparse.SparseMatrixCOO{$T, $INT}), :(MKLSparse.SparseMatrixCSR{$T, $INT}))
-      for (taga, untaga) in tag_wrappers, (wrapa, transa, unwrapa) in op_wrappers
-        TypeA = wrapa(taga(SparseMatrixType))
+# 5-arg mul!()
+function mul!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}, alpha::Number, beta::Number) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+    transA, descrA, unwrapA = describe_and_unwrap(A)
+    mv!(transA, T(alpha), unwrapA, descrA, x, T(beta), y)
+end
 
-        @eval begin
-          function LinearAlgebra.mul!(y::StridedVector{$T}, A::$TypeA, x::StridedVector{$T}, alpha::Number, beta::Number)
-              # return cscmv!($transa, $T(alpha), $matdescra(A), $(untaga(unwrapa(:A))), x, $T(beta), y)
-              return mv!($transa, $T(alpha), $(untaga(unwrapa(:A))), $matrixdescra(A), x, $T(beta), y)
-          end
+function mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S}, B::StridedMatrix{T}, alpha::Number, beta::Number) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+    transA, descrA, unwrapA = describe_and_unwrap(A)
+    mm!(transA, T(alpha), unwrapA, descrA, B, T(beta), C)
+end
 
-          function LinearAlgebra.mul!(C::StridedMatrix{$T}, A::$TypeA, B::StridedMatrix{$T}, alpha::Number, beta::Number)
-              # return cscmm!($transa, $T(alpha), $matdescra(A), $(untaga(unwrapa(:A))), B, $T(beta), C)
-              return mm!($transa, $T(alpha), $(untaga(unwrapa(:A))), $matrixdescra(A), B, $T(beta), C)
-          end
-        end
-      end
+# define 4-arg ldiv!(C, A, B, a) (C := alpha*inv(A)*B) that is not present in standard LinearAlgrebra
+# redefine 3-arg ldiv!(C, A, B) using 4-arg ldiv!(C, A, B, 1)
+function ldiv!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}, alpha::Number = one(T)) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+    transA, descrA, unwrapA = describe_and_unwrap(A)
+    trsv!(transA, alpha, unwrapA, descrA, x, y)
+end
 
-      for (trianglea, untrianglea) in triangle_wrappers, (wrapa, transa, unwrapa) in op_wrappers
-        TypeA = wrapa(trianglea(SparseMatrixType))
+function LinearAlgebra.ldiv!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S}, B::StridedMatrix{T}, alpha::Number = one(T)) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+    transA, descrA, unwrapA = describe_and_unwrap(A)
+    trsm!(transA, alpha, unwrapA, descrA, B, C)
+end
 
-        @eval begin
-          function LinearAlgebra.mul!(y::StridedVector{$T}, A::$TypeA, x::StridedVector{$T}, alpha::Number, beta::Number)
-              # return cscmv!($transa, $T(alpha), $matdescra(A), $(untrianglea(unwrapa(:A))), x, $T(beta), y)
-              return mv!($transa, $T(alpha), $(untrianglea(unwrapa(:A))), $matrixdescra(A), x, $T(beta), y)
-          end
+function (*)(A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+    m, n = size(A)
+    y = Vector{T}(undef, m)
+    return mul!(y, A, x, one(T), zero(T))
+end
 
-          function LinearAlgebra.mul!(C::StridedMatrix{$T}, A::$TypeA, B::StridedMatrix{$T}, alpha::Number, beta::Number)
-              # return cscmm!($transa, $T(alpha), $matdescra(A), $(untrianglea(unwrapa(:A))), B, $T(beta), C)
-              return mm!($transa, $T(alpha), $(untrianglea(unwrapa(:A))), $matrixdescra(A), B, $T(beta), C)
-          end
+function (*)(A::SimpleOrSpecialOrAdjMat{T, S}, B::StridedMatrix{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+    m, k = size(A)
+    p, n = size(B)
+    C = Matrix{T}(undef, m, n)
+    return mul!(C, A, B, one(T), zero(T))
+end
 
-          # define 4-arg ldiv!(C, A, B, a) (C := alpha*inv(A)*B) that is not present in standard LinearAlgrebra
-          # redefine 3-arg ldiv!(C, A, B) using 4-arg ldiv!(C, A, B, 1)
-          function LinearAlgebra.ldiv!(y::StridedVector{$T}, A::$TypeA, x::StridedVector{$T}, alpha::Number = one($T))
-            # return cscsv!($transa, alpha, $matdescra(A), $(untrianglea(unwrapa(:A))), x, y)
-            return trsv!($transa, alpha, $(untrianglea(unwrapa(:A))), $matrixdescra(A), x, y)
-          end
+function (\)(A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+    n = length(x)
+    y = Vector{T}(undef, n)
+    return ldiv!(y, A, x)
+end
 
-          function LinearAlgebra.ldiv!(C::StridedMatrix{$T}, A::$TypeA, B::StridedMatrix{$T}, alpha::Number = one($T))
-            # return cscsm!($transa, alpha, $matdescra(A), $(untrianglea(unwrapa(:A))), B, C)
-            return trsm!($transa, alpha, $(untrianglea(unwrapa(:A))), $matrixdescra(A), B, C)
-          end
-
-          function (*)(A::$TypeA, x::StridedVector{$T})
-            m, n = size(A)
-            y = Vector{$T}(undef, m)
-            return mul!(y, A, x, one($T), zero($T))
-          end
-
-          function (*)(A::$TypeA, B::StridedMatrix{$T})
-            m, k = size(A)
-            p, n = size(B)
-            C = Matrix{$T}(undef, m, n)
-            return mul!(C, A, B, one($T), zero($T))
-          end
-
-          function (\)(A::$TypeA, x::StridedVector{$T})
-            n = length(x)
-            y = Vector{$T}(undef, n)
-            return ldiv!(y, A, x)
-          end
-
-          function (\)(A::$TypeA, B::StridedMatrix{$T})
-            m, n = size(B)
-            C = Matrix{$T}(undef, m, n)
-            return ldiv!(C, A, B)
-          end
-        end
-      end
-    end
-  end
+function (\)(A::SimpleOrSpecialOrAdjMat{T, S}, B::StridedMatrix{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+    m, n = size(B)
+    C = Matrix{T}(undef, m, n)
+    return ldiv!(C, A, B)
 end

@@ -18,6 +18,9 @@ mutable struct SparseMatrixCSR{Tv,Ti} <: AbstractSparseMatrix{Tv,Ti}
   nzval::Vector{Tv}
 end
 
+mkl_storagetype_specifier(::Type{<:SparseMatrixCOO}) = "coo"
+mkl_storagetype_specifier(::Type{<:SparseMatrixCSR}) = "csr"
+
 Base.size(A::MKLSparse.SparseMatrixCOO) = (A.m, A.n)
 Base.size(A::MKLSparse.SparseMatrixCSR) = (A.m, A.n)
 
@@ -33,42 +36,32 @@ end
 
 Base.unsafe_convert(::Type{sparse_matrix_t}, desc::MKLSparseMatrix) = desc.handle
 
-for T in (:Float32, :Float64, :ComplexF32, :ComplexF64)
-  INT_TYPES = Base.USE_BLAS64 ? (:Int32, :Int64) : (:Int32,)
-  for INT in INT_TYPES
+function MKLSparseMatrix(A::SparseMatrixCOO, IndexBase::Char='O')
+    descr_ref = Ref{sparse_matrix_t}()
+    mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
+             descr_ref, IndexBase, A.m, A.n, nnz(A), A.rows, A.cols, A.vals,
+             log=Val{false}())
+    obj = MKLSparseMatrix(descr_ref[])
+    finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
+    return obj
+end
 
-    create_coo = Symbol("mkl_sparse_", mkl_type_specifier(T), "_create_coo", mkl_integer_specifier(INT))
-    create_csc = Symbol("mkl_sparse_", mkl_type_specifier(T), "_create_csc", mkl_integer_specifier(INT))
-    create_csr = Symbol("mkl_sparse_", mkl_type_specifier(T), "_create_csr", mkl_integer_specifier(INT))
-    sparse_destroy = (INT == :Int32) ? :mkl_sparse_destroy : :mkl_sparse_destroy_64
+function MKLSparseMatrix(A::SparseMatrixCSR, IndexBase::Char='O')
+    descr_ref = Ref{sparse_matrix_t}()
+    mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
+             descr_ref, IndexBase, A.m, A.n, A.rowptr, pointer(A.rowptr, 2), A.colval, A.nzval,
+             log=Val{false}())
+    obj = MKLSparseMatrix(descr_ref[])
+    finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
+    return obj
+end
 
-    @eval begin
-      # SparseMatrixCOO
-      function MKLSparseMatrix(A::MKLSparse.SparseMatrixCOO{$T, $INT}, IndexBase::Char='O')
-        descr_ref = Ref{sparse_matrix_t}()
-        $create_coo(descr_ref, IndexBase, A.m, A.n, nnz(A), A.rows, A.cols, A.vals)
-        obj = MKLSparseMatrix(descr_ref[])
-        finalizer($sparse_destroy, obj)
-        return obj
-      end
-
-      # SparseMatrixCSR
-      function MKLSparseMatrix(A::MKLSparse.SparseMatrixCSR{$T, $INT}, IndexBase::Char='O')
-        descr_ref = Ref{sparse_matrix_t}()
-        $create_csr(descr_ref, IndexBase, A.m, A.n, A.rowptr, pointer(A.rowptr, 2), A.colval, A.nzval)
-        obj = MKLSparseMatrix(descr_ref[])
-        finalizer($sparse_destroy, obj)
-        return obj
-      end
-
-      # SparseMatrixCSC
-      function MKLSparseMatrix(A::SparseMatrixCSC{$T, $INT}, IndexBase::Char='O')
-        descr_ref = Ref{sparse_matrix_t}()
-        $create_csc(descr_ref, IndexBase, A.m, A.n, A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval)
-        obj = MKLSparseMatrix(descr_ref[])
-        finalizer($sparse_destroy, obj)
-        return obj
-      end
-    end
-  end
+function MKLSparseMatrix(A::SparseMatrixCSC, IndexBase::Char='O')
+    descr_ref = Ref{sparse_matrix_t}()
+    mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
+             descr_ref, IndexBase, A.m, A.n, A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval,
+             log=Val{false}())
+    obj = MKLSparseMatrix(descr_ref[])
+    finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
+    return obj
 end

@@ -1,28 +1,44 @@
 # MKL sparse types
 
-function mkl_type_specifier(T::Symbol)
-    if T == :Float32
+@inline function mkl_valtype_specifier(::Type{Tv}) where Tv <: BlasFloat
+    if Tv == Float32
         's'
-    elseif T == :Float64
+    elseif Tv == Float64
         'd'
-    elseif T == :ComplexF32
+    elseif Tv == ComplexF32
         'c'
-    elseif T == :ComplexF64
+    elseif Tv == ComplexF64
         'z'
     else
-        throw(ArgumentError("Unsupported numeric type $T"))
+        throw(ArgumentError("Unsupported sparse value type $Tv"))
     end
 end
 
-function mkl_integer_specifier(INT::Symbol)
-    if INT == :Int32
+@inline function mkl_indextype_specifier(::Type{Ti}) where Ti <: Integer
+    if Ti == Int32
         ""
-    elseif INT == :Int64
+    elseif Ti == Int64
         "_64"
     else
-        throw(ArgumentError("Unsupported numeric type $INT"))
+        throw(ArgumentError("Unsupported sparse index type $Ti"))
     end
 end
+
+mkl_storagetype_specifier(::Type{S}) where S <: AbstractSparseMatrix =
+    throw(ArgumentError("Unsupported sparse matrix storage type $S"))
+
+mkl_storagetype_specifier(::Type{<:SparseMatrixCSC}) = "csc"
+
+# generates the name of the MKL call from the template
+# 'S' char replaced by a specifier of the sparse storage type S
+# 'T' char replaced by a specifier of the value type Tv
+# 'I' char replaced by a specifier of the index type Ti
+# (e.g. 's' for Float32), so the actuall function being called is mkl_scscmm()
+@inline Base.@assume_effects :foldable mkl_function_name(template::Symbol, S::Type, Tv::Type, Ti::Type) =
+    Symbol(reduce(replace, ["T" => mkl_valtype_specifier(Tv),
+                            "I" => mkl_indextype_specifier(Ti),
+                            "S" => mkl_storagetype_specifier(S)],
+                  init=String(template)))
 
 matrixdescra(A::LowerTriangular)     = matrix_descr('T','L','N')
 matrixdescra(A::UpperTriangular)     = matrix_descr('T','U','N')
