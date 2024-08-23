@@ -28,6 +28,17 @@ macro blas(ex)
     end
 end
 
+# special matrix classes to test
+# and the function to create a matrix of that class from a random sparse matrix
+matrix_classes = [
+    Symmetric => sp -> sp + transpose(sp),
+    Hermitian => sp -> sp + adjoint(sp),
+    LowerTriangular => sp -> tril(sp),
+    UpperTriangular => sp -> triu(sp),
+    UnitLowerTriangular => sp -> tril(sp, -1) + I,
+    UnitUpperTriangular => sp -> triu(sp, 1) + I,
+]
+
 @testset "SparseBLAS for $T matrices and vectors and $IT indices" for
     T in (Float32, Float64, ComplexF32, ComplexF64),
     IT in (Base.USE_BLAS64 ? (Int32, Int64) : (Int32,))
@@ -105,42 +116,40 @@ end
         @test @blas(mul!(copy(ab), spA, b, 1, 1)) ≈ a*b + ab atol=atol
         @test @blas(mul!(copy(tac), transpose(spA), c, 1, 1)) ≈ transpose(a)*c + tac atol=atol
         @test @blas(mul!(copy(tac), spA', c, 1, 1)) ≈ a'*c + tac atol=atol
-
-        symA = spA + transpose(spA)
-        @test @blas(Symmetric(symA) * b) ≈ Array(Symmetric(symA)) * b
-        hermA = spA + adjoint(spA)
-        @test @blas(Hermitian(hermA) * b) ≈ Array(Hermitian(hermA)) * b
     end
 end
 
-@testset "SparseMatrixCSC{$T, $IT} {* /} Vector{$T} for triangular/symmetric/hermitian" begin
+@testset "$Aclass{SparseMatrixCSC{$T}} * $(ifelse(Bdim == 2, "Matrix", "Vector")){$T}" for Bdim in 1:2,
+        (Aclass, convert_to_class) in matrix_classes
     for _ in 1:10
         n = rand(50:150)
-        spA = convert(SparseMatrixCSC{T, IT}, sprand(T, n, n, 0.5) + convert(real(T), sqrt(n))*I)
+        spA = convert_to_class(sprand(T, n, n, 0.5) + convert(real(T), sqrt(n))*I)
         A = Array(spA)
-        b = rand(T, n)
+        B = Bdim == 2 ? rand(T, n, n) : rand(T, n)
+        α = rand(T)
 
-        trilA = tril(spA)
-        @test @blas(LowerTriangular(trilA) \ b) ≈ Array(LowerTriangular(trilA)) \ b
-        @test @blas(LowerTriangular(trilA) * b) ≈ Array(LowerTriangular(trilA)) * b
+        @test @blas(mul!(similar(B), Aclass(spA), B, α, 0)) ≈ α * Aclass(A) * B
+        @test @blas(mul!(similar(B), Aclass(spA), B)) ≈ Aclass(A) * B
+        @test @blas(Aclass(spA) * B) ≈ Aclass(A) * B
+    end
+end
 
-        triuA = triu(spA)
-        @test @blas(UpperTriangular(triuA) \ b) ≈ Array(UpperTriangular(triuA)) \ b
-        @test @blas(UpperTriangular(triuA) * b) ≈ Array(UpperTriangular(triuA)) * b
+@testset "$Aclass{SparseMatrixCSC{$T}} \\ $(ifelse(Bdim == 2, "Matrix", "Vector")){$T}" for Bdim in 1:2,
+    (Aclass, convert_to_class) in matrix_classes
 
-        trilUA = tril(spA, -1) + I
-        @test @blas(UnitLowerTriangular(trilUA) \ b) ≈ Array(UnitLowerTriangular(trilUA)) \ b
-        @test @blas(UnitLowerTriangular(trilUA) * b) ≈ Array(UnitLowerTriangular(trilUA)) * b
+    (Aclass == Symmetric || Aclass == Hermitian) && continue # not implemented in MKLSparse
 
-        triuUA = triu(spA, 1)  + I
-        @test @blas(UnitUpperTriangular(triuUA) \ b) ≈ Array(UnitUpperTriangular(triuUA)) \ b
-        @test @blas(UnitUpperTriangular(triuUA) * b) ≈ Array(UnitUpperTriangular(triuUA)) * b
+    for _ in 1:10
+        n = rand(50:150)
+        spA = convert_to_class(sprand(T, n, n, 0.5) + convert(real(T), sqrt(n))*I)
+        A = Array(spA)
+        B = Bdim == 2 ? rand(T, n, rand(50:150)) : rand(T, n)
+        spAclass = Aclass(spA)
+        α = rand(T)
 
-        symA = spA + transpose(spA)
-        @test @blas(Symmetric(symA) * b) ≈ Array(Symmetric(symA)) * b
-
-        hermA = spA + adjoint(spA)
-        @test @blas(Hermitian(hermA) * b) ≈ Array(Hermitian(hermA)) * b
+        @test @blas(ldiv!(α, Aclass(spA), B, similar(B))) ≈ α * (Aclass(A) \ B)
+        @test @blas(ldiv!(similar(B), Aclass(spA), B)) ≈ Aclass(A) \ B
+        @test @blas(Aclass(spA) \ B) ≈ Aclass(A) \ B
     end
 end
 
