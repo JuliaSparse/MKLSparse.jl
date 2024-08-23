@@ -47,6 +47,39 @@ macro blas(ex)
     end
 end
 
+# generate random sparse matrix of the specified type SPMT
+
+function sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: SparseMatrixCSC{Tv, Ti}} where {Tv, Ti}
+    spM = sprand(Tv, m, n, p)
+    if diag != 0
+        spM += convert(real(Tv), diag)*I
+    end
+    return convert(SPMT, spM)
+end
+
+function sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCSR{Tv, Ti}} where {Tv, Ti}
+    spM = sparserand(SparseMatrixCSC{Tv, Ti}, n, m, p, diag)
+    return MKLSparse.SparseMatrixCSR(m, n, convert(Vector{Ti}, spM.colptr),
+                                     convert(Vector{Ti}, spM.rowval), spM.nzval)
+end
+
+function sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCOO{Tv, Ti}} where {Tv, Ti}
+    spM = sparserand(SparseMatrixCSC{Tv, Ti}, m, n, p, diag)
+    rows, cols, vals = findnz(spM)
+    return MKLSparse.SparseMatrixCOO(m, n, convert(Vector{Ti}, rows), convert(Vector{Ti}, cols), vals)
+end
+
+function Base.Array(spA::MKLSparse.SparseMatrixCOO{T}) where T
+    A = fill(zero(T), spA.m, spA.n)
+    for (i, j, v) in zip(spA.rows, spA.cols, spA.vals)
+        A[i, j] = v
+    end
+    return A
+end
+
+Base.Array(spA::MKLSparse.SparseMatrixCSR) =
+    Array(transpose(SparseMatrixCSC(spA.n, spA.m, spA.rowptr, spA.colval, spA.nzval)))
+
 # special matrix classes to test
 # and the function to create a matrix of that class from a random sparse matrix
 matrix_classes = [
@@ -58,17 +91,18 @@ matrix_classes = [
     UnitUpperTriangular => sp -> triu(sp, 1) + I,
 ]
 
-@testset "SparseBLAS for $T matrices and vectors and $IT indices" for
+@testset "BLAS for $SPMT{$T, $IT} matrices" for
+    SPMT in (SparseMatrixCSC, MKLSparse.SparseMatrixCOO, MKLSparse.SparseMatrixCSR),
     T in (Float32, Float64, ComplexF32, ComplexF64),
     IT in (Base.USE_BLAS64 ? (Int32, Int64) : (Int32,))
 
 local atol::real(T) = 100*eps(real(one(T))) # absolute tolerance for SparseBLAS results
 
-@testset "SparseMatrixCSC{$T,$IT} * Vector{$T}" begin
+@testset "$SPMT{$T,$IT} * Vector{$T}" begin
     Random.seed!(100500)
 
     for _ in 1:10
-        spA = convert(SpraseMatrixCSC{T, IT}, sprand(T, 10, 5, 0.5))
+        spA = sparserand(SPMT{T, IT}, 10, 5, 0.5)
         a = Array(spA)
         b = rand(T, 5)
         c = rand(T, 10)
@@ -83,11 +117,11 @@ local atol::real(T) = 100*eps(real(one(T))) # absolute tolerance for SparseBLAS 
     end
 end
 
-@testset "Vector{$T} * SparseMatrixCSC{$T,$IT}" begin
+@testset "Vector{$T} * $SPMT{$T,$IT}" begin
     Random.seed!(100500)
 
     for _ in 1:10
-        spA = convert(SparseMatrixCSC{T, IT}, sprand(T, 10, 5, 0.5))
+        spA = sparserand(SPMT{T, IT}, 10, 5, 0.5)
         a = Array(spA)
         b = rand(T, 10)
         c = rand(T, 5)
@@ -109,11 +143,11 @@ end
     end
 end
 
-@testset "SparseMatrixCSC{$T,$IT} * Matrix{$T}" begin
+@testset "$SPMT{$T,$IT} * Matrix{$T}" begin
     Random.seed!(100500)
 
     for _ in 1:10
-        spA = convert(SparseMatrixCSC{T,IT}, sprand(T, 10, 5, 0.5))
+        spA = sparserand(SPMT{T,IT}, 10, 5, 0.5)
         a = Array(spA)
         b = rand(T, 5, 8)
         c = rand(T, 10, 12)
@@ -144,13 +178,15 @@ end
     end
 end
 
-@testset "$Aclass{SparseMatrixCSC{$T}} * $(ifelse(Bdim == 2, "Matrix", "Vector")){$T}" for Bdim in 1:2,
+if SPMT <: SparseMatrixCSC # conversion to special matrices not implemented for CSR and COO
+
+@testset "$Aclass{$SPMT{$T}} * $(ifelse(Bdim == 2, "Matrix", "Vector")){$T}" for Bdim in 1:2,
         (Aclass, convert_to_class) in matrix_classes
     Random.seed!(100500)
 
     for _ in 1:10
         n = rand(50:150)
-        spA = convert_to_class(sprand(T, n, n, 0.5) + convert(real(T), sqrt(n))*I)
+        spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
         A = Array(spA)
         @test spA == A
         B = Bdim == 2 ? rand(T, n, n) : rand(T, n)
@@ -162,7 +198,7 @@ end
     end
 end
 
-@testset "$Aclass{SparseMatrixCSC{$T}} \\ $(ifelse(Bdim == 2, "Matrix", "Vector")){$T}" for Bdim in 1:2,
+@testset "$Aclass{$SPMT{$T}} \\ $(ifelse(Bdim == 2, "Matrix", "Vector")){$T}" for Bdim in 1:2,
     (Aclass, convert_to_class) in matrix_classes
 
     (Aclass == Symmetric || Aclass == Hermitian) && continue # not implemented in MKLSparse
@@ -171,7 +207,7 @@ end
 
     for _ in 1:10
         n = rand(50:150)
-        spA = convert_to_class(sprand(T, n, n, 0.5) + convert(real(T), sqrt(n))*I)
+        spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
         A = Array(spA)
         B = Bdim == 2 ? rand(T, n, rand(50:150)) : rand(T, n)
         spAclass = Aclass(spA)
@@ -181,6 +217,8 @@ end
         @test @blas(ldiv!(similar(B), Aclass(spA), B)) ≈ Aclass(A) \ B
         @test @blas(Aclass(spA) \ B) ≈ Aclass(A) \ B
     end
+end
+
 end
 
 end
