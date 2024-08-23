@@ -4,8 +4,14 @@ using LinearAlgebra, SparseArrays
 using LinearAlgebra: BlasInt, BlasFloat, checksquare
 using MKL_jll: libmkl_rt
 
-# For testing purposes:
-global const __counter = Ref(0)
+# counts total MKL Sparse API calls (for testing purposes)
+global const __mklsparse_calls_count = Ref(0)
+
+# increments to the `__mklsparse_calls_count` variable
+function _log_mklsparse_call(fname)
+    #@debug "$fname called"
+    __mklsparse_calls_count[] += 1
+end
 
 @enum Threading begin
     THREADING_INTEL

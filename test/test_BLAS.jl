@@ -39,9 +39,9 @@ end
 macro blas(ex)
     quote
         begin
-            MKLSparse.__counter[] = 0
+            MKLSparse.__mklsparse_calls_count[] = 0
             local res = $(@inferred(esc(ex)))
-            @test MKLSparse.__counter[] == 1
+            @test MKLSparse.__mklsparse_calls_count[] == 1
             res
         end
     end

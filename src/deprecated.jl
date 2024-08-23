@@ -16,7 +16,8 @@ function cscmv!(transa::Char, α::T, matdescra::String,
                 β::T, y::StridedVector{T}) where {T <: BlasFloat}
     check_transa(transa)
     check_mat_op_sizes(y, A, transa, x, 'N')
-    __counter[] += 1
+    _log_mklsparse_call(:mkl_Tcscmv)
+
     T == Float32    && (mkl_scscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
     T == Float64    && (mkl_dcscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
     T == ComplexF32 && (mkl_ccscmv(transa, A.m, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y))
@@ -31,7 +32,7 @@ function cscmm!(transa::Char, α::T, matdescra::String,
     check_mat_op_sizes(C, A, transa, B, 'N')
     mB, nB = size(B)
     mC, nC = size(C)
-    __counter[] += 1
+    _log_mklsparse_call(:mkl_Tcscmm)
 
     T == Float32    && (mkl_scscmm(transa, A.m, nC, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC))
     T == Float64    && (mkl_dcscmm(transa, A.m, nC, A.n, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC))
@@ -46,7 +47,7 @@ function cscsv!(transa::Char, α::T, matdescra::String,
     n = checksquare(A)
     check_transa(transa)
     check_mat_op_sizes(y, A, transa, x, 'N')
-    __counter[] += 1
+    _log_mklsparse_call(:mkl_Tcscsv)
 
     T == Float32    && (mkl_scscsv(transa, A.m, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y))
     T == Float64    && (mkl_dcscsv(transa, A.m, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y))
@@ -63,7 +64,7 @@ function cscsm!(transa::Char, α::T, matdescra::String,
     n = checksquare(A)
     check_transa(transa)
     check_mat_op_sizes(C, A, transa, B, 'N')
-    __counter[] += 1
+    _log_mklsparse_call(:mkl_Tcscsm)
 
     T == Float32    && (mkl_scscsm(transa, A.n, nC, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC))
     T == Float64    && (mkl_dcscsm(transa, A.n, nC, α, matdescra, A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC))

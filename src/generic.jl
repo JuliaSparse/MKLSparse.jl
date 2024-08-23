@@ -12,7 +12,7 @@ for T in (:Float32, :Float64, :ComplexF32, :ComplexF64)
         function mv!(transa::Char, alpha::$T, A::$SparseMatrix, descr::matrix_descr, x::StridedVector{$T}, beta::$T, y::StridedVector{$T})
           check_transa(transa)
           check_mat_op_sizes(y, A, transa, x, 'N')
-          __counter[] += 1
+          _log_mklsparse_call($fname_mv)
           $fname_mv(transa, alpha, MKLSparseMatrix(A), descr, x, beta, y)
           return y
         end
@@ -20,7 +20,7 @@ for T in (:Float32, :Float64, :ComplexF32, :ComplexF64)
         function mm!(transa::Char, alpha::$T, A::$SparseMatrix, descr::matrix_descr, x::StridedMatrix{$T}, beta::$T, y::StridedMatrix{$T})
           check_transa(transa)
           check_mat_op_sizes(y, A, transa, x, 'N')
-          __counter[] += 1
+          _log_mklsparse_call($fname_mm)
           columns = size(y, 2)
           ldx = stride(x, 2)
           ldy = stride(y, 2)
@@ -32,7 +32,7 @@ for T in (:Float32, :Float64, :ComplexF32, :ComplexF64)
           checksquare(A)
           check_transa(transa)
           check_mat_op_sizes(y, A, transa, x, 'N')
-          __counter[] += 1
+          _log_mklsparse_call($fname_trsv)
           $fname_trsv(transa, alpha, MKLSparseMatrix(A), descr, x, y)
           return y
         end
@@ -41,7 +41,7 @@ for T in (:Float32, :Float64, :ComplexF32, :ComplexF64)
           checksquare(A)
           check_transa(transa)
           check_mat_op_sizes(y, A, transa, x, 'N')
-          __counter[] += 1
+          _log_mklsparse_call($fname_trsm)
           columns = size(y, 2)
           ldx = stride(x, 2)
           ldy = stride(y, 2)
