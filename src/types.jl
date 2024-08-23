@@ -51,7 +51,7 @@ matrixdescra(A::SparseMatrixCSC)     = matrix_descr('G', 'F', 'N')
 matrixdescra(A::Transpose)           = matrixdescra(A.parent)
 matrixdescra(A::Adjoint)             = matrixdescra(A.parent)
 
-function Base.convert(::Type{sparse_operation_t}, trans::Char)
+@inline function Base.convert(::Type{sparse_operation_t}, trans::Char)
     if trans == 'N'
         SPARSE_OPERATION_NON_TRANSPOSE
     elseif trans == 'T'
@@ -63,7 +63,7 @@ function Base.convert(::Type{sparse_operation_t}, trans::Char)
     end
 end
 
-function Base.convert(::Type{sparse_matrix_type_t}, mattype::Char)
+@inline function Base.convert(::Type{sparse_matrix_type_t}, mattype::Char)
     if mattype == 'G'
         SPARSE_MATRIX_TYPE_GENERAL
     elseif mattype == 'S'
@@ -79,7 +79,7 @@ function Base.convert(::Type{sparse_matrix_type_t}, mattype::Char)
     end
 end
 
-function Base.convert(::Type{sparse_matrix_type_t}, mattype::String)
+@inline function Base.convert(::Type{sparse_matrix_type_t}, mattype::String)
     if length(mattype) == 1
         return convert(sparse_matrix_type_t, mattype[1])
     elseif mattype == "BT"
@@ -91,7 +91,7 @@ function Base.convert(::Type{sparse_matrix_type_t}, mattype::String)
     end
 end
 
-function Base.convert(::Type{sparse_index_base_t}, index::Char)
+@inline function Base.convert(::Type{sparse_index_base_t}, index::Char)
     if index == 'Z'
         return SPARSE_INDEX_BASE_ZERO
     elseif index == 'O'
@@ -101,7 +101,7 @@ function Base.convert(::Type{sparse_index_base_t}, index::Char)
     end
 end
 
-function Base.convert(::Type{sparse_fill_mode_t}, uplo::Char)
+@inline function Base.convert(::Type{sparse_fill_mode_t}, uplo::Char)
     if uplo == 'L'
         SPARSE_FILL_MODE_LOWER
     elseif uplo == 'U'
@@ -113,7 +113,7 @@ function Base.convert(::Type{sparse_fill_mode_t}, uplo::Char)
     end
 end
 
-function Base.convert(::Type{sparse_diag_type_t}, diag::Char)
+@inline function Base.convert(::Type{sparse_diag_type_t}, diag::Char)
     if diag == 'U'
         SPARSE_DIAG_UNIT
     elseif diag == 'N'
@@ -123,7 +123,7 @@ function Base.convert(::Type{sparse_diag_type_t}, diag::Char)
     end
 end
 
-function Base.convert(::Type{sparse_layout_t}, layout::Char)
+@inline function Base.convert(::Type{sparse_layout_t}, layout::Char)
     if layout == 'R'
         SPARSE_LAYOUT_ROW_MAJOR
     elseif layout == 'C'
@@ -133,7 +133,7 @@ function Base.convert(::Type{sparse_layout_t}, layout::Char)
     end
 end
 
-function Base.convert(::Type{verbose_mode_t}, verbose::String)
+@inline function Base.convert(::Type{verbose_mode_t}, verbose::String)
     if verbose == "off"
         SPARSE_VERBOSE_OFF
     elseif verbose == "basic"
@@ -145,7 +145,7 @@ function Base.convert(::Type{verbose_mode_t}, verbose::String)
     end
 end
 
-function Base.convert(::Type{sparse_memory_usage_t}, memory::String)
+@inline function Base.convert(::Type{sparse_memory_usage_t}, memory::String)
     if memory == "none"
         SPARSE_MEMORY_NONE
     elseif memory == "aggressive"
@@ -155,7 +155,7 @@ function Base.convert(::Type{sparse_memory_usage_t}, memory::String)
     end
 end
 
-Base.convert(::Type{matrix_descr}, matdescr::AbstractString) =
+@inline Base.convert(::Type{matrix_descr}, matdescr::AbstractString) =
     matrix_descr(convert(sparse_matrix_type_t, matdescr[1]),
                  convert(sparse_fill_mode_t, matdescr[2]),
                  convert(sparse_diag_type_t, matdescr[3]))
