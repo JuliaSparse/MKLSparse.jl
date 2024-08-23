@@ -13,7 +13,7 @@ using Test, SparseArrays, LinearAlgebra
     @test MKLSparse.matdescra(UpperTriangular(sTu)) == "TUNF"
     @test MKLSparse.matdescra(UnitLowerTriangular(sTl)) == "TLUF"
     @test MKLSparse.matdescra(UnitUpperTriangular(sTu)) == "TUUF"
-    @test MKLSparse.matdescra(sA) == "GUUF"
+    @test MKLSparse.matdescra(sA) == "GFNF"
 end
 
 # evaluates ex and checks whether it has called any SparseBLAS MKL method
