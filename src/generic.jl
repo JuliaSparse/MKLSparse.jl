@@ -9,43 +9,43 @@ for T in (:Float32, :Float64, :ComplexF32, :ComplexF64)
       fname_trsm = Symbol("mkl_sparse_", mkl_type_specifier(T), "_trsm", mkl_integer_specifier(INT))
 
       @eval begin
-        function mv!(operation::Char, alpha::$T, A::$SparseMatrix, descr::matrix_descr, x::StridedVector{$T}, beta::$T, y::StridedVector{$T})
-          _check_transa(operation)
-          _check_mat_mult_matvec(y, A, x, operation)
+        function mv!(transa::Char, alpha::$T, A::$SparseMatrix, descr::matrix_descr, x::StridedVector{$T}, beta::$T, y::StridedVector{$T})
+          check_transa(transa)
+          check_mat_op_sizes(y, A, transa, x, 'N')
           __counter[] += 1
-          $fname_mv(operation, alpha, MKLSparseMatrix(A), descr, x, beta, y)
+          $fname_mv(transa, alpha, MKLSparseMatrix(A), descr, x, beta, y)
           return y
         end
 
-        function mm!(operation::Char, alpha::$T, A::$SparseMatrix, descr::matrix_descr, x::StridedMatrix{$T}, beta::$T, y::StridedMatrix{$T})
-          _check_transa(operation)
-          _check_mat_mult_matvec(y, A, x, operation)
+        function mm!(transa::Char, alpha::$T, A::$SparseMatrix, descr::matrix_descr, x::StridedMatrix{$T}, beta::$T, y::StridedMatrix{$T})
+          check_transa(transa)
+          check_mat_op_sizes(y, A, transa, x, 'N')
           __counter[] += 1
           columns = size(y, 2)
           ldx = stride(x, 2)
           ldy = stride(y, 2)
-          $fname_mm(operation, alpha, MKLSparseMatrix(A), descr, 'C', x, columns, ldx, beta, y, ldy)
+          $fname_mm(transa, alpha, MKLSparseMatrix(A), descr, 'C', x, columns, ldx, beta, y, ldy)
           return y
         end
 
-        function trsv!(operation::Char, alpha::$T, A::$SparseMatrix, descr::matrix_descr, x::StridedVector{$T}, y::StridedVector{$T})
+        function trsv!(transa::Char, alpha::$T, A::$SparseMatrix, descr::matrix_descr, x::StridedVector{$T}, y::StridedVector{$T})
           checksquare(A)
-          _check_transa(operation)
-          _check_mat_mult_matvec(y, A, x, operation)
+          check_transa(transa)
+          check_mat_op_sizes(y, A, transa, x, 'N')
           __counter[] += 1
-          $fname_trsv(operation, alpha, MKLSparseMatrix(A), descr, x, y)
+          $fname_trsv(transa, alpha, MKLSparseMatrix(A), descr, x, y)
           return y
         end
 
-        function trsm!(operation::Char, alpha::$T, A::$SparseMatrix, descr::matrix_descr, x::StridedMatrix{$T}, y::StridedMatrix{$T})
+        function trsm!(transa::Char, alpha::$T, A::$SparseMatrix, descr::matrix_descr, x::StridedMatrix{$T}, y::StridedMatrix{$T})
           checksquare(A)
-          _check_transa(operation)
-          _check_mat_mult_matvec(y, A, x, operation)
+          check_transa(transa)
+          check_mat_op_sizes(y, A, transa, x, 'N')
           __counter[] += 1
           columns = size(y, 2)
           ldx = stride(x, 2)
           ldy = stride(y, 2)
-          $fname_trsm(operation, alpha, MKLSparseMatrix(A), descr, 'C', x, columns, ldx, y, ldy)
+          $fname_trsm(transa, alpha, MKLSparseMatrix(A), descr, 'C', x, columns, ldx, y, ldy)
           return y
         end
       end

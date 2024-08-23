@@ -143,3 +143,26 @@ Base.convert(::Type{matrix_descr}, matdescr::AbstractString) =
     matrix_descr(convert(sparse_matrix_type_t, matdescr[1]),
                  convert(sparse_fill_mode_t, matdescr[2]),
                  convert(sparse_diag_type_t, matdescr[3]))
+
+# check the correctness of transa argument of MKLSparse calls
+check_transa(t::Char) =
+    (t in ('C', 'N', 'T')) ||
+        throw(ArgumentError("transa: is '$t', must be 'N', 'T', or 'C'"))
+
+# check matrix sizes for the multiplication-like operation C <- tA[A] * tB[B]
+function check_mat_op_sizes(C, A, tA, B, tB)
+    mklsize(M::AbstractMatrix, tM::Char) = tM == 'N' ? size(M) : reverse(size(M))
+    mklsize(V::AbstractVector, tV::Char) = tV == 'N' ? (size(V, 1), 1) : (1, size(V, 1))
+    sizestr(M::AbstractMatrix) = string("[", size(M, 1), ", ", size(M, 2), "]")
+    sizestr(V::AbstractVector) = string("[", size(V, 1), "]")
+    opsym(t) = t == 'T' ? "ᵀ" : t == 'C' ? "ᴴ" : t == 'N' ? "" : "ERROR"
+
+    mA, nA = mklsize(A, tA)
+    mB, nB = mklsize(B, tB)
+    mC, nC = mklsize(C, 'N')
+    if nA != mB || mC != mA || nC != nB
+        str = string("arrays had inconsistent dimensions for C = A", opsym(tA), " * B", opsym(tB), ": ",
+                     sizestr(C), " = ", sizestr(A), opsym(tA), " * ", sizestr(B), opsym(tB))
+        throw(DimensionMismatch(str))
+    end
+end
