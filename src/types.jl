@@ -183,3 +183,19 @@ function check_mat_op_sizes(C, A, tA, B, tB)
         throw(DimensionMismatch(str))
     end
 end
+
+"""
+    MKLSparseError
+
+Wraps `MKLSparse.sparse_status_t` error code.
+"""
+struct MKLSparseError <: Exception
+    status::sparse_status_t
+end
+
+Base.showerror(io::IO, e::MKLSparseError) =
+    print(io, "MKLSparseError(", e.status, ")")
+
+# check the status of MKL call
+check_status(status::sparse_status_t) =
+    status == SPARSE_STATUS_SUCCESS || throw(MKLSparseError(status))

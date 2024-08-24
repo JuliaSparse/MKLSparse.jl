@@ -55,4 +55,6 @@ include("deprecated.jl")
 include("generic.jl")
 include("interface.jl")
 
+export MKLSparseError
+
 end # module
