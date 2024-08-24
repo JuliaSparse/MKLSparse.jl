@@ -2,20 +2,20 @@
 
 # https://github.com/JuliaSmoothOptimizers/SparseMatricesCOO.jl
 mutable struct SparseMatrixCOO{Tv,Ti} <: AbstractSparseMatrix{Tv,Ti}
-  m::Int
-  n::Int
-  rows::Vector{Ti}
-  cols::Vector{Ti}
-  vals::Vector{Tv}
+    m::Int
+    n::Int
+    rows::Vector{Ti}
+    cols::Vector{Ti}
+    vals::Vector{Tv}
 end
 
 # https://github.com/gridap/SparseMatricesCSR.jl
 mutable struct SparseMatrixCSR{Tv,Ti} <: AbstractSparseMatrix{Tv,Ti}
-  m::Int
-  n::Int
-  rowptr::Vector{Ti}
-  colval::Vector{Ti}
-  nzval::Vector{Tv}
+    m::Int
+    n::Int
+    rowptr::Vector{Ti}
+    colval::Vector{Ti}
+    nzval::Vector{Tv}
 end
 
 mkl_storagetype_specifier(::Type{<:SparseMatrixCOO}) = "coo"
@@ -31,7 +31,7 @@ matrixdescra(A::MKLSparse.SparseMatrixCSR) = matrix_descr('G', 'F', 'N')
 matrixdescra(A::MKLSparse.SparseMatrixCOO) = matrix_descr('G', 'F', 'N')
 
 mutable struct MKLSparseMatrix
-  handle::sparse_matrix_t
+    handle::sparse_matrix_t
 end
 
 Base.unsafe_convert(::Type{sparse_matrix_t}, desc::MKLSparseMatrix) = desc.handle
