@@ -37,34 +37,34 @@ end
 Base.unsafe_convert(::Type{sparse_matrix_t}, desc::MKLSparseMatrix) = desc.handle
 
 function MKLSparseMatrix(A::SparseMatrixCOO, IndexBase::Char='O')
-    descr_ref = Ref{sparse_matrix_t}()
+    matrix_ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   descr_ref, IndexBase, A.m, A.n, nnz(A), A.rows, A.cols, A.vals,
+                   matrix_ref, IndexBase, A.m, A.n, nnz(A), A.rows, A.cols, A.vals,
                    log=Val{false}())
     check_status(res)
-    obj = MKLSparseMatrix(descr_ref[])
+    obj = MKLSparseMatrix(matrix_ref[])
     finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
     return obj
 end
 
 function MKLSparseMatrix(A::SparseMatrixCSR, IndexBase::Char='O')
-    descr_ref = Ref{sparse_matrix_t}()
+    matrix_ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   descr_ref, IndexBase, A.m, A.n, A.rowptr, pointer(A.rowptr, 2), A.colval, A.nzval,
+                   matrix_ref, IndexBase, A.m, A.n, A.rowptr, pointer(A.rowptr, 2), A.colval, A.nzval,
                    log=Val{false}())
     check_status(res)
-    obj = MKLSparseMatrix(descr_ref[])
+    obj = MKLSparseMatrix(matrix_ref[])
     finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
     return obj
 end
 
 function MKLSparseMatrix(A::SparseMatrixCSC, IndexBase::Char='O')
-    descr_ref = Ref{sparse_matrix_t}()
+    matrix_ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   descr_ref, IndexBase, A.m, A.n, A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval,
+                   matrix_ref, IndexBase, A.m, A.n, A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval,
                    log=Val{false}())
     check_status(res)
-    obj = MKLSparseMatrix(descr_ref[])
+    obj = MKLSparseMatrix(matrix_ref[])
     finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
     return obj
 end
