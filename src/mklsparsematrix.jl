@@ -30,6 +30,18 @@ SparseArrays.nnz(A::MKLSparse.SparseMatrixCSR) = length(A.nzval)
 matrix_descr(A::MKLSparse.SparseMatrixCSR) = matrix_descr('G', 'F', 'N')
 matrix_descr(A::MKLSparse.SparseMatrixCOO) = matrix_descr('G', 'F', 'N')
 
+Base.convert(::Type{SparseMatrixCSR{Tv, Ti}}, tA::Transpose{Tv, SparseMatrixCSC{Tv, Ti}}) where {Tv, Ti} =
+    SparseMatrixCSR{Tv, Ti}(size(tA)..., parent(tA).colptr, rowvals(parent(tA)), nonzeros(parent(tA)))
+
+Base.convert(::Type{SparseMatrixCSR}, tA::Transpose{Tv, SparseMatrixCSC{Tv, Ti}}) where {Tv, Ti} =
+    convert(SparseMatrixCSR{Tv, Ti}, tA)
+
+Base.convert(::Type{SparseMatrixCSC{Tv, Ti}}, tA::Transpose{Tv, SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
+    SparseMatrixCSC{Tv, Ti}(size(tA)..., parent(tA).rowptr, parent(tA).colval, parent(tA).nzval)
+
+Base.convert(::Type{SparseMatrixCSC}, tA::Transpose{Tv, SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
+    convert(SparseMatrixCSC{Tv, Ti}, tA)
+
 mutable struct MKLSparseMatrix
     handle::sparse_matrix_t
 end

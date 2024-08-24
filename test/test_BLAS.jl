@@ -76,7 +76,7 @@ function Base.Array(spA::MKLSparse.SparseMatrixCOO{T}) where T
 end
 
 Base.Array(spA::MKLSparse.SparseMatrixCSR) =
-    Array(transpose(SparseMatrixCSC(spA.n, spA.m, spA.rowptr, spA.colval, spA.nzval)))
+    Array(convert(SparseMatrixCSC, transpose(spA)))
 
 # special matrix classes to test
 # and the function to create a matrix of that class from a random sparse matrix
