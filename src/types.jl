@@ -29,16 +29,17 @@ mkl_storagetype_specifier(::Type{S}) where S <: AbstractSparseMatrix =
 
 mkl_storagetype_specifier(::Type{<:SparseMatrixCSC}) = "csc"
 
-# generates the name of the MKL call from the template
-# 'S' char replaced by a specifier of the sparse storage type S
-# 'T' char replaced by a specifier of the value type Tv
-# 'I' char replaced by a specifier of the index type Ti
-# (e.g. 's' for Float32), so the actuall function being called is mkl_scscmm()
+# generates the name of the MKL call from the template:
+# 'S' is replaced by a specifier of the sparse storage type S
+# 'T' is replaced by a specifier of the value type Tv
+# 'I' is replaced by a specifier of the index type Ti
+# (e.g. for :mkl_sparse_T_create_SI template and SparseMatrixCSC{Float32, Int64}
+#  the returned function name would be :mkl_sparse_s_create_csc_I64)
 @inline Base.@assume_effects :foldable mkl_function_name(template::Symbol, S::Type, Tv::Type, Ti::Type) =
-    Symbol(reduce(replace, ["T" => mkl_valtype_specifier(Tv),
-                            "I" => mkl_indextype_specifier(Ti),
-                            "S" => mkl_storagetype_specifier(S)],
-                  init=String(template)))
+    Symbol(replace(String(template),
+                   "T" => mkl_valtype_specifier(Tv),
+                   "I" => mkl_indextype_specifier(Ti),
+                   "S" => mkl_storagetype_specifier(S)))
 
 matrix_descr(A::LowerTriangular)     = matrix_descr('T','L','N')
 matrix_descr(A::UpperTriangular)     = matrix_descr('T','U','N')
