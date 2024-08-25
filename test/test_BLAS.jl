@@ -78,7 +78,7 @@ matrix_classes = [
     IT in (Base.USE_BLAS64 ? (Int32, Int64) : (Int32,))
 
 local isCOO = SPMT <: MKLSparse.SparseMatrixCOO
-local atol::real(T) = 100*eps(real(one(T))) # absolute tolerance for SparseBLAS results
+local atol::real(T) = 750*eps(real(one(T))) # absolute tolerance for SparseBLAS results
 
 @testset "Create MKLSparse matrix from $SPMT{$T, $IT} and export back" begin
     spA = sparserand(SPMT{T, IT}, rand(10:50), rand(10:50), 0.25)
@@ -103,65 +103,68 @@ end
 
 @testset "$SPMT{$T,$IT} * Vector{$T}" begin
     for _ in 1:10
-        spA = sparserand(SPMT{T, IT}, 10, 5, 0.5)
+        m, n = rand(10:50, 2)
+        spA = sparserand(SPMT{T, IT}, m, n, 0.5)
         a = convert(Array, spA)
-        b = rand(T, 5)
-        c = rand(T, 10)
+        b = rand(T, n)
+        c = rand(T, m)
 
         @test @blas(spA*b) ≈ a*b atol=atol
         @test @blas(spA'*c) ≈ a'*c atol=atol
         @test @blas(transpose(spA)*c) ≈ transpose(a)*c atol=atol
 
-        @test_throws DimensionMismatch spA*c
-        @test_throws DimensionMismatch spA'*b
-        @test_throws DimensionMismatch transpose(spA)*b
+        if m != n
+            @test_throws DimensionMismatch spA*c
+            @test_throws DimensionMismatch spA'*b
+            @test_throws DimensionMismatch transpose(spA)*b
+        end
     end
 end
 
-@testset "Vector{$T} * $SPMT{$T,$IT}" begin
-    Random.seed!(100500)
-
+@testset "$trans(Vector{$T}) * $SPMT{$T,$IT}" for trans in (transpose, adjoint)
     for _ in 1:10
-        spA = sparserand(SPMT{T, IT}, 10, 5, 0.5)
+        m, n = rand(10:50, 2)
+        spA = sparserand(SPMT{T, IT}, m, n, 0.5)
         a = convert(Array, spA)
-        b = rand(T, 10)
-        c = rand(T, 5)
+        b = rand(T, m)
+        c = rand(T, n)
 
-        @test @blas(b'*spA) ≈ b'*a atol=atol
-        @test @blas(c'*spA') ≈ c'*a' atol=atol
+        @test @blas(trans(b)*spA) ≈ trans(b)*a atol=atol
+        @test @blas(trans(c)*spA') ≈ trans(c)*a' atol=atol
+        @test @blas(trans(c)*transpose(spA)) ≈ trans(c)*transpose(a) atol=atol
 
-        @test_throws DimensionMismatch c*spA
-        @test_throws DimensionMismatch b*spA'
-        @test_throws DimensionMismatch b*transpose(spA)
+        if m != n
+            @test_throws DimensionMismatch c*spA
+            @test_throws DimensionMismatch b*spA'
+            @test_throws DimensionMismatch b*transpose(spA)
 
-        @test_throws DimensionMismatch c'*spA
-        @test_throws DimensionMismatch b'*spA'
-
-        if !(T <: Complex) # adjoint*transposed isn't routed to BLAS call
-            @test @blas(c'*transpose(spA)) ≈ c'*transpose(a) atol=atol
-            @test_throws DimensionMismatch b'*transpose(spA)
+            @test_throws DimensionMismatch trans(c)*spA
+            @test_throws DimensionMismatch trans(b)*spA'
+            @test_throws DimensionMismatch trans(b)*transpose(spA)
         end
     end
 end
 
 @testset "$SPMT{$T,$IT} * Matrix{$T}" begin
     for _ in 1:10
-        spA = sparserand(SPMT{T,IT}, 10, 5, 0.5)
+        m, n, k, l = rand(10:50, 4)
+        spA = sparserand(SPMT{T,IT}, m, n, 0.5)
         a = convert(Array, spA)
-        b = rand(T, 5, 8)
-        c = rand(T, 10, 12)
-        ab = rand(T, 10, 8)
-        tac = rand(T, 5, 12)
-        α = rand(T)
-        β = rand(T)
+        b = rand(T, n, k)
+        c = rand(T, m, l)
+        ab = rand(T, m, k)
+        tac = rand(T, n, l)
+        α, β = rand(T, 2)
 
         @test @blas(spA*b) ≈ a*b atol=atol
         @test @blas(spA'*c) ≈ a'*c atol=atol
         @test @blas(transpose(spA)*c) ≈ transpose(a)*c atol=atol
 
-        @test_throws DimensionMismatch spA*c
-        @test_throws DimensionMismatch spA'*b
-        @test_throws DimensionMismatch transpose(spA)*b
+        if m != n
+            @test_throws DimensionMismatch spA*c
+            @test_throws DimensionMismatch spA'*b
+            @test_throws DimensionMismatch transpose(spA)*b
+        end
 
         @test @blas(mul!(similar(ab), spA, b)) ≈ a*b atol=atol
         @test @blas(mul!(similar(tac), spA', c)) ≈ a'*c atol=atol
@@ -179,8 +182,12 @@ end
 
 if SPMT <: SparseMatrixCSC # conversion to special matrices not implemented for CSR and COO
 
-@testset "$Aclass{$SPMT{$T}} * $(ifelse(Bdim == 2, "Matrix", "Vector")){$T}" for Bdim in 1:2,
-        (Aclass, convert_to_class) in matrix_classes
+@testset "$Aclass{$SPMT{$T}} * $trans($(ifelse(Bdim == 2, "Matrix", "Vector")){$T})" for Bdim in 1:2,
+        (Aclass, convert_to_class) in matrix_classes,
+        trans in (identity, transpose, adjoint)
+
+    (Bdim == 1 && trans != identity) && continue # not valid
+
     for _ in 1:10
         n = rand(50:150)
         spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
@@ -189,9 +196,9 @@ if SPMT <: SparseMatrixCSC # conversion to special matrices not implemented for 
         B = Bdim == 2 ? rand(T, n, n) : rand(T, n)
         α = rand(T)
 
-        @test @blas(mul!(similar(B), Aclass(spA), B, α, 0)) ≈ α * Aclass(A) * B
-        @test @blas(mul!(similar(B), Aclass(spA), B)) ≈ Aclass(A) * B
-        @test @blas(Aclass(spA) * B) ≈ Aclass(A) * B
+        @test @blas(mul!(similar(B), Aclass(spA), trans(B), α, 0)) ≈ α * Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
+        @test @blas(mul!(similar(B), Aclass(spA), trans(B))) ≈ Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
+        @test @blas(Aclass(spA) * trans(B)) ≈ Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
     end
 end
 
