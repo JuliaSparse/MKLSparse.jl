@@ -36,10 +36,10 @@ end
 
 Base.unsafe_convert(::Type{sparse_matrix_t}, desc::MKLSparseMatrix) = desc.handle
 
-function MKLSparseMatrix(A::SparseMatrixCOO, IndexBase::Char='O')
+function MKLSparseMatrix(A::SparseMatrixCOO; index_base = SPARSE_INDEX_BASE_ONE)
     matrix_ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   matrix_ref, IndexBase, A.m, A.n, nnz(A), A.rows, A.cols, A.vals,
+                   matrix_ref, index_base, A.m, A.n, nnz(A), A.rows, A.cols, A.vals,
                    log=Val{false}())
     check_status(res)
     obj = MKLSparseMatrix(matrix_ref[])
@@ -47,10 +47,10 @@ function MKLSparseMatrix(A::SparseMatrixCOO, IndexBase::Char='O')
     return obj
 end
 
-function MKLSparseMatrix(A::SparseMatrixCSR, IndexBase::Char='O')
+function MKLSparseMatrix(A::SparseMatrixCSR; index_base = SPARSE_INDEX_BASE_ONE)
     matrix_ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   matrix_ref, IndexBase, A.m, A.n, A.rowptr, pointer(A.rowptr, 2), A.colval, A.nzval,
+                   matrix_ref, index_base, A.m, A.n, A.rowptr, pointer(A.rowptr, 2), A.colval, A.nzval,
                    log=Val{false}())
     check_status(res)
     obj = MKLSparseMatrix(matrix_ref[])
@@ -58,10 +58,11 @@ function MKLSparseMatrix(A::SparseMatrixCSR, IndexBase::Char='O')
     return obj
 end
 
-function MKLSparseMatrix(A::SparseMatrixCSC, IndexBase::Char='O')
+function MKLSparseMatrix(A::SparseMatrixCSC; index_base = SPARSE_INDEX_BASE_ONE)
+    # SparseMatrixCSC is fixed to 1-based indexing, passing SPARSE_INDEX_BASE_ZERO is most likely an error
     matrix_ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   matrix_ref, IndexBase, A.m, A.n, A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval,
+                   matrix_ref, index_base, A.m, A.n, A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval,
                    log=Val{false}())
     check_status(res)
     obj = MKLSparseMatrix(matrix_ref[])

@@ -93,9 +93,9 @@ end
 end
 
 @inline function Base.convert(::Type{sparse_index_base_t}, index::Char)
-    if index == 'Z'
+    if index == '0'
         return SPARSE_INDEX_BASE_ZERO
-    elseif index == 'O'
+    elseif index == '1'
         return SPARSE_INDEX_BASE_ONE
     else
         throw(ArgumentError("Unknown index base $index"))
