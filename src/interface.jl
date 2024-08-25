@@ -21,30 +21,38 @@ describe_and_unwrap(A::Adjoint) = ('C', matrixdescra(A), unwrapa(parent(A)))
 describe_and_unwrap(A::Transpose) = ('T', matrixdescra(A), unwrapa(parent(A)))
 
 # 5-arg mul!()
-function mul!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}, alpha::Number, beta::Number) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+function mul!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+              x::StridedVector{T}, alpha::Number, beta::Number
+) where {T <: BlasFloat, S <: MKLSparseMat{T}}
     transA, descrA, unwrapA = describe_and_unwrap(A)
     mv!(transA, T(alpha), unwrapA, descrA, x, T(beta), y)
 end
 
-function mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S}, B::StridedMatrix{T}, alpha::Number, beta::Number) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+function mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+              B::StridedMatrix{T}, alpha::Number, beta::Number
+) where {T <: BlasFloat, S <: MKLSparseMat{T}}
     transA, descrA, unwrapA = describe_and_unwrap(A)
     mm!(transA, T(alpha), unwrapA, descrA, B, T(beta), C)
 end
 
 # 3-arg mul!() calls 5-arg mul!()
-mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S}, B::StridedMatrix{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
-    mul!(C, A, B, one(T), zero(T))
-mul!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
+mul!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+     x::StridedVector{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
     mul!(y, A, x, one(T), zero(T))
+mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+     B::StridedMatrix{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
+    mul!(C, A, B, one(T), zero(T))
 
 # define 4-arg ldiv!(C, A, B, a) (C := alpha*inv(A)*B) that is not present in standard LinearAlgrebra
 # redefine 3-arg ldiv!(C, A, B) using 4-arg ldiv!(C, A, B, 1)
-function ldiv!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}, alpha::Number = one(T)) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+function ldiv!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+               x::StridedVector{T}, alpha::Number = one(T)) where {T <: BlasFloat, S <: MKLSparseMat{T}}
     transA, descrA, unwrapA = describe_and_unwrap(A)
     trsv!(transA, alpha, unwrapA, descrA, x, y)
 end
 
-function LinearAlgebra.ldiv!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S}, B::StridedMatrix{T}, alpha::Number = one(T)) where {T <: BlasFloat, S <: MKLSparseMat{T}}
+function LinearAlgebra.ldiv!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+                             B::StridedMatrix{T}, alpha::Number = one(T)) where {T <: BlasFloat, S <: MKLSparseMat{T}}
     transA, descrA, unwrapA = describe_and_unwrap(A)
     trsm!(transA, alpha, unwrapA, descrA, B, C)
 end

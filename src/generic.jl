@@ -18,7 +18,9 @@ end
     return body
 end
 
-function mv!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr, x::StridedVector{T}, beta::T, y::StridedVector{T}) where T
+function mv!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr,
+             x::StridedVector{T}, beta::T, y::StridedVector{T}
+) where T
     check_transa(transa)
     check_mat_op_sizes(y, A, transa, x, 'N')
     mkl_call(Val{:mkl_sparse_T_mvI}(), typeof(A),
@@ -26,7 +28,9 @@ function mv!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_d
     return y
 end
 
-function mm!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr, x::StridedMatrix{T}, beta::T, y::StridedMatrix{T}) where T
+function mm!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr,
+             x::StridedMatrix{T}, beta::T, y::StridedMatrix{T}
+) where T
     check_transa(transa)
     check_mat_op_sizes(y, A, transa, x, 'N')
     columns = size(y, 2)
@@ -37,7 +41,9 @@ function mm!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_d
     return y
 end
 
-function trsv!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr, x::StridedVector{T}, y::StridedVector{T}) where T
+function trsv!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr,
+               x::StridedVector{T}, y::StridedVector{T}
+) where T
     checksquare(A)
     check_transa(transa)
     check_mat_op_sizes(y, A, transa, x, 'N')
@@ -46,7 +52,9 @@ function trsv!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix
     return y
 end
 
-function trsm!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr, x::StridedMatrix{T}, y::StridedMatrix{T}) where T
+function trsm!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr,
+               x::StridedMatrix{T}, y::StridedMatrix{T}
+) where T
     checksquare(A)
     check_transa(transa)
     check_mat_op_sizes(y, A, transa, x, 'N')
