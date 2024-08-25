@@ -27,8 +27,8 @@ Base.size(A::MKLSparse.SparseMatrixCSR) = (A.m, A.n)
 SparseArrays.nnz(A::MKLSparse.SparseMatrixCOO) = length(A.vals)
 SparseArrays.nnz(A::MKLSparse.SparseMatrixCSR) = length(A.nzval)
 
-matrixdescra(A::MKLSparse.SparseMatrixCSR) = matrix_descr('G', 'F', 'N')
-matrixdescra(A::MKLSparse.SparseMatrixCOO) = matrix_descr('G', 'F', 'N')
+matrix_descr(A::MKLSparse.SparseMatrixCSR) = matrix_descr('G', 'F', 'N')
+matrix_descr(A::MKLSparse.SparseMatrixCOO) = matrix_descr('G', 'F', 'N')
 
 mutable struct MKLSparseMatrix
     handle::sparse_matrix_t

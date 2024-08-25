@@ -40,16 +40,16 @@ mkl_storagetype_specifier(::Type{<:SparseMatrixCSC}) = "csc"
                             "S" => mkl_storagetype_specifier(S)],
                   init=String(template)))
 
-matrixdescra(A::LowerTriangular)     = matrix_descr('T','L','N')
-matrixdescra(A::UpperTriangular)     = matrix_descr('T','U','N')
-matrixdescra(A::Diagonal)            = matrix_descr('D','F','N')
-matrixdescra(A::UnitLowerTriangular) = matrix_descr('T','L','U')
-matrixdescra(A::UnitUpperTriangular) = matrix_descr('T','U','U')
-matrixdescra(A::Symmetric)           = matrix_descr('S', A.uplo, 'N')
-matrixdescra(A::Hermitian)           = matrix_descr('H', A.uplo, 'N')
-matrixdescra(A::SparseMatrixCSC)     = matrix_descr('G', 'F', 'N')
-matrixdescra(A::Transpose)           = matrixdescra(A.parent)
-matrixdescra(A::Adjoint)             = matrixdescra(A.parent)
+matrix_descr(A::LowerTriangular)     = matrix_descr('T','L','N')
+matrix_descr(A::UpperTriangular)     = matrix_descr('T','U','N')
+matrix_descr(A::Diagonal)            = matrix_descr('D','F','N')
+matrix_descr(A::UnitLowerTriangular) = matrix_descr('T','L','U')
+matrix_descr(A::UnitUpperTriangular) = matrix_descr('T','U','U')
+matrix_descr(A::Symmetric)           = matrix_descr('S', A.uplo, 'N')
+matrix_descr(A::Hermitian)           = matrix_descr('H', A.uplo, 'N')
+matrix_descr(A::SparseMatrixCSC)     = matrix_descr('G', 'F', 'N')
+matrix_descr(A::Transpose)           = matrix_descr(A.parent)
+matrix_descr(A::Adjoint)             = matrix_descr(A.parent)
 
 @inline function Base.convert(::Type{sparse_operation_t}, trans::Char)
     if trans == 'N'

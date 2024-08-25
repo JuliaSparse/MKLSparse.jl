@@ -16,9 +16,9 @@ unwrapa(A::Union{LowerTriangular, UpperTriangular,
                  Symmetric, Hermitian}) = parent(A)
 
 # returns a tuple of transa, matdescra and unwrapped A
-describe_and_unwrap(A::AbstractMatrix) = ('N', matrixdescra(A), unwrapa(A))
-describe_and_unwrap(A::Adjoint) = ('C', matrixdescra(A), unwrapa(parent(A)))
-describe_and_unwrap(A::Transpose) = ('T', matrixdescra(A), unwrapa(parent(A)))
+describe_and_unwrap(A::AbstractMatrix) = ('N', matrix_descr(A), unwrapa(A))
+describe_and_unwrap(A::Adjoint) = ('C', matrix_descr(A), unwrapa(parent(A)))
+describe_and_unwrap(A::Transpose) = ('T', matrix_descr(A), unwrapa(parent(A)))
 
 # 5-arg mul!()
 function mul!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S},
