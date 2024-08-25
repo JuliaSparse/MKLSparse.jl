@@ -167,10 +167,20 @@ check_transa(t::Char) =
         throw(ArgumentError("transa: is '$t', must be 'N', 'T', or 'C'"))
 
 # check matrix sizes for the multiplication-like operation C <- tA[A] * tB[B]
-function check_mat_op_sizes(C, A, tA, B, tB)
-    mklsize(M::AbstractMatrix, tM::Char) = tM == 'N' ? size(M) : reverse(size(M))
-    mklsize(V::AbstractVector, tV::Char) = tV == 'N' ? (size(V, 1), 1) : (1, size(V, 1))
-    sizestr(M::AbstractMatrix) = string("[", size(M, 1), ", ", size(M, 2), "]")
+function check_mat_op_sizes(C, A, tA, B, tB;
+                            dense_layout::sparse_layout_t = SPARSE_LAYOUT_COLUMN_MAJOR)
+    mklsize(M::AbstractMatrix, tM::Char) =
+        (tM == 'N') == (dense_layout == SPARSE_LAYOUT_COLUMN_MAJOR) ? size(M) : reverse(size(M))
+    mklsize(M::AbstractSparseMatrix, tM::Char) =
+        tM == 'N' ? size(M) : reverse(size(M))
+    mklsize(V::AbstractVector, tV::Char) =
+        tV == 'N' ? (size(V, 1), 1) : (1, size(V, 1))
+    sizestr(M::AbstractMatrix) =
+        dense_layout == SPARSE_LAYOUT_COLUMN_MAJOR ?
+            string("[", size(M, 1), ", ", size(M, 2), "]") :
+            string("[", size(M, 2), ", ", size(M, 1), "]")
+    sizestr(M::AbstractSparseMatrix) =
+            string("[", size(M, 1), ", ", size(M, 2), "]")
     sizestr(V::AbstractVector) = string("[", size(V, 1), "]")
     opsym(t) = t == 'T' ? "ᵀ" : t == 'C' ? "ᴴ" : t == 'N' ? "" : "ERROR"
 

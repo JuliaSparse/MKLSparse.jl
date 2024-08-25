@@ -30,15 +30,16 @@ function mv!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_d
 end
 
 function mm!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr,
-             x::StridedMatrix{T}, beta::T, y::StridedMatrix{T}
+             x::StridedMatrix{T}, beta::T, y::StridedMatrix{T};
+             dense_layout::sparse_layout_t = SPARSE_LAYOUT_COLUMN_MAJOR
 ) where T
     check_transa(transa)
-    check_mat_op_sizes(y, A, transa, x, 'N')
-    columns = size(y, 2)
+    check_mat_op_sizes(y, A, transa, x, 'N'; dense_layout)
+    columns = size(y, dense_layout == SPARSE_LAYOUT_COLUMN_MAJOR ? 2 : 1)
     ldx = stride(x, 2)
     ldy = stride(y, 2)
     res = mkl_call(Val{:mkl_sparse_T_mmI}(), typeof(A),
-                   transa, alpha, MKLSparseMatrix(A), descr, 'C', x, columns, ldx, beta, y, ldy)
+                   transa, alpha, MKLSparseMatrix(A), descr, dense_layout, x, columns, ldx, beta, y, ldy)
     check_status(res)
     return y
 end
@@ -56,16 +57,17 @@ function trsv!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix
 end
 
 function trsm!(transa::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr,
-               x::StridedMatrix{T}, y::StridedMatrix{T}
+               x::StridedMatrix{T}, y::StridedMatrix{T};
+               dense_layout::sparse_layout_t = SPARSE_LAYOUT_COLUMN_MAJOR
 ) where T
     checksquare(A)
     check_transa(transa)
-    check_mat_op_sizes(y, A, transa, x, 'N')
-    columns = size(y, 2)
+    check_mat_op_sizes(y, A, transa, x, 'N'; dense_layout)
+    columns = size(y, dense_layout == SPARSE_LAYOUT_COLUMN_MAJOR ? 2 : 1)
     ldx = stride(x, 2)
     ldy = stride(y, 2)
     res = mkl_call(Val{:mkl_sparse_T_trsmI}(), typeof(A),
-                   transa, alpha, MKLSparseMatrix(A), descr, 'C', x, columns, ldx, y, ldy)
+                   transa, alpha, MKLSparseMatrix(A), descr, dense_layout, x, columns, ldx, y, ldy)
     check_status(res)
     return y
 end
