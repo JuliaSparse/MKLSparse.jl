@@ -48,12 +48,31 @@ function mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
     mm!(transA, T(alpha), unwrapA, descrA, B, T(beta), C)
 end
 
+# ColMajorRes = ColMajorMtx*SparseMatrixCSC is implemented via
+# RowMajorRes = SparseMatrixCSR*RowMajorMtx Sparse MKL BLAS calls
+# Switching the B layout from CSC to CSR is required, because MKLSparse
+# does not support CSC 1-based multiplication with row-major matrices.
+# Only CSC is supported as for the other sparse formats the combination
+# of indexing, storage and dense layout would be unsupported,
+# see https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-c/2024-2/mkl-sparse-mm.html
+# (one potential workaround is to temporarily switch to 0-based indexing)
+function mul!(C::StridedMatrix{T}, A::StridedMatrix{T},
+              B::SimpleOrSpecialOrAdjMat{T, S}, alpha::Number, beta::Number
+) where {T <: BlasFloat, S <: SparseArrays.AbstractSparseMatrixCSC{T}}
+    transB, descrB, unwrapB = describe_and_unwrap(B)
+    mm!(transB, T(alpha), lazypermutedims(unwrapB), lazypermutedims(descrB), A,
+        T(beta), C, dense_layout = SPARSE_LAYOUT_ROW_MAJOR)
+end
+
 # 3-arg mul!() calls 5-arg mul!()
 mul!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S},
      x::StridedVector{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
     mul!(y, A, x, one(T), zero(T))
 mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
      B::StridedMatrix{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
+    mul!(C, A, B, one(T), zero(T))
+mul!(C::StridedMatrix{T}, A::StridedMatrix{T},
+     B::SimpleOrSpecialOrAdjMat{T, S}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
     mul!(C, A, B, one(T), zero(T))
 
 # define 4-arg ldiv!(C, A, B, a) (C := alpha*inv(A)*B) that is not present in standard LinearAlgrebra
@@ -80,6 +99,9 @@ if VERSION < v"1.10"
     mul!(Matrix{T}(undef, size(A, 1), size(B, 2)), A, B)
 
 end # if VERSION < v"1.10"
+
+(*)(A::StridedMatrix{T}, B::SimpleOrSpecialOrAdjMat{T, S}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
+    mul!(Matrix{T}(undef, size(A, 1), size(B, 2)), A, B)
 
 function (\)(A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}}
     n = length(x)

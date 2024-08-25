@@ -78,6 +78,7 @@ matrix_classes = [
     IT in (Base.USE_BLAS64 ? (Int32, Int64) : (Int32,))
 
 local isCOO = SPMT <: MKLSparse.SparseMatrixCOO
+local isCOOorCSR = isCOO || SPMT <: MKLSparse.SparseMatrixCSR
 local atol::real(T) = 750*eps(real(one(T))) # absolute tolerance for SparseBLAS results
 
 @testset "Describe $SPMT{$T, $IT} matrix" begin
@@ -223,6 +224,43 @@ end
     end
 end
 
+@testset "Matrix{$T} * $SPMT{$T,$IT}" begin
+    for _ in 1:10
+        m, n, k, l = rand(10:50, 4)
+        spA = sparserand(SPMT{T,IT}, m, n, 0.5)
+        a = convert(Array, spA)
+        b = rand(T, k, m)
+        c = rand(T, l, n)
+        ba = rand(T, k, n)
+        cta = rand(T, l, m)
+        α, β = rand(T, 2)
+
+        # COO and CSR is currently not supported
+        # (MKLSparse does not support this combination of indexing, sparse and dense layouts)
+        @test @blas(b*spA) ≈ b*a atol=atol skip=isCOOorCSR
+        @test @blas(c*spA') ≈ c*a' atol=atol skip=isCOOorCSR
+        @test @blas(c*transpose(spA)) ≈ c*transpose(a) atol=atol skip=isCOOorCSR
+
+        if m != n
+            @test_throws DimensionMismatch c*spA
+            @test_throws DimensionMismatch b*spA'
+            @test_throws DimensionMismatch b*transpose(spA)
+        end
+
+        @test @blas(mul!(similar(ba), b, spA)) ≈ b*a atol=atol skip=isCOOorCSR
+        @test @blas(mul!(similar(cta), c, spA')) ≈ c*a' atol=atol skip=isCOOorCSR
+        @test @blas(mul!(similar(cta), c, transpose(spA))) ≈ c*transpose(a) atol=atol skip=isCOOorCSR
+
+        @test @blas(mul!(copy(ba), b, spA, α, β)) ≈ α*b*a + β*ba atol=atol skip=isCOOorCSR
+        @test @blas(mul!(copy(cta), c, spA', α, β)) ≈ α*c*a' + β*cta atol=atol skip=isCOOorCSR
+        @test @blas(mul!(copy(cta), c, transpose(spA), α, β)) ≈ α*c*transpose(a) + β*cta atol=atol skip=isCOOorCSR
+
+        @test @blas(mul!(copy(ba), b, spA, 1, 1)) ≈ b*a + ba atol=atol skip=isCOOorCSR
+        @test @blas(mul!(copy(cta), c, transpose(spA), 1, 1)) ≈ c*transpose(a) + cta atol=atol skip=isCOOorCSR
+        @test @blas(mul!(copy(cta), c, spA', 1, 1)) ≈ c*a' + cta atol=atol skip=isCOOorCSR
+    end
+end
+
 if SPMT <: SparseMatrixCSC # conversion to special matrices not implemented for CSR and COO
 
 @testset "$Aclass{$SPMT{$T}} * $trans($(ifelse(Bdim == 2, "Matrix", "Vector")){$T})" for Bdim in 1:2,
@@ -242,6 +280,26 @@ if SPMT <: SparseMatrixCSC # conversion to special matrices not implemented for 
         @test @blas(mul!(similar(B), Aclass(spA), trans(B), α, 0)) ≈ α * Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
         @test @blas(mul!(similar(B), Aclass(spA), trans(B))) ≈ Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
         @test @blas(Aclass(spA) * trans(B)) ≈ Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
+    end
+end
+
+@testset "$trans($(ifelse(Bdim == 2, "Matrix", "Vector")){$T}) * $Aclass{$SPMT{$T}}" for Bdim in 1:2,
+        (Aclass, convert_to_class) in matrix_classes,
+        trans in (identity, transpose, adjoint)
+
+    (Bdim == 1 && trans == identity) && continue # not valid
+
+    for _ in 1:10
+        n = rand(50:150)
+        spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
+        A = convert(Array, spA)
+        @test spA == A
+        B = Bdim == 2 ? rand(T, n, n) : rand(T, n)
+        α = rand(T)
+
+        @test @blas(mul!(similar(B), trans(B), Aclass(spA), α, 0)) ≈ α * trans(B) * Aclass(A) skip=trans!=identity
+        @test @blas(mul!(similar(B), trans(B), Aclass(spA))) ≈ trans(B) * Aclass(A) skip=trans!=identity
+        @test @blas(trans(B) * Aclass(spA)) ≈ trans(B) * Aclass(A) skip=(Bdim==2 && trans!=identity)
     end
 end
 
