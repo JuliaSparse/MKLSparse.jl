@@ -48,6 +48,14 @@ Base.convert(::Type{SparseMatrixCSC{Tv, Ti}}, tA::Transpose{Tv, SparseMatrixCSR{
 Base.convert(::Type{SparseMatrixCSC}, tA::Transpose{Tv, SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
     convert(SparseMatrixCSC{Tv, Ti}, tA)
 
+function Base.convert(::Type{SparseMatrixCOO{Tv, Ti}}, A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
+    rows, cols, vals = findnz(A)
+    return SparseMatrixCOO{Tv, Ti}(size(A)..., convert(Vector{Ti}, rows), convert(Vector{Ti}, cols), vals)
+end
+
+Base.convert(::Type{SparseMatrixCOO}, A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti} =
+    convert(SparseMatrixCOO{Tv, Ti}, A)
+
 """
     MKLSparseMatrix
 

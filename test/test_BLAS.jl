@@ -55,17 +55,11 @@ function sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 
     return convert(SPMT, spM)
 end
 
-function sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCSR{Tv, Ti}} where {Tv, Ti}
-    spM = sparserand(SparseMatrixCSC{Tv, Ti}, n, m, p, diag)
-    return MKLSparse.SparseMatrixCSR(m, n, convert(Vector{Ti}, spM.colptr),
-                                     convert(Vector{Ti}, spM.rowval), spM.nzval)
-end
+sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCSR{Tv, Ti}} where {Tv, Ti} =
+    convert(MKLSparse.SparseMatrixCSR, transpose(sparserand(SparseMatrixCSC{Tv, Ti}, n, m, p, diag)))
 
-function sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCOO{Tv, Ti}} where {Tv, Ti}
-    spM = sparserand(SparseMatrixCSC{Tv, Ti}, m, n, p, diag)
-    rows, cols, vals = findnz(spM)
-    return MKLSparse.SparseMatrixCOO(m, n, convert(Vector{Ti}, rows), convert(Vector{Ti}, cols), vals)
-end
+sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCOO{Tv, Ti}} where {Tv, Ti} =
+    convert(MKLSparse.SparseMatrixCOO, sparserand(SparseMatrixCSC{Tv, Ti}, m, n, p, diag))
 
 function Base.Array(spA::MKLSparse.SparseMatrixCOO{T}) where T
     A = fill(zero(T), spA.m, spA.n)
