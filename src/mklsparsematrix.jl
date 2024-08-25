@@ -67,6 +67,28 @@ end
 Base.convert(::Type{Array}, spA::MKLSparse.SparseMatrixCSR) =
     convert(Array, transpose(convert(SparseMatrixCSC, transpose(spA))))
 
+# lazypermutedims(sparse) does not do in any new array allocations,
+# it just switches the layout of the sparse matrix reusing the same data
+
+# transpose the sparse matrix and switch its layout from CSC to CSR
+lazypermutedims(A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti} =
+    convert(SparseMatrixCSR{Tv, Ti}, transpose(A))
+
+# transpose the sparse matrix and switch its layout from CSR to CSC
+lazypermutedims(A::SparseMatrixCSR{Tv, Ti}) where {Tv, Ti} =
+    convert(SparseMatrixCSC{Tv, Ti}, transpose(A))
+
+# transpose the sparse matrix in COO
+lazypermutedims(A::SparseMatrixCOO{Tv, Ti}) where {Tv, Ti} =
+    SparseMatrixCOO{Tv, Ti}(A.n, A.m, A.cols, A.rows, A.vals)
+
+# when lazypermutedims() is applied to matrix A, its description should be updated
+lazypermutedims(descr::matrix_descr) = matrix_descr(
+    descr.type,
+    descr.mode == SPARSE_FILL_MODE_UPPER ? SPARSE_FILL_MODE_LOWER :
+    descr.mode == SPARSE_FILL_MODE_LOWER ? SPARSE_FILL_MODE_UPPER : descr.mode,
+    descr.diag)
+
 """
     MKLSparseMatrix
 
