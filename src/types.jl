@@ -64,6 +64,12 @@ matrix_descr(A::Adjoint)             = matrix_descr(A.parent)
     end
 end
 
+@inline Base.convert(::Type{sparse_operation_t}, ::Type{<:Transpose}) =
+    SPARSE_OPERATION_TRANSPOSE
+
+@inline Base.convert(::Type{sparse_operation_t}, ::Type{<:Adjoint}) =
+    SPARSE_OPERATION_CONJUGATE_TRANSPOSE
+
 @inline function Base.convert(::Type{sparse_matrix_type_t}, mattype::Char)
     if mattype == 'G'
         SPARSE_MATRIX_TYPE_GENERAL
