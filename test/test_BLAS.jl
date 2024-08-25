@@ -61,17 +61,6 @@ sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where 
 sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCOO{Tv, Ti}} where {Tv, Ti} =
     convert(MKLSparse.SparseMatrixCOO, sparserand(SparseMatrixCSC{Tv, Ti}, m, n, p, diag))
 
-function Base.Array(spA::MKLSparse.SparseMatrixCOO{T}) where T
-    A = fill(zero(T), spA.m, spA.n)
-    for (i, j, v) in zip(spA.rows, spA.cols, spA.vals)
-        A[i, j] = v
-    end
-    return A
-end
-
-Base.Array(spA::MKLSparse.SparseMatrixCSR) =
-    Array(convert(SparseMatrixCSC, transpose(spA)))
-
 # special matrix classes to test
 # and the function to create a matrix of that class from a random sparse matrix
 matrix_classes = [
@@ -115,7 +104,7 @@ end
 @testset "$SPMT{$T,$IT} * Vector{$T}" begin
     for _ in 1:10
         spA = sparserand(SPMT{T, IT}, 10, 5, 0.5)
-        a = Array(spA)
+        a = convert(Array, spA)
         b = rand(T, 5)
         c = rand(T, 10)
 
@@ -134,7 +123,7 @@ end
 
     for _ in 1:10
         spA = sparserand(SPMT{T, IT}, 10, 5, 0.5)
-        a = Array(spA)
+        a = convert(Array, spA)
         b = rand(T, 10)
         c = rand(T, 5)
 
@@ -158,7 +147,7 @@ end
 @testset "$SPMT{$T,$IT} * Matrix{$T}" begin
     for _ in 1:10
         spA = sparserand(SPMT{T,IT}, 10, 5, 0.5)
-        a = Array(spA)
+        a = convert(Array, spA)
         b = rand(T, 5, 8)
         c = rand(T, 10, 12)
         ab = rand(T, 10, 8)
@@ -195,7 +184,7 @@ if SPMT <: SparseMatrixCSC # conversion to special matrices not implemented for 
     for _ in 1:10
         n = rand(50:150)
         spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
-        A = Array(spA)
+        A = convert(Array, spA)
         @test spA == A
         B = Bdim == 2 ? rand(T, n, n) : rand(T, n)
         α = rand(T)
@@ -214,7 +203,7 @@ end
     for _ in 1:10
         n = rand(50:150)
         spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
-        A = Array(spA)
+        A = convert(Array, spA)
         B = Bdim == 2 ? rand(T, n, rand(50:150)) : rand(T, n)
         spAclass = Aclass(spA)
         α = rand(T)

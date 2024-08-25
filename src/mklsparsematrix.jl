@@ -56,6 +56,17 @@ end
 Base.convert(::Type{SparseMatrixCOO}, A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti} =
     convert(SparseMatrixCOO{Tv, Ti}, A)
 
+function Base.convert(::Type{Array}, spA::MKLSparse.SparseMatrixCOO{T}) where T
+    A = fill(zero(T), spA.m, spA.n)
+    for (i, j, v) in zip(spA.rows, spA.cols, spA.vals)
+        A[i, j] = v
+    end
+    return A
+end
+
+Base.convert(::Type{Array}, spA::MKLSparse.SparseMatrixCSR) =
+    convert(Array, transpose(convert(SparseMatrixCSC, transpose(spA))))
+
 """
     MKLSparseMatrix
 
