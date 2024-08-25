@@ -94,7 +94,29 @@ matrix_classes = [
     T in (Float32, Float64, ComplexF32, ComplexF64),
     IT in (Base.USE_BLAS64 ? (Int32, Int64) : (Int32,))
 
+local isCOO = SPMT <: MKLSparse.SparseMatrixCOO
 local atol::real(T) = 100*eps(real(one(T))) # absolute tolerance for SparseBLAS results
+
+@testset "Create MKLSparse matrix from $SPMT{$T, $IT} and export back" begin
+    spA = sparserand(SPMT{T, IT}, rand(10:50), rand(10:50), 0.25)
+    mklA = MKLSparse.MKLSparseMatrix(spA)
+
+    # test conversion to incompatible Julia types
+    SPMT2 = SPMT === SparseMatrixCSC ? MKLSparse.SparseMatrixCSR : SparseMatrixCSC
+    @test_throws MKLSparseError convert(SPMT2{T, IT}, mklA)
+
+    # MKL Sparse does not check for matrix index type and function name compatibility
+    #if Base.USE_BLAS64
+    #    IT2 = IT === Int64 ? Int32 : Int64
+    #    @test_throws MKLSparseError convert(SPMT{T, IT2}, mklA)
+    #end
+    # MKL Sparse does not check for matrix value type and function name compatibility
+    #T2 = T === Float64 ? Float32 : Float64
+    #@test_throws MKLSparseError convert(SPMT{T2, IT}, mklA)
+
+    # MKL does not support export of COO matrices
+    @test convert(SPMT{T, IT}, mklA) == spA skip=isCOO
+end
 
 @testset "$SPMT{$T,$IT} * Vector{$T}" begin
     for _ in 1:10
