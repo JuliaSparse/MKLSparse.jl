@@ -73,12 +73,55 @@ matrix_classes = [
 ]
 
 @testset "BLAS for $SPMT{$T, $IT} matrices" for
-    SPMT in (SparseMatrixCSC, MKLSparse.SparseMatrixCOO, MKLSparse.SparseMatrixCSR),
+    SPMT in (SparseMatrixCSC, MKLSparse.SparseMatrixCSR, MKLSparse.SparseMatrixCOO),
     T in (Float32, Float64, ComplexF32, ComplexF64),
     IT in (Base.USE_BLAS64 ? (Int32, Int64) : (Int32,))
 
 local isCOO = SPMT <: MKLSparse.SparseMatrixCOO
 local atol::real(T) = 750*eps(real(one(T))) # absolute tolerance for SparseBLAS results
+
+@testset "Describe $SPMT{$T, $IT} matrix" begin
+    spA = sparserand(SPMT{T, IT}, 10, 10, 0.25)
+
+    @test MKLSparse.describe_and_unwrap(spA) == ('N', MKLSparse.matrix_descr('G','F','N'), spA)
+    @test MKLSparse.describe_and_unwrap(transpose(spA)) == ('T', MKLSparse.matrix_descr('G','F','N'), spA)
+    @test MKLSparse.describe_and_unwrap(adjoint(spA)) == ('C', MKLSparse.matrix_descr('G','F','N'), spA)
+
+    @test MKLSparse.describe_and_unwrap(Symmetric(spA)) == ('N', MKLSparse.matrix_descr('S','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(Hermitian(spA)) == ('N', MKLSparse.matrix_descr('H','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(LowerTriangular(spA)) == ('N', MKLSparse.matrix_descr('T','L','N'), spA)
+    @test MKLSparse.describe_and_unwrap(UpperTriangular(spA)) == ('N', MKLSparse.matrix_descr('T','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(UnitLowerTriangular(spA)) == ('N', MKLSparse.matrix_descr('T','L','U'), spA)
+    @test MKLSparse.describe_and_unwrap(UnitUpperTriangular(spA)) == ('N', MKLSparse.matrix_descr('T','U','U'), spA)
+
+    @test MKLSparse.describe_and_unwrap(adjoint(Symmetric(spA))) == (T <: Real ? 'N' : 'C', MKLSparse.matrix_descr('S','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(adjoint(Hermitian(spA))) == ('N', MKLSparse.matrix_descr('H','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(adjoint(LowerTriangular(spA))) == ('C', MKLSparse.matrix_descr('T','L','N'), spA)
+    @test MKLSparse.describe_and_unwrap(adjoint(UpperTriangular(spA))) == ('C', MKLSparse.matrix_descr('T','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(adjoint(UnitLowerTriangular(spA))) == ('C', MKLSparse.matrix_descr('T','L','U'), spA)
+    @test MKLSparse.describe_and_unwrap(adjoint(UnitUpperTriangular(spA))) == ('C', MKLSparse.matrix_descr('T','U','U'), spA)
+
+    @test MKLSparse.describe_and_unwrap(transpose(Symmetric(spA))) == ('N', MKLSparse.matrix_descr('S','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(transpose(Hermitian(spA))) == (T <: Real ? 'N' : 'T', MKLSparse.matrix_descr('H','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(transpose(LowerTriangular(spA))) == ('T', MKLSparse.matrix_descr('T','L','N'), spA)
+    @test MKLSparse.describe_and_unwrap(transpose(UpperTriangular(spA))) == ('T', MKLSparse.matrix_descr('T','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(transpose(UnitLowerTriangular(spA))) == ('T', MKLSparse.matrix_descr('T','L','U'), spA)
+    @test MKLSparse.describe_and_unwrap(transpose(UnitUpperTriangular(spA))) == ('T', MKLSparse.matrix_descr('T','U','U'), spA)
+
+    @test MKLSparse.describe_and_unwrap(Symmetric(adjoint(spA))) == (T <: Real ? 'N' : 'C', MKLSparse.matrix_descr('S','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(Hermitian(adjoint(spA))) == ('N', MKLSparse.matrix_descr('H','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(UpperTriangular(adjoint(spA))) == ('C', MKLSparse.matrix_descr('T','L','N'), spA)
+    @test MKLSparse.describe_and_unwrap(LowerTriangular(adjoint(spA))) == ('C', MKLSparse.matrix_descr('T','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(UnitUpperTriangular(adjoint(spA))) == ('C', MKLSparse.matrix_descr('T','L','U'), spA)
+    @test MKLSparse.describe_and_unwrap(UnitLowerTriangular(adjoint(spA))) == ('C', MKLSparse.matrix_descr('T','U','U'), spA)
+
+    @test MKLSparse.describe_and_unwrap(Symmetric(transpose(spA))) == ('N', MKLSparse.matrix_descr('S','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(Hermitian(transpose(spA))) == (T <: Real ? 'N' : 'T', MKLSparse.matrix_descr('H','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(UpperTriangular(transpose(spA))) == ('T', MKLSparse.matrix_descr('T','L','N'), spA)
+    @test MKLSparse.describe_and_unwrap(LowerTriangular(transpose(spA))) == ('T', MKLSparse.matrix_descr('T','U','N'), spA)
+    @test MKLSparse.describe_and_unwrap(UnitUpperTriangular(transpose(spA))) == ('T', MKLSparse.matrix_descr('T','L','U'), spA)
+    @test MKLSparse.describe_and_unwrap(UnitLowerTriangular(transpose(spA))) == ('T', MKLSparse.matrix_descr('T','U','U'), spA)
+end
 
 @testset "Create MKLSparse matrix from $SPMT{$T, $IT} and export back" begin
     spA = sparserand(SPMT{T, IT}, rand(10:50), rand(10:50), 0.25)
