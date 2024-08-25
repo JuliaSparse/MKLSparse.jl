@@ -38,6 +38,11 @@ function mul!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S},
               x::StridedVector{T}, alpha::Number, beta::Number
 ) where {T <: BlasFloat, S <: MKLSparseMat{T}}
     transA, descrA, unwrapA = describe_and_unwrap(A)
+    # fix the strange behaviour of multipling adjoint vectors by triangular matrices
+    # looks like wrong the triangle is being used
+    if descrA.type == SPARSE_MATRIX_TYPE_TRIANGULAR && transA == 'C'
+        descrA = lazypermutedims(descrA)
+    end
     mv!(transA, T(alpha), unwrapA, descrA, x, T(beta), y)
 end
 
@@ -98,10 +103,38 @@ if VERSION < v"1.10"
 (*)(A::SimpleOrSpecialOrAdjMat{T, S}, B::StridedMatrix{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
     mul!(Matrix{T}(undef, size(A, 1), size(B, 2)), A, B)
 
+# xᵀ * B = (Bᵀ * x)ᵀ
+(*)(x::Transpose{T, <:StridedVector{T}}, B::SimpleOrSpecialMat{T, S}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
+    transpose(mul!(similar(x, size(B, 2)), transpose(B), parent(x)))
+
+# xᴴ * B = (Bᴴ * x)ᴴ
+(*)(x::Adjoint{T, <:StridedVector{T}}, B::SimpleOrSpecialMat{T, S}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
+    adjoint(mul!(similar(x, size(B, 2)), adjoint(B), parent(x)))
+
 end # if VERSION < v"1.10"
 
 (*)(A::StridedMatrix{T}, B::SimpleOrSpecialOrAdjMat{T, S}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
     mul!(Matrix{T}(undef, size(A, 1), size(B, 2)), A, B)
+
+# stdlib does not provide these methods for complex types
+
+# xᴴ * Bᵀ = (Bᵀᴴ * x)ᴴ
+function (*)(x::Adjoint{T, <:StridedVector{T}}, B::Transpose{T, <:SimpleOrSpecialMat{T, S}}
+) where {T <: Union{ComplexF32, ComplexF64}, S <: MKLSparseMat{T}}
+    transB, descrB, unwrapB = describe_and_unwrap(parent(B))
+    y = similar(x, size(B, 2))
+    adjoint(mv!('C', one(T), lazypermutedims(unwrapB), lazypermutedims(descrB), parent(x),
+                zero(T), y))
+end
+
+# xᵀ * Bᴴ = (Bᵀᴴ * x)ᵀ
+function (*)(x::Transpose{T, <:StridedVector{T}}, B::Adjoint{T, <:SimpleOrSpecialMat{T, S}}
+) where {T <: Union{ComplexF32, ComplexF64}, S <: MKLSparseMat{T}}
+    transB, descrB, unwrapB = describe_and_unwrap(parent(B))
+    y = similar(x, size(B, 2))
+    transpose(mv!('C', one(T), lazypermutedims(unwrapB), lazypermutedims(descrB), parent(x),
+                  zero(T), y))
+end
 
 function (\)(A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}}
     n = length(x)
