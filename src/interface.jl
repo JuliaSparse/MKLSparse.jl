@@ -57,18 +57,11 @@ function LinearAlgebra.ldiv!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, 
     trsm!(transA, alpha, unwrapA, descrA, B, C)
 end
 
-function (*)(A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}}
-    m, n = size(A)
-    y = Vector{T}(undef, m)
-    return mul!(y, A, x, one(T), zero(T))
-end
+(*)(A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
+    mul!(Vector{T}(undef, size(A, 1)), A, x, one(T), zero(T))
 
-function (*)(A::SimpleOrSpecialOrAdjMat{T, S}, B::StridedMatrix{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}}
-    m, k = size(A)
-    p, n = size(B)
-    C = Matrix{T}(undef, m, n)
-    return mul!(C, A, B, one(T), zero(T))
-end
+(*)(A::SimpleOrSpecialOrAdjMat{T, S}, B::StridedMatrix{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}} =
+    mul!(Matrix{T}(undef, size(A, 1), size(B, 2)), A, B, one(T), zero(T))
 
 function (\)(A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}) where {T <: BlasFloat, S <: MKLSparseMat{T}}
     n = length(x)
