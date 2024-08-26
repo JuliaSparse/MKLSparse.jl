@@ -29,27 +29,28 @@ mkl_storagetype_specifier(::Type{S}) where S <: AbstractSparseMatrix =
 
 mkl_storagetype_specifier(::Type{<:SparseMatrixCSC}) = "csc"
 
-# generates the name of the MKL call from the template
-# 'S' char replaced by a specifier of the sparse storage type S
-# 'T' char replaced by a specifier of the value type Tv
-# 'I' char replaced by a specifier of the index type Ti
-# (e.g. 's' for Float32), so the actuall function being called is mkl_scscmm()
+# generates the name of the MKL call from the template:
+# 'S' is replaced by a specifier of the sparse storage type S
+# 'T' is replaced by a specifier of the value type Tv
+# 'I' is replaced by a specifier of the index type Ti
+# (e.g. for :mkl_sparse_T_create_SI template and SparseMatrixCSC{Float32, Int64}
+#  the returned function name would be :mkl_sparse_s_create_csc_I64)
 @inline Base.@assume_effects :foldable mkl_function_name(template::Symbol, S::Type, Tv::Type, Ti::Type) =
-    Symbol(reduce(replace, ["T" => mkl_valtype_specifier(Tv),
-                            "I" => mkl_indextype_specifier(Ti),
-                            "S" => mkl_storagetype_specifier(S)],
-                  init=String(template)))
+    Symbol(replace(String(template),
+                   "T" => mkl_valtype_specifier(Tv),
+                   "I" => mkl_indextype_specifier(Ti),
+                   "S" => mkl_storagetype_specifier(S)))
 
-matrixdescra(A::LowerTriangular)     = matrix_descr('T','L','N')
-matrixdescra(A::UpperTriangular)     = matrix_descr('T','U','N')
-matrixdescra(A::Diagonal)            = matrix_descr('D','F','N')
-matrixdescra(A::UnitLowerTriangular) = matrix_descr('T','L','U')
-matrixdescra(A::UnitUpperTriangular) = matrix_descr('T','U','U')
-matrixdescra(A::Symmetric)           = matrix_descr('S', A.uplo, 'N')
-matrixdescra(A::Hermitian)           = matrix_descr('H', A.uplo, 'N')
-matrixdescra(A::SparseMatrixCSC)     = matrix_descr('G', 'F', 'N')
-matrixdescra(A::Transpose)           = matrixdescra(A.parent)
-matrixdescra(A::Adjoint)             = matrixdescra(A.parent)
+matrix_descr(A::LowerTriangular)     = matrix_descr('T','L','N')
+matrix_descr(A::UpperTriangular)     = matrix_descr('T','U','N')
+matrix_descr(A::Diagonal)            = matrix_descr('D','F','N')
+matrix_descr(A::UnitLowerTriangular) = matrix_descr('T','L','U')
+matrix_descr(A::UnitUpperTriangular) = matrix_descr('T','U','U')
+matrix_descr(A::Symmetric)           = matrix_descr('S', A.uplo, 'N')
+matrix_descr(A::Hermitian)           = matrix_descr('H', A.uplo, 'N')
+matrix_descr(A::SparseMatrixCSC)     = matrix_descr('G', 'F', 'N')
+matrix_descr(A::Transpose)           = matrix_descr(A.parent)
+matrix_descr(A::Adjoint)             = matrix_descr(A.parent)
 
 @inline function Base.convert(::Type{sparse_operation_t}, trans::Char)
     if trans == 'N'
@@ -62,6 +63,12 @@ matrixdescra(A::Adjoint)             = matrixdescra(A.parent)
         throw(ArgumentError("Unknown operation $trans"))
     end
 end
+
+@inline Base.convert(::Type{sparse_operation_t}, ::Type{<:Transpose}) =
+    SPARSE_OPERATION_TRANSPOSE
+
+@inline Base.convert(::Type{sparse_operation_t}, ::Type{<:Adjoint}) =
+    SPARSE_OPERATION_CONJUGATE_TRANSPOSE
 
 @inline function Base.convert(::Type{sparse_matrix_type_t}, mattype::Char)
     if mattype == 'G'
@@ -92,9 +99,9 @@ end
 end
 
 @inline function Base.convert(::Type{sparse_index_base_t}, index::Char)
-    if index == 'Z'
+    if index == '0'
         return SPARSE_INDEX_BASE_ZERO
-    elseif index == 'O'
+    elseif index == '1'
         return SPARSE_INDEX_BASE_ONE
     else
         throw(ArgumentError("Unknown index base $index"))
@@ -166,10 +173,20 @@ check_transa(t::Char) =
         throw(ArgumentError("transa: is '$t', must be 'N', 'T', or 'C'"))
 
 # check matrix sizes for the multiplication-like operation C <- tA[A] * tB[B]
-function check_mat_op_sizes(C, A, tA, B, tB)
-    mklsize(M::AbstractMatrix, tM::Char) = tM == 'N' ? size(M) : reverse(size(M))
-    mklsize(V::AbstractVector, tV::Char) = tV == 'N' ? (size(V, 1), 1) : (1, size(V, 1))
-    sizestr(M::AbstractMatrix) = string("[", size(M, 1), ", ", size(M, 2), "]")
+function check_mat_op_sizes(C, A, tA, B, tB;
+                            dense_layout::sparse_layout_t = SPARSE_LAYOUT_COLUMN_MAJOR)
+    mklsize(M::AbstractMatrix, tM::Char) =
+        (tM == 'N') == (dense_layout == SPARSE_LAYOUT_COLUMN_MAJOR) ? size(M) : reverse(size(M))
+    mklsize(M::AbstractSparseMatrix, tM::Char) =
+        tM == 'N' ? size(M) : reverse(size(M))
+    mklsize(V::AbstractVector, tV::Char) =
+        tV == 'N' ? (size(V, 1), 1) : (1, size(V, 1))
+    sizestr(M::AbstractMatrix) =
+        dense_layout == SPARSE_LAYOUT_COLUMN_MAJOR ?
+            string("[", size(M, 1), ", ", size(M, 2), "]") :
+            string("[", size(M, 2), ", ", size(M, 1), "]")
+    sizestr(M::AbstractSparseMatrix) =
+            string("[", size(M, 1), ", ", size(M, 2), "]")
     sizestr(V::AbstractVector) = string("[", size(V, 1), "]")
     opsym(t) = t == 'T' ? "ᵀ" : t == 'C' ? "ᴴ" : t == 'N' ? "" : "ERROR"
 
@@ -182,3 +199,19 @@ function check_mat_op_sizes(C, A, tA, B, tB)
         throw(DimensionMismatch(str))
     end
 end
+
+"""
+    MKLSparseError
+
+Wraps `MKLSparse.sparse_status_t` error code.
+"""
+struct MKLSparseError <: Exception
+    status::sparse_status_t
+end
+
+Base.showerror(io::IO, e::MKLSparseError) =
+    print(io, "MKLSparseError(", e.status, ")")
+
+# check the status of MKL call
+check_status(status::sparse_status_t) =
+    status == SPARSE_STATUS_SUCCESS || throw(MKLSparseError(status))
