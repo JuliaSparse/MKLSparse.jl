@@ -12,26 +12,27 @@ SimpleOrSpecialMat{T, M} = Union{M, SpecialMat{T, <:M}}
 SimpleOrSpecialOrAdjMat{T, M} = Union{SimpleOrAdjMat{T, <:SimpleOrSpecialMat{T, <:M}},
                                       SimpleOrSpecialMat{T, <:SimpleOrAdjMat{T, <:M}}}
 
-unwrapa(A::AbstractMatrix) = A
-unwrapa(A::Union{Adjoint, Transpose}) = unwrapa(parent(A))
-unwrapa(A::SpecialMat) = unwrapa(parent(A))
+# unwraps matrix A from Adjoint/Transpose transform
+unwrap_trans(A::AbstractMatrix) = A
+unwrap_trans(A::Union{Adjoint, Transpose}) = unwrap_trans(parent(A))
+unwrap_trans(A::SpecialMat) = unwrap_trans(parent(A))
 
-# returns a tuple of transa, matdescra and unwrapped A
-describe_and_unwrap(A::AbstractMatrix) = ('N', matrix_descr(A), unwrapa(A))
-describe_and_unwrap(A::Adjoint) = ('C', matrix_descr(A), unwrapa(parent(A)))
-describe_and_unwrap(A::Transpose) = ('T', matrix_descr(A), unwrapa(parent(A)))
+# returns a tuple of trans, matrix_descr and unwrapped A
+describe_and_unwrap(A::AbstractMatrix) = ('N', matrix_descr(A), unwrap_trans(A))
+describe_and_unwrap(A::Adjoint) = ('C', matrix_descr(A), unwrap_trans(parent(A)))
+describe_and_unwrap(A::Transpose) = ('T', matrix_descr(A), unwrap_trans(parent(A)))
 describe_and_unwrap(A::LowerTriangular{<:Any, T}) where T <: Union{Adjoint, Transpose} =
-    (T <: Adjoint ? 'C' : 'T', matrix_descr('T', 'U', 'N'), unwrapa(A))
+    (T <: Adjoint ? 'C' : 'T', matrix_descr('T', 'U', 'N'), unwrap_trans(A))
 describe_and_unwrap(A::UpperTriangular{<:Any, T}) where T <: Union{Adjoint, Transpose} =
-    (T <: Adjoint ? 'C' : 'T', matrix_descr('T', 'L', 'N'), unwrapa(A))
+    (T <: Adjoint ? 'C' : 'T', matrix_descr('T', 'L', 'N'), unwrap_trans(A))
 describe_and_unwrap(A::UnitLowerTriangular{<:Any, T}) where T <: Union{Adjoint, Transpose} =
-    (T <: Adjoint ? 'C' : 'T', matrix_descr('T', 'U', 'U'), unwrapa(A))
+    (T <: Adjoint ? 'C' : 'T', matrix_descr('T', 'U', 'U'), unwrap_trans(A))
 describe_and_unwrap(A::UnitUpperTriangular{<:Any, T}) where T <: Union{Adjoint, Transpose} =
-    (T <: Adjoint ? 'C' : 'T', matrix_descr('T', 'L', 'U'), unwrapa(A))
+    (T <: Adjoint ? 'C' : 'T', matrix_descr('T', 'L', 'U'), unwrap_trans(A))
 describe_and_unwrap(A::Symmetric{<:Any, T}) where T <: Union{Adjoint, Transpose} =
-    (T <: Transpose || (eltype(A) <: Real) ? 'N' : 'C', matrix_descr('S', A.uplo, 'N'), unwrapa(A))
+    (T <: Transpose || (eltype(A) <: Real) ? 'N' : 'C', matrix_descr('S', A.uplo, 'N'), unwrap_trans(A))
 describe_and_unwrap(A::Hermitian{<:Any, T}) where T <: Union{Adjoint, Transpose} =
-    (T <: Adjoint || (eltype(A) <: Real) ? 'N' : 'T', matrix_descr('H', A.uplo, 'N'), unwrapa(A))
+    (T <: Adjoint || (eltype(A) <: Real) ? 'N' : 'T', matrix_descr('H', A.uplo, 'N'), unwrap_trans(A))
 
 # 5-arg mul!()
 function mul!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S},
