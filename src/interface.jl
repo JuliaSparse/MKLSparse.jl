@@ -34,7 +34,7 @@ describe_and_unwrap(A::Symmetric{<:Any, T}) where T <: Union{Adjoint, Transpose}
 describe_and_unwrap(A::Hermitian{<:Any, T}) where T <: Union{Adjoint, Transpose} =
     (T <: Adjoint || (eltype(A) <: Real) ? 'N' : 'T', matrix_descr('H', A.uplo, 'N'), unwrap_trans(A))
 
-# 5-arg mul!()
+# mul!(vec, sparse, vec, a, b)
 function mul!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S},
               x::StridedVector{T}, alpha::Number, beta::Number
 ) where {T <: BlasFloat, S <: MKLSparseMat{T}}
@@ -47,6 +47,7 @@ function mul!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S},
     mv!(transA, T(alpha), unwrapA, descrA, x, T(beta), y)
 end
 
+# mul!(dense, sparse, dense, a, b)
 function mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
               B::StridedMatrix{T}, alpha::Number, beta::Number
 ) where {T <: BlasFloat, S <: MKLSparseMat{T}}
@@ -54,6 +55,7 @@ function mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
     mm!(transA, T(alpha), unwrapA, descrA, B, T(beta), C)
 end
 
+# mul!(dense, dense, sparse, a, b)
 # ColMajorRes = ColMajorMtx*SparseMatrixCSC is implemented via
 # RowMajorRes = SparseMatrixCSR*RowMajorMtx Sparse MKL BLAS calls
 # Switching the B layout from CSC to CSR is required, because MKLSparse
