@@ -174,7 +174,9 @@ check_trans(t::Char) =
 
 # check matrix sizes for the multiplication-like operation C <- tA[A] * tB[B]
 function check_mat_op_sizes(C, A, tA, B, tB;
-                            dense_layout::sparse_layout_t = SPARSE_LAYOUT_COLUMN_MAJOR)
+                            dense_layout::sparse_layout_t = SPARSE_LAYOUT_COLUMN_MAJOR,
+                            check_result_rows::Bool = true,
+                            check_result_columns::Bool = true)
     mklsize(M::AbstractMatrix, tM::Char) =
         (tM == 'N') == (dense_layout == SPARSE_LAYOUT_COLUMN_MAJOR) ? size(M) : reverse(size(M))
     mklsize(M::AbstractSparseMatrix, tM::Char) =
@@ -193,7 +195,7 @@ function check_mat_op_sizes(C, A, tA, B, tB;
     mA, nA = mklsize(A, tA)
     mB, nB = mklsize(B, tB)
     mC, nC = !isnothing(C) ? mklsize(C, 'N') : (mA, nB)
-    if nA != mB || mC != mA || nC != nB
+    if nA != mB || (check_result_rows && mC != mA) || (check_result_columns && nC != nB)
         str = string("arrays had inconsistent dimensions for C = A", opsym(tA), " * B", opsym(tB), ": ",
                      (isnothing(C) ? "" : (sizestr(C) * " = ")),
                      sizestr(A), opsym(tA), " * ", sizestr(B), opsym(tB))
