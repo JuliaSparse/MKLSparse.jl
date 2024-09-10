@@ -3,14 +3,18 @@ import LinearAlgebra: mul!, ldiv!
 
 MKLSparseMat{T} = Union{SparseArrays.AbstractSparseMatrixCSC{T}, SparseMatrixCSR{T}, SparseMatrixCOO{T}}
 
-SimpleOrAdjMat{T, M} = Union{M, Adjoint{T, <:M}, Transpose{T, <:M}}
+AdjOrTranspMat{T, M} = Union{Adjoint{T, <:M}, Transpose{T,<:M}}
 
-SpecialMat{T, M} = Union{LowerTriangular{T,<:M}, UpperTriangular{T,<:M},
-                         UnitLowerTriangular{T,<:M}, UnitUpperTriangular{T,<:M},
+SimpleOrAdjMat{T, M} = Union{M, Adjoint{T, <:M}, Transpose{T,<:M}}
+
+SpecialMat{T, M} = Union{LinearAlgebra.AbstractTriangular{T,<:M},
                          Symmetric{T,<:M}, Hermitian{T,<:M}}
-SimpleOrSpecialMat{T, M} = Union{M, SpecialMat{T, <:M}}
-SimpleOrSpecialOrAdjMat{T, M} = Union{SimpleOrAdjMat{T, <:SimpleOrSpecialMat{T, <:M}},
-                                      SimpleOrSpecialMat{T, <:SimpleOrAdjMat{T, <:M}}}
+SimpleOrSpecialMat{T, M} = Union{M, SpecialMat{T,<:M}}
+SimpleOrSpecialOrAdjMat{T, M} = Union{M,
+                                      SpecialMat{T,<:M},
+                                      AdjOrTranspMat{T,<:M},
+                                      AdjOrTranspMat{T, <:SpecialMat{T,<:M}},
+                                      SpecialMat{T,<:AdjOrTranspMat{T,<:M}}}
 
 # unwraps matrix A from Adjoint/Transpose transform
 unwrap_trans(A::AbstractMatrix) = A
