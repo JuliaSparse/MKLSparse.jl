@@ -1,3 +1,9 @@
+# Intermediate wrappers for the Sparse BLAS routines
+# that check the parameters validity (including matrix dimensions checks)
+# and convert Julia's matrix types to the MKL's matrix types.
+# See https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-c/2024-2/inspector-executor-sparse-blas-execution-routines.html
+# for the detailed description of the wrapped functions.
+
 # generates the reference to the MKL function from the template
 @inline @generated function mkl_function(
     ::Val{F}, ::Type{S}
