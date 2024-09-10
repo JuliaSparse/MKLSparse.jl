@@ -52,6 +52,13 @@ matrix_descr(A::SparseMatrixCSC)     = matrix_descr('G', 'F', 'N')
 matrix_descr(A::Transpose)           = matrix_descr(A.parent)
 matrix_descr(A::Adjoint)             = matrix_descr(A.parent)
 
+# modify the specific fields of the descriptor
+matrix_descr(descr::matrix_descr;
+             type::sparse_matrix_type_t = descr.type,
+             mode::sparse_fill_mode_t = descr.mode,
+             diag::sparse_diag_type_t = descr.diag) =
+    matrix_descr(type, mode, diag)
+
 @inline function Base.convert(::Type{sparse_operation_t}, trans::Char)
     if trans == 'N'
         SPARSE_OPERATION_NON_TRANSPOSE
