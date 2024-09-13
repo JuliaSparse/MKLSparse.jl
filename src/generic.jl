@@ -196,6 +196,62 @@ function sp2md!(transA::Char, alpha::T, A::AbstractSparseMatrix{T}, descrA::matr
     return C
 end
 
+# C := A * op(A), or
+# C := op(A) * A, where C is sparse
+# note: only the upper triangular part of C is computed
+function syrk(transA::Char, A::AbstractSparseMatrix{T}) where T
+    check_trans(transA)
+    Cout = Ref{sparse_matrix_t}()
+    hA = MKLSparseMatrix(A)
+    res = mkl_call(Val{:mkl_sparse_syrkI}(), typeof(A),
+                   transA, hA, Cout)
+    destroy(hA)
+    check_status(res)
+    return MKLSparseMatrix(Cout[])
+end
+
+# C := A * op(A), or
+# C := op(A) * A, where C is dense
+# note: only the upper triangular part of C is computed
+function syrkd!(transA::Char, alpha::T, A::AbstractSparseMatrix{T}, beta::T,
+                C::StridedMatrix{T};
+                dense_layout::sparse_layout_t = SPARSE_LAYOUT_COLUMN_MAJOR
+) where T
+    check_trans(transA)
+    check_mat_op_sizes(C, A, transA, A, transA == 'N' ? 'T' : 'N'; dense_layout)
+    ldC = stride(C, 2)
+    hA = MKLSparseMatrix(A)
+    res = mkl_call(Val{:mkl_sparse_T_syrkdI}(), typeof(A),
+                   transA, hA, alpha, beta, C, dense_layout, ldC)
+    destroy(hA)
+    check_status(res)
+    return C
+end
+
+# C := alpha * op(A) * B * A + beta * C, or
+# C := alpha * A * B * op(A) + beta * C, where C is dense
+# note: only the upper triangular part of C is computed
+function syprd!(transA::Char, alpha::T, A::AbstractSparseMatrix{T},
+                B::StridedMatrix{T}, beta::T, C::StridedMatrix{T};
+                dense_layout_B::sparse_layout_t = SPARSE_LAYOUT_COLUMN_MAJOR,
+                dense_layout_C::sparse_layout_t = SPARSE_LAYOUT_COLUMN_MAJOR
+) where T
+    check_trans(transA)
+    # FIXME dense_layout_B not used
+    check_mat_op_sizes(C, A, transA, B, 'N';
+                       check_result_columns = false, dense_layout = dense_layout_C)
+    check_mat_op_sizes(C, B, 'N', A, transA == 'N' ? 'T' : 'N';
+                       check_result_rows = false, dense_layout = dense_layout_C)
+    ldB = stride(B, 2)
+    ldC = stride(C, 2)
+    hA = MKLSparseMatrix(A)
+    res = mkl_call(Val{:mkl_sparse_T_syprdI}(), typeof(A),
+                   transA, hA, B, dense_layout_B, ldB,
+                   alpha, beta, C, dense_layout_C, ldC)
+    destroy(hA)
+    check_status(res)
+    return C
+end
 
 # find y: op(A) * y = alpha * x
 function trsv!(transA::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr,
