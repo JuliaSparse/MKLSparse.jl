@@ -10,7 +10,7 @@
     elseif Tv == ComplexF64
         'z'
     else
-        throw(ArgumentError("Unsupported sparse value type $Tv"))
+        throw(ArgumentError(lazy"Unsupported sparse value type $Tv"))
     end
 end
 
@@ -20,12 +20,12 @@ end
     elseif Ti == Int64
         "_64"
     else
-        throw(ArgumentError("Unsupported sparse index type $Ti"))
+        throw(ArgumentError(lazy"Unsupported sparse index type $Ti"))
     end
 end
 
 mkl_storagetype_specifier(::Type{S}) where S <: AbstractSparseMatrix =
-    throw(ArgumentError("Unsupported sparse matrix storage type $S"))
+    throw(ArgumentError(lazy"Unsupported sparse matrix storage type $S"))
 
 mkl_storagetype_specifier(::Type{<:SparseMatrixCSC}) = "csc"
 
@@ -67,7 +67,7 @@ matrix_descr(descr::matrix_descr;
     elseif trans == 'C'
         SPARSE_OPERATION_CONJUGATE_TRANSPOSE
     else
-        throw(ArgumentError("Unknown operation $trans"))
+        throw(ArgumentError(lazy"Unknown operation $trans"))
     end
 end
 
@@ -89,7 +89,7 @@ end
     elseif mattype == 'D'
         SPARSE_MATRIX_TYPE_DIAGONAL
     else
-        throw(ArgumentError("Unknown matrix type $mattype"))
+        throw(ArgumentError(lazy"Unknown matrix type $mattype"))
     end
 end
 
@@ -101,7 +101,7 @@ end
     elseif mattype == "BD"
         return SPARSE_MATRIX_TYPE_BLOCK_DIAGONAL
     else
-        throw(ArgumentError("Unknown matrix type $mattype"))
+        throw(ArgumentError(lazy"Unknown matrix type $mattype"))
     end
 end
 
@@ -111,7 +111,7 @@ end
     elseif index == '1'
         return SPARSE_INDEX_BASE_ONE
     else
-        throw(ArgumentError("Unknown index base $index"))
+        throw(ArgumentError(lazy"Unknown index base $index"))
     end
 end
 
@@ -123,7 +123,7 @@ end
     elseif uplo =='F'
         SPARSE_FILL_MODE_FULL
     else
-        throw(ArgumentError("Unknown fill mode $uplo"))
+        throw(ArgumentError(lazy"Unknown fill mode $uplo"))
     end
 end
 
@@ -133,7 +133,7 @@ end
     elseif diag == 'N'
        SPARSE_DIAG_NON_UNIT
     else
-        throw(ArgumentError("Unknown diag type $diag"))
+        throw(ArgumentError(lazy"Unknown diag type $diag"))
     end
 end
 
@@ -143,7 +143,7 @@ end
     elseif layout == 'C'
         SPARSE_LAYOUT_COLUMN_MAJOR
     else
-        throw(ArgumentError("Unknown layout $layout"))
+        throw(ArgumentError(lazy"Unknown layout $layout"))
     end
 end
 
@@ -155,7 +155,7 @@ end
     elseif verbose == "extended"
         SPARSE_VERBOSE_EXTENDED
     else
-        throw(ArgumentError("Unknown verbose mode $verbose"))
+        throw(ArgumentError(lazy"Unknown verbose mode $verbose"))
     end
 end
 
@@ -165,7 +165,7 @@ end
     elseif memory == "aggressive"
         SPARSE_MEMORY_AGGRESSIVE
     else
-        throw(ArgumentError("Unknown memory usage $memory"))
+        throw(ArgumentError(lazy"Unknown memory usage $memory"))
     end
 end
 
@@ -177,7 +177,7 @@ end
 # check the correctness of transA (transB etc) argument of MKLSparse calls
 check_trans(t::Char) =
     (t in ('C', 'N', 'T')) ||
-        throw(ArgumentError("trans: is '$t', must be 'N', 'T', or 'C'"))
+        throw(ArgumentError(lazy"trans: is '$t', must be 'N', 'T', or 'C'"))
 
 # check matrix sizes for the multiplication-like operation C <- tA[A] * tB[B]
 function check_mat_op_sizes(C, A, tA, B, tB;
