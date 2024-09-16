@@ -90,55 +90,62 @@ lazypermutedims(descr::matrix_descr) = matrix_descr(
     descr.diag)
 
 """
-    MKLSparseMatrix
+    MKLSparseMatrix{S}
 
-A wrapper around a MKLSparse matrix handle.
+A wrapper around the handle of a MKLSparse matrix
+created from the Julia sparse matrix of type `S`.
 """
-mutable struct MKLSparseMatrix
+struct MKLSparseMatrix{S <: AbstractSparseMatrix}
     handle::sparse_matrix_t
 end
 
-Base.unsafe_convert(::Type{sparse_matrix_t}, desc::MKLSparseMatrix) = desc.handle
+Base.unsafe_convert(::Type{sparse_matrix_t}, A::MKLSparseMatrix) = A.handle
 
+# create sparse_matrix_t handle for the SparseMKL representation of a given sparse matrix
+# the created SparseMKL matrix handle has to be disposed by calling destroy_handle()
 function MKLSparseMatrix(A::SparseMatrixCOO; index_base = SPARSE_INDEX_BASE_ONE)
-    matrix_ref = Ref{sparse_matrix_t}()
+    ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   matrix_ref, index_base, A.m, A.n, nnz(A), A.rows, A.cols, A.vals,
+                   ref, index_base, A.m, A.n, nnz(A), A.rows, A.cols, A.vals,
                    log=Val{false}())
     check_status(res)
-    obj = MKLSparseMatrix(matrix_ref[])
-    finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
-    return obj
+    return MKLSparseMatrix{typeof(A)}(ref[])
 end
 
 function MKLSparseMatrix(A::SparseMatrixCSR; index_base = SPARSE_INDEX_BASE_ONE)
-    matrix_ref = Ref{sparse_matrix_t}()
+    ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   matrix_ref, index_base, A.m, A.n, A.rowptr, pointer(A.rowptr, 2), A.colval, A.nzval,
+                   ref, index_base, A.m, A.n, A.rowptr, pointer(A.rowptr, 2), A.colval, A.nzval,
                    log=Val{false}())
     check_status(res)
-    obj = MKLSparseMatrix(matrix_ref[])
-    finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
-    return obj
+    return MKLSparseMatrix{typeof(A)}(ref[])
 end
 
 function MKLSparseMatrix(A::SparseMatrixCSC; index_base = SPARSE_INDEX_BASE_ONE)
+    ref = Ref{sparse_matrix_t}()
     # SparseMatrixCSC is fixed to 1-based indexing, passing SPARSE_INDEX_BASE_ZERO is most likely an error
-    matrix_ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   matrix_ref, index_base, A.m, A.n, A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval,
+                   ref, index_base, A.m, A.n, A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval,
                    log=Val{false}())
     check_status(res)
-    obj = MKLSparseMatrix(matrix_ref[])
-    finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
-    return obj
+    return MKLSparseMatrix{typeof(A)}(ref[])
+end
+
+function destroy(A::MKLSparseMatrix{S}) where S
+    if A.handle != C_NULL
+        res = mkl_call(Val{:mkl_sparse_destroyI}(), S, A.handle, log=Val{false}())
+        check_status(res)
+        return res
+    else
+        return SPARSE_STATUS_NOT_INITIALIZED
+    end
 end
 
 # extract the Intel MKL's sparse matrix A information assuming its storage type is S
 # the returned arrays are internal to MKL representation of A, their lifetime is limited by A
 # "major_" refers to the major axis (rows for CSR, columns for CSC)
 # "minor_" refers to the minor axis (columns for CSR, rows for CSC)
-function extract_data(::Type{S}, ref::sparse_matrix_t) where {S <: AbstractSparseMatrix{Tv, Ti}} where {Tv, Ti}
+function extract_data(ref::MKLSparseMatrix{S}) where {S <: AbstractSparseMatrix{Tv, Ti}} where {Tv, Ti}
     IT = ifelse(BlasInt === Int64 && Ti === Int32, BlasInt, Ti)
     index_base = Ref{sparse_index_base_t}()
     nrows = Ref{IT}(0)
@@ -178,10 +185,9 @@ function extract_data(::Type{S}, ref::sparse_matrix_t) where {S <: AbstractSpars
     )
 end
 
-extract_data(::Type{S}, A::MKLSparseMatrix) where {S <: AbstractSparseMatrix} = extract_data(S, A.handle)
-
-function Base.convert(::Type{S}, A::MKLSparseMatrix) where {S <: SparseMatrixCSC{Tv, Ti}} where {Tv, Ti}
-    _A = extract_data(S, A)
+function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSC}
+    _A = extract_data(A)
+    Ti = eltype(_A.minor_val)
     rowval = _A.index_base == SPARSE_INDEX_BASE_ZERO ?
         _A.minor_val .+ one(Ti) : # convert to 1-based (rowval is copied)
         copy(_A.minor_val)
@@ -189,12 +195,15 @@ function Base.convert(::Type{S}, A::MKLSparseMatrix) where {S <: SparseMatrixCSC
 end
 
 # converter for the default SparseMatrixCSC storage type
-Base.convert(::Type{SparseMatrixCSC}, A::MKLSparseMatrix) =
-    convert(SparseMatrixCSC{Float64, BlasInt}, A)
+Base.convert(::Type{SparseMatrixCSC}, A::MKLSparseMatrix{SparseMatrixCSC{Tv, Ti}}) where {Tv, Ti} =
+    convert(SparseMatrixCSC{Tv, Ti}, A)
 
-function Base.convert(::Type{S}, A::MKLSparseMatrix) where {S <: SparseMatrixCSR{Tv, Ti}} where {Tv, Ti}
-    _A = extract_data(S, A)
+function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSR}
+    _A = extract_data(A)
     # not converting the col indices depending on index_base
     @show length(_A.nzval)
     return S(_A.size..., copy(_A.major_starts), copy(_A.minor_val), copy(_A.nzval))
 end
+
+Base.convert(::Type{SparseMatrixCSR}, A::MKLSparseMatrix{SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
+    convert(SparseMatrixCSR{Tv, Ti}, A)

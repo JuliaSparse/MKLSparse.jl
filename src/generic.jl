@@ -30,8 +30,10 @@ function mv!(transA::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_d
 ) where T
     check_trans(transA)
     check_mat_op_sizes(y, A, transA, x, 'N')
+    hA = MKLSparseMatrix(A)
     res = mkl_call(Val{:mkl_sparse_T_mvI}(), typeof(A),
-             transA, alpha, MKLSparseMatrix(A), descr, x, beta, y)
+             transA, alpha, hA, descr, x, beta, y)
+    destroy(hA)
     check_status(res)
     return y
 end
@@ -46,8 +48,10 @@ function mm!(transA::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_d
     columns = size(C, dense_layout == SPARSE_LAYOUT_COLUMN_MAJOR ? 2 : 1)
     ldB = stride(B, 2)
     ldC = stride(C, 2)
+    hA = MKLSparseMatrix(A)
     res = mkl_call(Val{:mkl_sparse_T_mmI}(), typeof(A),
-                   transA, alpha, MKLSparseMatrix(A), descr, dense_layout, B, columns, ldB, beta, C, ldC)
+                   transA, alpha, hA, descr, dense_layout, B, columns, ldB, beta, C, ldC)
+    destroy(hA)
     check_status(res)
     return C
 end
@@ -59,8 +63,10 @@ function trsv!(transA::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix
     checksquare(A)
     check_trans(transA)
     check_mat_op_sizes(y, A, transA, x, 'N')
+    hA = MKLSparseMatrix(A)
     res = mkl_call(Val{:mkl_sparse_T_trsvI}(), typeof(A),
-                   transA, alpha, MKLSparseMatrix(A), descr, x, y)
+                   transA, alpha, hA, descr, x, y)
+    destroy(hA)
     check_status(res)
     return y
 end
@@ -76,8 +82,10 @@ function trsm!(transA::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix
     columns = size(Y, dense_layout == SPARSE_LAYOUT_COLUMN_MAJOR ? 2 : 1)
     ldX = stride(X, 2)
     ldY = stride(Y, 2)
+    hA = MKLSparseMatrix(A)
     res = mkl_call(Val{:mkl_sparse_T_trsmI}(), typeof(A),
-                   transA, alpha, MKLSparseMatrix(A), descr, dense_layout, X, columns, ldX, Y, ldY)
+                   transA, alpha, hA, descr, dense_layout, X, columns, ldX, Y, ldY)
+    destroy(hA)
     check_status(res)
     return Y
 end

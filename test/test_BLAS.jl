@@ -130,7 +130,7 @@ end
 
     # test conversion to incompatible Julia types
     SPMT2 = SPMT === SparseMatrixCSC ? MKLSparse.SparseMatrixCSR : SparseMatrixCSC
-    @test_throws MKLSparseError convert(SPMT2{T, IT}, mklA)
+    @test_throws MethodError convert(SPMT2{T, IT}, mklA)
 
     # MKL Sparse does not check for matrix index type and function name compatibility
     #if Base.USE_BLAS64
@@ -143,6 +143,7 @@ end
 
     # MKL does not support export of COO matrices
     @test convert(SPMT{T, IT}, mklA) == spA skip=isCOO
+    MKLSparse.destroy(mklA)
 end
 
 @testset "$SPMT{$T,$IT} * Vector{$T}" begin
