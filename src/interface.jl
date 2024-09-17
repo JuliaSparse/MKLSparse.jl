@@ -59,6 +59,27 @@ function mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
     mm!(transA, T(alpha), unwrapA, descrA, B, T(beta), C)
 end
 
+# mul!(dense, sparse, sparse, a, b)
+function mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+              B::SimpleOrSpecialOrAdjMat{T, S}, alpha::Number, beta::Number
+) where {T <: BlasFloat, S <: SparseMat{T}}
+    transA, descrA, unwrapA = describe_and_unwrap(A)
+    transB, descrB, unwrapB = describe_and_unwrap(B)
+    # FIXME only general matrices are supported by sp2m in MKL SparseBLAS
+    #       should the elements of the special matrices be fixed?
+    if descrA.type == SPARSE_MATRIX_TYPE_SYMMETRIC
+        @assert issymmetric(unwrapA) "A must be symmetric"
+    end
+    if descrB.type == SPARSE_MATRIX_TYPE_SYMMETRIC
+        @assert issymmetric(unwrapB) "B must be symmetric"
+    end
+    descrA = matrix_descr(descrA, type = SPARSE_MATRIX_TYPE_GENERAL, diag = SPARSE_DIAG_NON_UNIT, mode = SPARSE_FILL_MODE_FULL)
+    descrB = matrix_descr(descrB, type = SPARSE_MATRIX_TYPE_GENERAL, diag = SPARSE_DIAG_NON_UNIT, mode = SPARSE_FILL_MODE_FULL)
+    sp2md!(transA, T(alpha), unwrapA, descrA,
+           transB, unwrapB, descrB,
+           T(beta), C)
+end
+
 # mul!(dense, dense, sparse, a, b)
 # ColMajorRes = ColMajorMtx*SparseMatrixCSC is implemented via
 # RowMajorRes = SparseMatrixCSR*RowMajorMtx Sparse MKL BLAS calls
@@ -87,6 +108,34 @@ mul!(C::StridedMatrix{T}, A::StridedMatrix{T},
      B::SimpleOrSpecialOrAdjMat{T, S}) where {T <: BlasFloat, S <: SparseMat{T}} =
     mul!(C, A, B, one(T), zero(T))
 
+# mul!(dense, sparse, sparse) calls sp2md!()
+mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+     B::SimpleOrSpecialOrAdjMat{T, S}
+) where {T <: BlasFloat, S <: SparseMat{T}} =
+    mul!(C, A, B, one(T), zero(T))
+
+# mul!(sparse, sparse, sparse)
+mul!(C::SparseMatrixCSC{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+     B::SimpleOrSpecialOrAdjMat{T, S}
+) where {T <: BlasFloat, S <: SparseMat{T}} =
+    unsafe_mul!(C, A, B; check_nzpattern = true)
+
+# unsafe_mul!() allows disabling the check for the result's non-zero pattern
+function unsafe_mul!(C::SparseMatrixCSC{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+                     B::SimpleOrSpecialOrAdjMat{T, S};
+                     check_nzpattern::Bool = true
+) where {T <: BlasFloat, S <: SparseMat{T}}
+    transA, descrA, unwrapA = describe_and_unwrap(A)
+    transB, descrB, unwrapB = describe_and_unwrap(B)
+    # FIXME only general matrices are supported by sp2m in MKL SparseBLAS
+    #       should the elements of the special matrices be fixed?
+    descrA = matrix_descr(descrA, type = SPARSE_MATRIX_TYPE_GENERAL)
+    descrB = matrix_descr(descrB, type = SPARSE_MATRIX_TYPE_GENERAL)
+    sp2m!(transA, unwrapA, descrA,
+          transB, unwrapB, descrB,
+          parent(C); check_nzpattern)
+end
+
 # define 4-arg ldiv!(C, A, B, a) (C := alpha*inv(A)*B) that is not present in standard LinearAlgrebra
 # redefine 3-arg ldiv!(C, A, B) using 4-arg ldiv!(C, A, B, 1)
 function ldiv!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S},
@@ -99,6 +148,21 @@ function LinearAlgebra.ldiv!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, 
                              B::StridedMatrix{T}, alpha::Number = one(T)) where {T <: BlasFloat, S <: SparseMat{T}}
     transA, descrA, unwrapA = describe_and_unwrap(A)
     trsm!(transA, alpha, unwrapA, descrA, B, C)
+end
+
+# sparse := sparse * sparse
+function (*)(A::SimpleOrSpecialOrAdjMat{T, S},
+             B::SimpleOrSpecialOrAdjMat{T, S}
+) where {T <: BlasFloat, S <: SparseMat{T}}
+    transA, descrA, unwrapA = describe_and_unwrap(A)
+    transB, descrB, unwrapB = describe_and_unwrap(B)
+    # FIXME only general matrices are supported by sp2m in MKL SparseBLAS
+    #       should the elements of the special matrices be fixed?
+    descrA = matrix_descr(descrA, type = SPARSE_MATRIX_TYPE_GENERAL)
+    descrB = matrix_descr(descrB, type = SPARSE_MATRIX_TYPE_GENERAL)
+    res = sp2m(transA, unwrapA, descrA,
+               transB, unwrapB, descrB)
+    return convert(S, res)
 end
 
 if VERSION < v"1.10"
