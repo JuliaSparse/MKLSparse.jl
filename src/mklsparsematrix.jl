@@ -90,110 +90,120 @@ lazypermutedims(descr::matrix_descr) = matrix_descr(
     descr.diag)
 
 """
-    MKLSparseMatrix
+    MKLSparseMatrix{S}
 
-A wrapper around a MKLSparse matrix handle.
+A wrapper around the handle of a MKLSparse matrix
+created from the Julia sparse matrix of type `S`.
 """
-mutable struct MKLSparseMatrix
+struct MKLSparseMatrix{S <: AbstractSparseMatrix}
     handle::sparse_matrix_t
 end
 
-Base.unsafe_convert(::Type{sparse_matrix_t}, desc::MKLSparseMatrix) = desc.handle
+Base.unsafe_convert(::Type{sparse_matrix_t}, A::MKLSparseMatrix) = A.handle
 
+# create sparse_matrix_t handle for the SparseMKL representation of a given sparse matrix
+# the created SparseMKL matrix handle has to be disposed by calling destroy_handle()
 function MKLSparseMatrix(A::SparseMatrixCOO; index_base = SPARSE_INDEX_BASE_ONE)
-    matrix_ref = Ref{sparse_matrix_t}()
+    ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   matrix_ref, index_base, A.m, A.n, nnz(A), A.rows, A.cols, A.vals,
+                   ref, index_base, A.m, A.n, nnz(A), A.rows, A.cols, A.vals,
                    log=Val{false}())
     check_status(res)
-    obj = MKLSparseMatrix(matrix_ref[])
-    finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
-    return obj
+    return MKLSparseMatrix{typeof(A)}(ref[])
 end
 
 function MKLSparseMatrix(A::SparseMatrixCSR; index_base = SPARSE_INDEX_BASE_ONE)
-    matrix_ref = Ref{sparse_matrix_t}()
+    ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   matrix_ref, index_base, A.m, A.n, A.rowptr, pointer(A.rowptr, 2), A.colval, A.nzval,
+                   ref, index_base, A.m, A.n, A.rowptr, pointer(A.rowptr, 2), A.colval, A.nzval,
                    log=Val{false}())
     check_status(res)
-    obj = MKLSparseMatrix(matrix_ref[])
-    finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
-    return obj
+    return MKLSparseMatrix{typeof(A)}(ref[])
 end
 
 function MKLSparseMatrix(A::SparseMatrixCSC; index_base = SPARSE_INDEX_BASE_ONE)
+    ref = Ref{sparse_matrix_t}()
     # SparseMatrixCSC is fixed to 1-based indexing, passing SPARSE_INDEX_BASE_ZERO is most likely an error
-    matrix_ref = Ref{sparse_matrix_t}()
     res = mkl_call(Val{:mkl_sparse_T_create_SI}(), typeof(A),
-                   matrix_ref, index_base, A.m, A.n, A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval,
+                   ref, index_base, A.m, A.n, A.colptr, pointer(A.colptr, 2), A.rowval, A.nzval,
                    log=Val{false}())
     check_status(res)
-    obj = MKLSparseMatrix(matrix_ref[])
-    finalizer(mkl_function(Val{:mkl_sparse_destroyI}(), typeof(A)), obj)
-    return obj
+    return MKLSparseMatrix{typeof(A)}(ref[])
 end
 
-function Base.convert(::Type{S}, A::MKLSparseMatrix) where {S <: SparseMatrixCSC{Tv, Ti}} where {Tv, Ti}
+function destroy(A::MKLSparseMatrix{S}) where S
+    if A.handle != C_NULL
+        res = mkl_call(Val{:mkl_sparse_destroyI}(), S, A.handle, log=Val{false}())
+        check_status(res)
+        return res
+    else
+        return SPARSE_STATUS_NOT_INITIALIZED
+    end
+end
+
+# extract the Intel MKL's sparse matrix A information assuming its storage type is S
+# the returned arrays are internal to MKL representation of A, their lifetime is limited by A
+# "major_" refers to the major axis (rows for CSR, columns for CSC)
+# "minor_" refers to the minor axis (columns for CSR, rows for CSC)
+function extract_data(ref::MKLSparseMatrix{S}) where {S <: AbstractSparseMatrix{Tv, Ti}} where {Tv, Ti}
     IT = ifelse(BlasInt === Int64 && Ti === Int32, BlasInt, Ti)
     index_base = Ref{sparse_index_base_t}()
     nrows = Ref{IT}(0)
     ncols = Ref{IT}(0)
-    colstartsptr = Ref{Ptr{IT}}()
-    colendsptr = Ref{Ptr{IT}}()
-    rowvalptr = Ref{Ptr{IT}}()
+    major_startsptr = Ref{Ptr{IT}}()
+    major_endsptr = Ref{Ptr{IT}}()
+    minor_valptr = Ref{Ptr{IT}}()
     nzvalptr = Ref{Ptr{Tv}}()
     res = mkl_call(Val{:mkl_sparse_T_export_SI}(), S,
-                   A.handle, index_base, nrows, ncols, colstartsptr, colendsptr, rowvalptr, nzvalptr,
+                   ref, index_base, nrows, ncols, major_startsptr, major_endsptr, minor_valptr, nzvalptr,
                    log=Val{false}())
     check_status(res)
-    colstarts = unsafe_wrap(Vector{Ti}, reinterpret(Ptr{Ti}, colstartsptr[]), ncols[], own=false)
-    colends = unsafe_wrap(Vector{Ti}, reinterpret(Ptr{Ti}, colendsptr[]), ncols[], own=false)
-    @assert colends[end] >= colstarts[1]
-    rowval = unsafe_wrap(Vector{Ti}, reinterpret(Ptr{Ti}, rowvalptr[]), colends[end] - colstarts[1], own=false)
-    nzval = unsafe_wrap(Vector{Tv}, nzvalptr[], colends[end] - colstarts[1], own=false)
-    rowval = if index_base[] == SPARSE_INDEX_BASE_ZERO
-        rowval .+ one(Ti) # convert to 1-based (rowval is copied)
+    nmajor = S <: SparseMatrixCSC ? ncols[] : S <: SparseMatrixCSR ? nrows[] : error("Unsupported storage type $S")
+    if major_startsptr[] != C_NULL && major_endsptr[] != C_NULL
+        major_starts = unsafe_wrap(Vector{Ti}, reinterpret(Ptr{Ti}, major_startsptr[]), nmajor, own=false)
+        major_ends = unsafe_wrap(Vector{Ti}, reinterpret(Ptr{Ti}, major_endsptr[]), nmajor, own=false)
+        @assert major_ends[end] >= major_starts[1]
+        # check if minor_val and nzvl values occupy continuous memory segment
+        if pointer(major_ends) == pointer(major_starts, 2) # all(major_starts[i + 1] == major_ends[i] for i in 1:length(major_starts)-1)
+            major_starts = unsafe_wrap(Vector{Ti}, pointer(major_starts), nmajor + 1, own=false)
+        else
+            error("Support for non-continuous minor axis indices and non-zero values is not implemented")
+        end
     else
-        copy(rowval)
+        major_starts = nothing
+        major_ends = nothing
     end
-    # check if row and nz values occupy continuous memory segment
-    if pointer(colends) == pointer(colstarts, 2) # all(colstarts[i + 1] == colends[i] for i in 1:length(colstarts)-1)
-        colstarts = unsafe_wrap(Vector{Ti}, pointer(colstarts), ncols[] + 1, own=false)
-        return S(nrows[], ncols[], copy(colstarts), rowval, copy(nzval))
-    else
-        error("Support for non-continuous row and values is not implemented")
-    end
+    return (
+        size = (nrows[], ncols[]),
+        index_base = index_base[],
+        major_starts = major_starts,
+        #major_ends = major_ends,
+        minor_val = minor_valptr[] != C_NULL ? unsafe_wrap(Vector{Ti}, reinterpret(Ptr{Ti}, minor_valptr[]),
+                                                           major_ends[end] - major_starts[1], own=false) : nothing,
+        nzval = nzvalptr[] != C_NULL ? unsafe_wrap(Vector{Tv}, nzvalptr[],
+                                                   major_ends[end] - major_starts[1], own=false) : nothing,
+    )
+end
+
+function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSC}
+    _A = extract_data(A)
+    Ti = eltype(_A.minor_val)
+    rowval = _A.index_base == SPARSE_INDEX_BASE_ZERO ?
+        _A.minor_val .+ one(Ti) : # convert to 1-based (rowval is copied)
+        copy(_A.minor_val)
+    return S(_A.size..., copy(_A.major_starts), rowval, copy(_A.nzval))
 end
 
 # converter for the default SparseMatrixCSC storage type
-Base.convert(::Type{SparseMatrixCSC}, A::MKLSparseMatrix) =
-    convert(SparseMatrixCSC{Float64, BlasInt}, A)
+Base.convert(::Type{SparseMatrixCSC}, A::MKLSparseMatrix{SparseMatrixCSC{Tv, Ti}}) where {Tv, Ti} =
+    convert(SparseMatrixCSC{Tv, Ti}, A)
 
-function Base.convert(::Type{S}, A::MKLSparseMatrix) where {S <: SparseMatrixCSR{Tv, Ti}} where {Tv, Ti}
-    IT = ifelse(BlasInt === Int64 && Ti === Int32, BlasInt, Ti)
-    index_base = Ref{sparse_index_base_t}()
-    nrows = Ref{IT}(0)
-    ncols = Ref{IT}(0)
-    rowstartsptr = Ref{Ptr{IT}}()
-    rowendsptr = Ref{Ptr{IT}}()
-    colvalptr = Ref{Ptr{IT}}()
-    nzvalptr = Ref{Ptr{Tv}}()
-    res = mkl_call(Val{:mkl_sparse_T_export_SI}(), S,
-                   A.handle, index_base, nrows, ncols, rowstartsptr, rowendsptr, colvalptr, nzvalptr,
-                   log=Val{false}())
-    check_status(res)
-    rowstarts = unsafe_wrap(Vector{Ti}, reinterpret(Ptr{Ti}, rowstartsptr[]), nrows[], own=false)
-    rowends = unsafe_wrap(Vector{Ti}, reinterpret(Ptr{Ti}, rowendsptr[]), nrows[], own=false)
-    @assert rowends[end] >= rowstarts[1]
-    colval = unsafe_wrap(Vector{Ti}, reinterpret(Ptr{Ti}, colvalptr[]), rowends[end] - rowstarts[1], own=false)
-    nzval = unsafe_wrap(Vector{Tv}, nzvalptr[], rowends[end] - rowstarts[1], own=false)
+function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSR}
+    _A = extract_data(A)
     # not converting the col indices depending on index_base
-    # check if row and nz values occupy continuous memory segment
-    if pointer(rowends) == pointer(rowstarts, 2) # all(rowstarts[i + 1] == rowends[i] for i in 1:length(rowstarts)-1)
-        rowstarts = unsafe_wrap(Vector{Ti}, pointer(rowstarts), nrows[] + 1, own=false)
-        return S(nrows[], ncols[], copy(rowstarts), copy(colval), copy(nzval))
-    else
-        error("Support for non-continuous row and values is not implemented")
-    end
+    @show length(_A.nzval)
+    return S(_A.size..., copy(_A.major_starts), copy(_A.minor_val), copy(_A.nzval))
 end
+
+Base.convert(::Type{SparseMatrixCSR}, A::MKLSparseMatrix{SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
+    convert(SparseMatrixCSR{Tv, Ti}, A)

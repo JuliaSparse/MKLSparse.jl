@@ -167,10 +167,10 @@ end
                  convert(sparse_fill_mode_t, matdescr[2]),
                  convert(sparse_diag_type_t, matdescr[3]))
 
-# check the correctness of transa argument of MKLSparse calls
-check_transa(t::Char) =
+# check the correctness of transA (transB etc) argument of MKLSparse calls
+check_trans(t::Char) =
     (t in ('C', 'N', 'T')) ||
-        throw(ArgumentError("transa: is '$t', must be 'N', 'T', or 'C'"))
+        throw(ArgumentError("trans: is '$t', must be 'N', 'T', or 'C'"))
 
 # check matrix sizes for the multiplication-like operation C <- tA[A] * tB[B]
 function check_mat_op_sizes(C, A, tA, B, tB;

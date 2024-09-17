@@ -9,56 +9,56 @@ matdescra(A::SparseMatrixCSC) = "GFNF"
 matdescra(A::Transpose) = matdescra(A.parent)
 matdescra(A::Adjoint) = matdescra(A.parent)
 
-function cscmv!(transa::Char, α::T, matdescra::String,
+function cscmv!(transA::Char, α::T, matdescrA::String,
                 A::AbstractSparseMatrix{T}, x::StridedVector{T},
                 β::T, y::StridedVector{T}) where {T <: BlasFloat}
-    check_transa(transa)
-    check_mat_op_sizes(y, A, transa, x, 'N')
+    check_trans(transA)
+    check_mat_op_sizes(y, A, transA, x, 'N')
 
     mkl_call(Val{:mkl_TSmvI}(), typeof(A),
-             transa, A.m, A.n, α, matdescra,
+             transA, A.m, A.n, α, matdescrA,
              A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, β, y)
     return y
 end
 
-function cscmm!(transa::Char, α::T, matdescra::String,
+function cscmm!(transA::Char, α::T, matdescrA::String,
                 A::SparseMatrixCSC{T}, B::StridedMatrix{T},
                 β::T, C::StridedMatrix{T}) where {T <: BlasFloat}
-    check_transa(transa)
-    check_mat_op_sizes(C, A, transa, B, 'N')
+    check_trans(transA)
+    check_mat_op_sizes(C, A, transA, B, 'N')
     mB, nB = size(B)
     mC, nC = size(C)
 
     mkl_call(Val{:mkl_TSmmI}(), typeof(A),
-             transa, A.m, nC, A.n, α, matdescra,
+             transA, A.m, nC, A.n, α, matdescrA,
              A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, β, C, mC)
     return C
 end
 
-function cscsv!(transa::Char, α::T, matdescra::String,
+function cscsv!(transA::Char, α::T, matdescrA::String,
                 A::SparseMatrixCSC{T}, x::StridedVector{T},
                 y::StridedVector{T}) where {T <: BlasFloat}
     n = checksquare(A)
-    check_transa(transa)
-    check_mat_op_sizes(y, A, transa, x, 'N')
+    check_trans(transA)
+    check_mat_op_sizes(y, A, transA, x, 'N')
 
     mkl_call(Val{:mkl_TSsvI}(), typeof(A),
-             transa, A.m, α, matdescra,
+             transA, A.m, α, matdescrA,
              A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), x, y)
     return y
 end
 
-function cscsm!(transa::Char, α::T, matdescra::String,
+function cscsm!(transA::Char, α::T, matdescrA::String,
                 A::SparseMatrixCSC{T}, B::StridedMatrix{T},
                 C::StridedMatrix{T}) where {T <: BlasFloat}
     mB, nB = size(B)
     mC, nC = size(C)
     n = checksquare(A)
-    check_transa(transa)
-    check_mat_op_sizes(C, A, transa, B, 'N')
+    check_trans(transA)
+    check_mat_op_sizes(C, A, transA, B, 'N')
 
     mkl_call(Val{:mkl_TSsmI}(), typeof(A),
-             transa, A.n, nC, α, matdescra,
+             transA, A.n, nC, α, matdescrA,
              A.nzval, A.rowval, A.colptr, pointer(A.colptr, 2), B, mB, C, mC)
     return C
 end
