@@ -13,6 +13,8 @@ function _log_mklsparse_call(fname)
     __mklsparse_calls_count[] += 1
 end
 
+# common MKL definitions from mkl_service.h, see also MKL.jl
+
 @enum Threading begin
     THREADING_INTEL
     THREADING_SEQUENTIAL
@@ -39,6 +41,8 @@ function set_interface_layer(interface::Interface = INTERFACE_LP64)
     return nothing
 end
 
+# initialize the MKL interface upon module initialization
+# NOTE: this sets the interface for all MKL API calls, not just the sparse ones
 function __init__()
     set_interface_layer(INTERFACE_LP64)
 end
