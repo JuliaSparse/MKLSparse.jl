@@ -67,6 +67,21 @@ function mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
     mm!(transA, T(alpha), unwrapA, descrA, B, T(beta), C)
 end
 
+# mul!(dense, sparse, sparse, a, b) (calls sp2md!())
+function mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+              B::SimpleOrSpecialOrAdjMat{T, S}, alpha::Number, beta::Number
+) where {T <: BlasFloat, S <: SparseMat{T}}
+    transA, descrA, unwrapA = describe_and_unwrap(A)
+    transB, descrB, unwrapB = describe_and_unwrap(B)
+    # FIXME only general matrices are supported by sp2md in MKL SparseBLAS as of 2025.0
+    #       should the elements of the special matrices be fixed?
+    descrA = matrix_descr(descrA, type = SPARSE_MATRIX_TYPE_GENERAL, diag = SPARSE_DIAG_NON_UNIT, mode = SPARSE_FILL_MODE_FULL)
+    descrB = matrix_descr(descrB, type = SPARSE_MATRIX_TYPE_GENERAL, diag = SPARSE_DIAG_NON_UNIT, mode = SPARSE_FILL_MODE_FULL)
+    sp2md!(transA, T(alpha), unwrapA, descrA,
+           transB, unwrapB, descrB,
+           T(beta), C)
+end
+
 # mul!(dense, dense, sparse, a, b)
 # ColMajorRes = ColMajorMtx*SparseMatrixCSC is implemented via
 # RowMajorRes = SparseMatrixCSR*RowMajorMtx Sparse MKL BLAS calls
@@ -93,6 +108,12 @@ mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
     mul!(C, A, B, one(T), zero(T))
 mul!(C::StridedMatrix{T}, A::StridedMatrix{T},
      B::SimpleOrSpecialOrAdjMat{T, S}) where {T <: BlasFloat, S <: SparseMat{T}} =
+    mul!(C, A, B, one(T), zero(T))
+
+# mul!(dense, sparse, sparse)
+mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+     B::SimpleOrSpecialOrAdjMat{T, S}
+) where {T <: BlasFloat, S <: SparseMat{T}} =
     mul!(C, A, B, one(T), zero(T))
 
 # define 4-arg ldiv!(C, A, B, a) (C := alpha*inv(A)*B) that is not present in standard LinearAlgrebra

@@ -56,6 +56,28 @@ function mm!(transA::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_d
     return C
 end
 
+# C := alpha * opA(A) * opB(B) + beta * C, where C is dense
+function sp2md!(transA::Char, alpha::T, A::S, descrA::matrix_descr,
+                transB::Char, B::S, descrB::matrix_descr,
+                beta::T, C::StridedMatrix{T};
+                dense_layout::sparse_layout_t = SPARSE_LAYOUT_COLUMN_MAJOR
+) where {S <: AbstractSparseMatrix{T}} where T
+    check_trans(transA)
+    check_trans(transB)
+    check_mat_op_sizes(C, A, transA, B, transB)
+    ldC = stride(C, 2)
+    hA = MKLSparseMatrix(A)
+    hB = MKLSparseMatrix(B)
+    res = mkl_call(Val{:mkl_sparse_T_sp2mdI}(), S,
+                   transA, descrA, hA, transB, descrB, hB,
+                   alpha, beta,
+                   C, dense_layout, ldC)
+    destroy(hA)
+    destroy(hB)
+    check_status(res)
+    return C
+end
+
 # find y: op(A) * y = alpha * x
 function trsv!(transA::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr,
                x::StridedVector{T}, y::StridedVector{T}
