@@ -96,6 +96,33 @@ matrix_classes = [
     UnitUpperTriangular => sp -> triu(sp, 1) + I,
 ]
 
+@testset "fastcopytri!(Matrix{$T})" for
+    T in (Float32, Float64, ComplexF32, ComplexF64)
+
+    for _ in 1:ntries
+        m, n = rand(10:100, 2)
+
+        if m != n
+            @test_throws DimensionMismatch MKLSparse.fastcopytri!(denserandn(T, m, n), 'L')
+        end
+
+        A = denserandn(T, m, m)
+        @test_throws ArgumentError MKLSparse.fastcopytri!(A, 'K')
+
+        AL = copy(A)
+        @test MKLSparse.fastcopytri!(AL, 'L') === AL
+
+        @test MKLSparse.fastcopytri!(copy(A), 'L') == LinearAlgebra.copytri!(copy(A), 'L')
+        @test MKLSparse.fastcopytri!(copy(A), 'U') == LinearAlgebra.copytri!(copy(A), 'U')
+
+        @test MKLSparse.fastcopytri!(copy(A), 'L', true) == LinearAlgebra.copytri!(copy(A), 'L', true)
+        @test MKLSparse.fastcopytri!(copy(A), 'U', true) == LinearAlgebra.copytri!(copy(A), 'U', true)
+
+        @test MKLSparse.fastcopytri!(copy(A), 'L', false) == LinearAlgebra.copytri!(copy(A), 'L', false)
+        @test MKLSparse.fastcopytri!(copy(A), 'U', false) == LinearAlgebra.copytri!(copy(A), 'U', false)
+    end
+end
+
 @testset "{$T, $IT} Sparse Matrices conversion" for
     T in (Float32, Float64, ComplexF32, ComplexF64),
     IT in (Base.USE_BLAS64 ? (Int32, Int64) : (Int32,))
