@@ -67,7 +67,7 @@ end
 Base.convert(::Type{SparseMatrixCOO}, A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti} =
     convert(SparseMatrixCOO{Tv, Ti}, A)
 
-function Base.convert(::Type{Array}, spA::MKLSparse.SparseMatrixCOO{T}) where T
+function Base.Matrix(spA::SparseMatrixCOO{T}) where T
     A = fill(zero(T), spA.m, spA.n)
     for (i, j, v) in zip(spA.rows, spA.cols, spA.vals)
         A[i, j] = v
@@ -75,8 +75,34 @@ function Base.convert(::Type{Array}, spA::MKLSparse.SparseMatrixCOO{T}) where T
     return A
 end
 
-Base.convert(::Type{Array}, spA::MKLSparse.SparseMatrixCSR) =
-    convert(Array, transpose(convert(SparseMatrixCSC, transpose(spA))))
+Base.Array(spA::SparseMatrixCOO) = Matrix(spA)
+
+# Faster version for non-abstract Array and SparseMatrixCSC
+# Based on the implementation of Base.copyto!(A::Matrix{T}, S::SparseMatrixCSC{T})
+function Base.copyto!(A::Matrix{T}, S::SparseMatrixCSR{<:Number}) where {T<:Number}
+    isempty(S) && return A
+    size(A) != size(S) && throw(DimensionMismatch())
+
+    # Zero elements that are also in S, don't change rest of A
+    fill!(A, zero(T))
+    # Copy the structural nonzeros from S to A
+    for row in 1:size(S, 1)
+        for i in S.rowptr[row]:(S.rowptr[row+1]-1)
+            col = S.colval[i]
+            val = S.nzval[i]
+            A[row, col] = val
+        end
+    end
+    return A
+end
+
+function Base.Matrix(S::SparseMatrixCSR{Tv}) where Tv
+    A = Matrix{Tv}(undef, size(S, 1), size(S, 2))
+    copyto!(A, S)
+    return A
+end
+
+Base.Array(S::SparseMatrixCSR) = Matrix(S)
 
 # lazypermutedims(sparse) does not do in any new array allocations,
 # it just switches the layout of the sparse matrix reusing the same data

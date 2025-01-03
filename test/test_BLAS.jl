@@ -96,6 +96,52 @@ matrix_classes = [
     UnitUpperTriangular => sp -> triu(sp, 1) + I,
 ]
 
+@testset "{$T, $IT} Sparse Matrices conversion" for
+    T in (Float32, Float64, ComplexF32, ComplexF64),
+    IT in (Base.USE_BLAS64 ? (Int32, Int64) : (Int32,))
+
+    @testset "$SPMT{$T, $IT}" for
+        SPMT in (SparseMatrixCSC, MKLSparse.SparseMatrixCSR,
+                 MKLSparse.SparseMatrixCOO)
+        for _ in 1:ntries
+            m, n = rand(10:50, 4)
+            spf = 0.1 + 0.8 * rand()
+            spA = sparserandn(SPMT{T,IT}, m, n, spf)
+
+            A = convert(Matrix, spA)
+            @test A isa Matrix{T}
+            @test size(A) == size(spA)
+            @test nnz(spA) == sum(!=(0), A)
+
+            AA = convert(Array, spA)
+            @test AA isa Matrix{T}
+            @test AA == A
+        end
+    end
+
+    for _ in 1:ntries
+        m, n = rand(10:50, 4)
+        spf = 0.1 + 0.8 * rand()
+        cscA = sparserandn(SparseMatrixCSC{T,IT}, m, n, spf)
+
+        csrA = convert(MKLSparse.SparseMatrixCSR{T,IT}, transpose(cscA))
+        @test csrA isa MKLSparse.SparseMatrixCSR{T,IT}
+        @test size(cscA) == reverse(size(csrA))
+        @test convert(Matrix, transpose(cscA)) == convert(Matrix, csrA)
+
+        csrB = sparserandn(MKLSparse.SparseMatrixCSR{T,IT}, m, n, spf)
+        cscB = convert(SparseMatrixCSC{T,IT}, transpose(csrB))
+        @test cscB isa SparseMatrixCSC{T,IT}
+        @test size(csrB) == reverse(size(cscB))
+        @test convert(Matrix, csrB) == convert(Matrix, transpose(cscB))
+
+        cooA = convert(MKLSparse.SparseMatrixCOO{T,IT}, cscA)
+        @test cooA isa MKLSparse.SparseMatrixCOO{T,IT}
+        @test size(cscA) == size(cooA)
+        @test convert(Matrix, cscA) == convert(Matrix, cooA)
+    end
+end
+
 @testset "BLAS for $SPMT{$T, $IT} matrices" for
     SPMT in (SparseMatrixCSC, MKLSparse.SparseMatrixCSR, MKLSparse.SparseMatrixCOO),
     T in (Float32, Float64, ComplexF32, ComplexF64),
