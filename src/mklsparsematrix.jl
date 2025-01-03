@@ -257,3 +257,17 @@ end
 
 Base.convert(::Type{SparseMatrixCSR}, A::MKLSparseMatrix{SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
     convert(SparseMatrixCSR{Tv, Ti}, A)
+
+# copy the non-zero values from the MKL Sparse matrix A into the sparse matrix B
+# A and B should have the same non-zero pattern
+function Base.copy!(B::S, A::MKLSparseMatrix{S};
+                    check_nzpattern::Bool = true
+) where {S <: Union{SparseMatrixCSC, SparseMatrixCSR}}
+    _A = extract_data(A)
+    (!isnothing(_A.nzval) ? length(_A.nzval) : 0) == nnz(B) ||
+        error(lazy"Number of nonzeros in the source ($(length(_A.nzval))) does not match the destination matrix ($(nnz(B)))")
+    size(B) == _A.size || throw(DimensionMismatch(lazy"Size of the source $(_A.size) does not match the destination $(size(B))"))
+    check_nzpattern && MKLSparse.check_nzpattern(B, _A)
+    !isnothing(_A.nzval) && (pointer(B.nzval) != pointer(_A.nzval)) && copy!(B.nzval, _A.nzval)
+    return B
+end
