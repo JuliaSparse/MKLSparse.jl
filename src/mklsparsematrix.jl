@@ -53,6 +53,12 @@ Base.convert(::Type{SparseMatrixCSR{Tv, Ti}}, tA::Transpose{Tv, SparseMatrixCSC{
 Base.convert(::Type{SparseMatrixCSR}, tA::Transpose{Tv, SparseMatrixCSC{Tv, Ti}}) where {Tv, Ti} =
     convert(SparseMatrixCSR{Tv, Ti}, tA)
 
+Base.convert(::Type{SparseMatrixCSR{Tv, Ti}}, A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti} =
+    convert(SparseMatrixCSR{Tv, Ti}, transpose(permutedims(A)))
+
+Base.convert(::Type{SparseMatrixCSR}, A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti} =
+    convert(SparseMatrixCSR{Tv, Ti}, A)
+
 Base.convert(::Type{SparseMatrixCSC{Tv, Ti}}, tA::Transpose{Tv, SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
     SparseMatrixCSC{Tv, Ti}(size(tA)..., parent(tA).rowptr, parent(tA).colval, nonzeros(parent(tA)))
 
