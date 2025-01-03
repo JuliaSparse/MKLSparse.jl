@@ -546,6 +546,47 @@ end
     end
 end
 
+@testset "A::$SPMT{$T}, B:Matrix{$T}: Matrix{$T} := A * B * Aᵗ (syprd!())" begin
+    for _ in 1:ntries
+        m, n = rand(10:100, 2)
+        spA = sparserandn(SPMT{T, IT}, m, n, 0.1 + 0.8 * rand())
+        A = convert(Matrix, spA)
+        B1 = denserandn(T, n, n)
+        B1 = B1 + B1'
+        B1 = convert(Matrix{T}, B1 / norm(B1))
+        B2 = denserandn(T, m, m)
+        B2 = B2 + B2'
+        B2 = convert(Matrix{T}, B2 / norm(B2))
+        C1 = denserandn(T, m, m)
+        C1 = convert(Matrix{T}, C1 + C1')
+        C2 = denserandn(T, n, n)
+        C2 = convert(Matrix{T}, C2 + C2')
+        # Complex case does not support non-real coefficients due to Hermitian requirement
+        α, β = T.(real.(denserandn(T, 2)))
+
+        if T <: Complex && SPMT <: SparseMatrixCSC
+            @test_throws "syprd!() wrapper does not support" @blas(MKLSparse.syprd!('N', α, spA, B1, zero(T), copy(C1)))
+            break
+        end
+
+        if m != n
+            @test_throws DimensionMismatch @blas(MKLSparse.syprd!('N', α, spA, B1, β, copy(C2)))
+            @test_throws DimensionMismatch @blas(MKLSparse.syprd!('N', α, spA, B2, β, copy(C1)))
+            @test_throws DimensionMismatch @blas(MKLSparse.syprd!('T', α, spA, B1, β, copy(C2)))
+            @test_throws DimensionMismatch @blas(MKLSparse.syprd!('T', α, spA, B2, β, copy(C1)))
+        end
+
+        # test with bigger atol since A*B*Aᵗ does more * and + than other routines
+        @test @blas(MKLSparse.syprd!('N', α, spA, B1, zero(T), copy(C1))) ≈ α * A * B1 * A' atol=3*atol
+        @test @blas(MKLSparse.syprd!('T', α, spA, B2, zero(T), copy(C2))) ≈ α * A' * B2 * A atol=3*atol
+        @test @blas(MKLSparse.syprd!('C', α, spA, B2, zero(T), copy(C2))) ≈ α * A' * B2 * A atol=3*atol
+
+        @test @blas(MKLSparse.syprd!('N', α, spA, B1, β, copy(C1))) ≈ α * A * B1 * A' + β * C1 atol=3*atol
+        @test @blas(MKLSparse.syprd!('T', α, spA, B2, β, copy(C2))) ≈ α * A' * B2 * A + β * C2 atol=3*atol
+        @test @blas(MKLSparse.syprd!('C', α, spA, B2, β, copy(C2))) ≈ α * A' * B2 * A + β * C2 atol=3*atol
+    end
+end
+
 else # COO
 
 @testset "A,B::$SPMT{$T}: A * B not supported" begin
@@ -560,7 +601,7 @@ else # COO
     @test_throws MKLSparseError @blas(spA * spB)
 end
 
-@testset "A::$SPMT{$T}: syrkd!(), syrk() not supported" begin
+@testset "A::$SPMT{$T}: syrkd!(), syrk(), syprd!() not supported" begin
     m, n = rand(10:100, 2)
     spA = sparserandn(SPMT{T, IT}, m, n, 0.1 + 0.8 * rand())
     A = convert(Matrix, spA)
@@ -571,6 +612,7 @@ end
 
     @test_throws MethodError @blas(MKLSparse.syrkd!('N', α, spA, β, copy(C1)))
     @test_throws MethodError @blas(MKLSparse.syrk('N', spA))
+    @test_throws MethodError @blas(MKLSparse.syprd!('N', α, spA, B1, β, copy(C1)))
 end
 
 end # COO
