@@ -185,6 +185,36 @@ function extract_data(ref::MKLSparseMatrix{S}) where {S <: AbstractSparseMatrix{
     )
 end
 
+# check that source and destination have the same non-zero structure
+function check_nzpattern(dest::AbstractSparseMatrix, src::NamedTuple)
+    src_nnz = !isnothing(src.major_starts) ? src.major_starts[end] - 1 : 0
+    nnz(dest) == src_nnz ||
+        error(lazy"Number of nonzeros in the destination matrix ($(nnz(dest))) does not match the source ($(src_nnz))")
+
+    dest_major_starts = dest isa SparseMatrixCSC ? dest.colptr :
+                        dest isa SparseMatrixCSR ? dest.rowptr :
+                        error(lazy"Unsupported storage type $(typeof(dest))")
+    isnothing(src.major_starts) || dest_major_starts == src.major_starts ||
+        error("Nonzeros structure of the destination matrix does not match the source (major starts)")
+
+    Ti = eltype(src.minor_val)
+    dest_minor_val = dest isa SparseMatrixCSC ? dest.rowval :
+                     dest isa SparseMatrixCSR ? dest.colval :
+                     error(lazy"Unsupported storage type $(typeof(dest))")
+    # skip minor_val check if not provided
+    if !isnothing(src.minor_val)
+        # convert minor_vals to 1-based if the source is 0-based and the destination is SparseMatrixCSC
+        minors_match = src.index_base == SPARSE_INDEX_BASE_ZERO && dest isa SparseMatrixCSC ?
+            all((a, b) -> a + one(Ti) == b, zip(src.minor_val, dest_minor_val)) : # convert to 1-based
+            src.minor_val == dest_minor_val
+        minors_match ||
+            error("Nonzeros structure of the destination matrix does not match the source (minor values)")
+    end
+end
+
+check_nzpattern(dest::S, src::MKLSparseMatrix{S}) where S <: AbstractSparseMatrix =
+    check_nzpattern(dest, extract_data(src))
+
 function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSC}
     _A = extract_data(A)
     Ti = eltype(_A.minor_val)
