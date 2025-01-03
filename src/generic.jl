@@ -166,6 +166,38 @@ function sp2md!(transA::Char, alpha::T, A::S, descrA::matrix_descr,
     return C
 end
 
+# C := A * op(A), or
+# C := op(A) * A, where C is dense
+# note: only the upper triangular part of C is computed
+function syrkd!(transA::Char, alpha::T, A::SparseMatrixCSR{T}, beta::T,
+                C::StridedMatrix{T};
+                dense_layout::sparse_layout_t = SPARSE_LAYOUT_COLUMN_MAJOR,
+                copytri::Bool = true
+) where T
+    check_trans(transA)
+    check_mat_op_sizes(C, A, transA, A, transA == 'N' ? 'T' : 'N'; dense_layout)
+    ldC = stride(C, 2)
+    hA = MKLSparseMatrix(A)
+    res = mkl_call(Val{:mkl_sparse_T_syrkdI}(), typeof(A),
+                   transA, hA, alpha, beta, C, dense_layout, ldC)
+    destroy(hA)
+    check_status(res)
+    copytri && fastcopytri!(C, dense_layout == SPARSE_LAYOUT_COLUMN_MAJOR ? 'U' : 'L',
+                            T <: Complex)
+    return C
+end
+
+# CSC is not supported by SparseMKL directly, so treat A as Aᵀ in CSR format
+function syrkd!(transA::Char, alpha::T, A::SparseMatrixCSC{T}, beta::T,
+                C::StridedMatrix{T}; kwarg...
+) where T
+    # since CSC support is implemented by transposing A, the A*A' has to be conjugated
+    # to be correct in the complex case, that produces incorrect results when beta != 0
+    (T <: Complex) && error("syrkd!() wrapper does not support SparseMatrixCSC with complex values")
+    syrkd!(dual_opcode(T, transA), alpha,
+           convert(SparseMatrixCSR, transpose(A)), beta, C; kwarg...)
+end
+
 # find y: op(A) * y = alpha * x
 function trsv!(transA::Char, alpha::T, A::AbstractSparseMatrix{T}, descr::matrix_descr,
                x::StridedVector{T}, y::StridedVector{T}

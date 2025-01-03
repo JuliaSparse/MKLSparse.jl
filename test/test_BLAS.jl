@@ -495,6 +495,38 @@ end
     end
 end
 
+@testset "A::$SPMT{$T}, Matrix{$T} := A * Aᵗ (syrkd!())" begin
+    for _ in 1:ntries
+        m, n = rand(10:100, 2)
+        spA = sparserandn(SPMT{T, IT}, m, n, 0.1 + 0.8 * rand())
+        A = convert(Matrix, spA)
+        C1 = denserandn(T, m, m)
+        C1 = convert(Matrix{T}, C1 + C1')
+        C2 = denserandn(T, n, n)
+        C2 = convert(Matrix{T}, C2 + C2')
+        # Complex case does not support non-real coefficients due to Hermitian requirement
+        α, β = T(real(rand(T))), T(real(rand(T)))
+
+        if T <: Complex && SPMT <: SparseMatrixCSC
+            @test_throws "syrkd!() wrapper does not support" @blas(MKLSparse.syrkd!('N', α, spA, β, copy(C2)))
+            break
+        end
+
+        if m != n
+            @test_throws DimensionMismatch @blas(MKLSparse.syrkd!('N', α, spA, β, copy(C2)))
+            @test_throws DimensionMismatch @blas(MKLSparse.syrkd!('T', α, spA, β, copy(C1)))
+        end
+
+        @test @blas(MKLSparse.syrkd!('N', α, spA, zero(T), copy(C1))) ≈ α * A * A' atol=3*atol
+        @test @blas(MKLSparse.syrkd!('T', α, spA, zero(T), copy(C2))) ≈ α * A' * A atol=3*atol
+        @test @blas(MKLSparse.syrkd!('C', α, spA, zero(T), copy(C2))) ≈ α * A' * A atol=3*atol
+
+        @test @blas(MKLSparse.syrkd!('N', α, spA, β, copy(C1))) ≈ α * A * A' + β * C1 atol=3*atol
+        @test @blas(MKLSparse.syrkd!('T', α, spA, β, copy(C2))) ≈ α * A' * A + β * C2 atol=3*atol
+        @test @blas(MKLSparse.syrkd!('C', α, spA, β, copy(C2))) ≈ α * A' * A + β * C2 atol=3*atol
+    end
+end
+
 else # COO
 
 @testset "A,B::$SPMT{$T}: A * B not supported" begin
@@ -507,6 +539,18 @@ else # COO
 
     @test_throws MKLSparseError @blas(mul!(AB, spA, spB, α, β))
     @test_throws MKLSparseError @blas(spA * spB)
+end
+
+@testset "A::$SPMT{$T}: syrkd!() not supported" begin
+    m, n = rand(10:100, 2)
+    spA = sparserandn(SPMT{T, IT}, m, n, 0.1 + 0.8 * rand())
+    A = convert(Matrix, spA)
+    B1 = denserandn(T, n, n)
+    B2 = denserandn(T, m, m)
+    C1 = denserandn(T, m, m)
+    α, β = denserandn(T, 2)
+
+    @test_throws MethodError @blas(MKLSparse.syrkd!('N', α, spA, β, copy(C1)))
 end
 
 end # COO
