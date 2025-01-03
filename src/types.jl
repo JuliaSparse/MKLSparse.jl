@@ -71,6 +71,17 @@ matrix_descr(descr::matrix_descr;
     end
 end
 
+# given matrix eltype and N/C/T opcode, return the operation for the adjoint matrix ([CT]/N/N)
+@inline function dual_opcode(::Type{T}, trans::Char) where T <: Number
+    if trans == 'N'
+        return T <: Complex ? 'C' : 'T'
+    elseif trans == 'T' || trans == 'C'
+        return 'N'
+    else
+        throw(ArgumentError(lazy"Unknown operation $trans"))
+    end
+end
+
 @inline Base.convert(::Type{sparse_operation_t}, ::Type{<:Transpose}) =
     SPARSE_OPERATION_TRANSPOSE
 
