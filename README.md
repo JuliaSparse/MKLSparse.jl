@@ -2,8 +2,9 @@
 
 [![codecov](https://codecov.io/gh/JuliaSparse/MKLSparse.jl/graph/badge.svg?token=j3KoKBEIt1)](https://codecov.io/gh/JuliaSparse/MKLSparse.jl)
 
-`MKLSparse.jl` is a Julia package to seamlessly use the sparse functionality in MKL to speed up operations on sparse arrays in Julia.
-In order to use `MKLSparse.jl` you do not need to install Intel's MKL library nor build Julia with MKL. `MKLSparse.jl` will automatically download and use the MKL library for you when installed.
+*MKLSparse.jl* is a Julia package to seamlessly use the [sparse BLAS routines from Intel's Math Kernel Library (MKL)](https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-c)
+to speed up operations on sparse arrays in Julia.
+In order to use *MKLSparse.jl* you do not need to install Intel's MKL library nor build Julia with MKL. *MKLSparse.jl* will automatically download and use the MKL library for you when installed.
 
 ### Matrix multiplications
 
