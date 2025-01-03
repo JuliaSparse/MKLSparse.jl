@@ -21,20 +21,31 @@ end
 mkl_storagetype_specifier(::Type{<:SparseMatrixCOO}) = "coo"
 mkl_storagetype_specifier(::Type{<:SparseMatrixCSR}) = "csr"
 
-Base.size(A::MKLSparse.SparseMatrixCOO) = (A.m, A.n)
-Base.size(A::MKLSparse.SparseMatrixCSR) = (A.m, A.n)
+Base.size(A::SparseMatrixCOO) = (A.m, A.n)
+Base.size(A::SparseMatrixCSR) = (A.m, A.n)
 
-SparseArrays.nnz(A::MKLSparse.SparseMatrixCOO) = length(A.vals)
-SparseArrays.nnz(A::MKLSparse.SparseMatrixCSR) = length(A.nzval)
+SparseArrays.nonzeros(A::SparseMatrixCOO) = A.vals
+SparseArrays.nonzeros(A::SparseMatrixCSR) = A.nzval
 
-matrix_descr(A::MKLSparse.SparseMatrixCSR) = matrix_descr('G', 'F', 'N')
-matrix_descr(A::MKLSparse.SparseMatrixCOO) = matrix_descr('G', 'F', 'N')
+SparseArrays.nnz(A::SparseMatrixCOO) = length(A.vals)
+SparseArrays.nnz(A::SparseMatrixCSR) = length(A.nzval)
 
-Base.:(==)(A::MKLSparse.SparseMatrixCOO, B::MKLSparse.SparseMatrixCOO) =
+matrix_descr(A::SparseMatrixCSR) = matrix_descr('G', 'F', 'N')
+matrix_descr(A::SparseMatrixCOO) = matrix_descr('G', 'F', 'N')
+
+Base.copy(A::SparseMatrixCOO) = SparseMatrixCOO(A.m, A.n, copy(A.rows), copy(A.cols), copy(A.vals))
+Base.copy(A::SparseMatrixCSR) = SparseMatrixCSR(A.m, A.n, copy(A.rowptr), copy(A.colval), copy(A.nzval))
+
+Base.:(==)(A::SparseMatrixCOO, B::SparseMatrixCOO) =
     A.m == B.m && A.n == B.n && A.rows == B.rows && A.cols == B.cols && A.vals == B.vals
 
-Base.:(==)(A::MKLSparse.SparseMatrixCSR, B::MKLSparse.SparseMatrixCSR) =
+Base.:(==)(A::SparseMatrixCSR, B::SparseMatrixCSR) =
     A.m == B.m && A.n == B.n && A.rowptr == B.rowptr && A.colval == B.colval && A.nzval == B.nzval
+
+# for the unit tests
+LinearAlgebra.isapprox(A::Union{SparseMatrixCOO, SparseMatrixCSR},
+                       B::StridedMatrix; kwargs...) =
+    isapprox(convert(Matrix, A), B; kwargs...)
 
 Base.convert(::Type{SparseMatrixCSR{Tv, Ti}}, tA::Transpose{Tv, SparseMatrixCSC{Tv, Ti}}) where {Tv, Ti} =
     SparseMatrixCSR{Tv, Ti}(size(tA)..., parent(tA).colptr, rowvals(parent(tA)), nonzeros(parent(tA)))
@@ -42,8 +53,14 @@ Base.convert(::Type{SparseMatrixCSR{Tv, Ti}}, tA::Transpose{Tv, SparseMatrixCSC{
 Base.convert(::Type{SparseMatrixCSR}, tA::Transpose{Tv, SparseMatrixCSC{Tv, Ti}}) where {Tv, Ti} =
     convert(SparseMatrixCSR{Tv, Ti}, tA)
 
+Base.convert(::Type{SparseMatrixCSR{Tv, Ti}}, A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti} =
+    convert(SparseMatrixCSR{Tv, Ti}, transpose(permutedims(A)))
+
+Base.convert(::Type{SparseMatrixCSR}, A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti} =
+    convert(SparseMatrixCSR{Tv, Ti}, A)
+
 Base.convert(::Type{SparseMatrixCSC{Tv, Ti}}, tA::Transpose{Tv, SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
-    SparseMatrixCSC{Tv, Ti}(size(tA)..., parent(tA).rowptr, parent(tA).colval, parent(tA).nzval)
+    SparseMatrixCSC{Tv, Ti}(size(tA)..., parent(tA).rowptr, parent(tA).colval, nonzeros(parent(tA)))
 
 Base.convert(::Type{SparseMatrixCSC}, tA::Transpose{Tv, SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
     convert(SparseMatrixCSC{Tv, Ti}, tA)
@@ -56,7 +73,7 @@ end
 Base.convert(::Type{SparseMatrixCOO}, A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti} =
     convert(SparseMatrixCOO{Tv, Ti}, A)
 
-function Base.convert(::Type{Array}, spA::MKLSparse.SparseMatrixCOO{T}) where T
+function Base.Matrix(spA::SparseMatrixCOO{T}) where T
     A = fill(zero(T), spA.m, spA.n)
     for (i, j, v) in zip(spA.rows, spA.cols, spA.vals)
         A[i, j] = v
@@ -64,8 +81,34 @@ function Base.convert(::Type{Array}, spA::MKLSparse.SparseMatrixCOO{T}) where T
     return A
 end
 
-Base.convert(::Type{Array}, spA::MKLSparse.SparseMatrixCSR) =
-    convert(Array, transpose(convert(SparseMatrixCSC, transpose(spA))))
+Base.Array(spA::SparseMatrixCOO) = Matrix(spA)
+
+# Faster version for non-abstract Array and SparseMatrixCSC
+# Based on the implementation of Base.copyto!(A::Matrix{T}, S::SparseMatrixCSC{T})
+function Base.copyto!(A::Matrix{T}, S::SparseMatrixCSR{<:Number}) where {T<:Number}
+    isempty(S) && return A
+    size(A) != size(S) && throw(DimensionMismatch())
+
+    # Zero elements that are also in S, don't change rest of A
+    fill!(A, zero(T))
+    # Copy the structural nonzeros from S to A
+    for row in 1:size(S, 1)
+        for i in S.rowptr[row]:(S.rowptr[row+1]-1)
+            col = S.colval[i]
+            val = S.nzval[i]
+            A[row, col] = val
+        end
+    end
+    return A
+end
+
+function Base.Matrix(S::SparseMatrixCSR{Tv}) where Tv
+    A = Matrix{Tv}(undef, size(S, 1), size(S, 2))
+    copyto!(A, S)
+    return A
+end
+
+Base.Array(S::SparseMatrixCSR) = Matrix(S)
 
 # lazypermutedims(sparse) does not do in any new array allocations,
 # it just switches the layout of the sparse matrix reusing the same data
@@ -185,25 +228,78 @@ function extract_data(ref::MKLSparseMatrix{S}) where {S <: AbstractSparseMatrix{
     )
 end
 
-function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSC}
+# check that source and destination have the same non-zero structure
+function check_nzpattern(dest::AbstractSparseMatrix, src::NamedTuple)
+    src_nnz = !isnothing(src.major_starts) ? src.major_starts[end] - 1 : 0
+    nnz(dest) == src_nnz ||
+        error(lazy"Number of nonzeros in the destination matrix ($(nnz(dest))) does not match the source ($(src_nnz))")
+
+    dest_major_starts = dest isa SparseMatrixCSC ? dest.colptr :
+                        dest isa SparseMatrixCSR ? dest.rowptr :
+                        error(lazy"Unsupported storage type $(typeof(dest))")
+    isnothing(src.major_starts) || dest_major_starts == src.major_starts ||
+        error("Nonzeros structure of the destination matrix does not match the source (major starts)")
+
+    Ti = eltype(src.minor_val)
+    dest_minor_val = dest isa SparseMatrixCSC ? dest.rowval :
+                     dest isa SparseMatrixCSR ? dest.colval :
+                     error(lazy"Unsupported storage type $(typeof(dest))")
+    # skip minor_val check if not provided
+    if !isnothing(src.minor_val)
+        # convert minor_vals to 1-based if the source is 0-based and the destination is SparseMatrixCSC
+        minors_match = src.index_base == SPARSE_INDEX_BASE_ZERO && dest isa SparseMatrixCSC ?
+            all((a, b) -> a + one(Ti) == b, zip(src.minor_val, dest_minor_val)) : # convert to 1-based
+            src.minor_val == dest_minor_val
+        minors_match ||
+            error("Nonzeros structure of the destination matrix does not match the source (minor values)")
+    end
+end
+
+check_nzpattern(dest::S, src::MKLSparseMatrix{S}) where S <: AbstractSparseMatrix =
+    check_nzpattern(dest, extract_data(src))
+
+function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSC{Tv, Ti}} where {Tv, Ti}
     _A = extract_data(A)
-    Ti = eltype(_A.minor_val)
-    rowval = _A.index_base == SPARSE_INDEX_BASE_ZERO ?
-        _A.minor_val .+ one(Ti) : # convert to 1-based (rowval is copied)
-        copy(_A.minor_val)
-    return S(_A.size..., copy(_A.major_starts), rowval, copy(_A.nzval))
+    colptr = !isnothing(_A.major_starts) ?
+        Vector{Ti}(_A.major_starts) :
+        fill(one(Ti), _A.size[2] + 1)
+    rowval = !isnothing(_A.minor_val) ?
+        _A.index_base == SPARSE_INDEX_BASE_ZERO ?
+        [Ti(v) + one(Ti) for v in _A.minor_val] : # convert to 1-based
+        Vector{Ti}(_A.minor_val) :
+        Ti[]
+    nzval = !isnothing(_A.nzval) ? Vector{Tv}(_A.nzval) : Tv[]
+    return S(_A.size..., colptr, rowval, nzval)
 end
 
 # converter for the default SparseMatrixCSC storage type
 Base.convert(::Type{SparseMatrixCSC}, A::MKLSparseMatrix{SparseMatrixCSC{Tv, Ti}}) where {Tv, Ti} =
     convert(SparseMatrixCSC{Tv, Ti}, A)
 
-function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSR}
+function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSR{Tv, Ti}} where {Tv, Ti}
     _A = extract_data(A)
+    rowptr = !isnothing(_A.major_starts) ?
+        Vector{Ti}(_A.major_starts) :
+        fill(one(Ti), _A.size[1] + 1)
     # not converting the col indices depending on index_base
-    @show length(_A.nzval)
-    return S(_A.size..., copy(_A.major_starts), copy(_A.minor_val), copy(_A.nzval))
+    colval = !isnothing(_A.minor_val) ? Vector{Ti}(_A.minor_val) : Ti[]
+    nzval = !isnothing(_A.nzval) ? Vector{Tv}(_A.nzval) : Tv[]
+    return S(_A.size..., rowptr, colval, nzval)
 end
 
 Base.convert(::Type{SparseMatrixCSR}, A::MKLSparseMatrix{SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
     convert(SparseMatrixCSR{Tv, Ti}, A)
+
+# copy the non-zero values from the MKL Sparse matrix A into the sparse matrix B
+# A and B should have the same non-zero pattern
+function Base.copy!(B::S, A::MKLSparseMatrix{S};
+                    check_nzpattern::Bool = true
+) where {S <: Union{SparseMatrixCSC, SparseMatrixCSR}}
+    _A = extract_data(A)
+    (!isnothing(_A.nzval) ? length(_A.nzval) : 0) == nnz(B) ||
+        error(lazy"Number of nonzeros in the source ($(length(_A.nzval))) does not match the destination matrix ($(nnz(B)))")
+    size(B) == _A.size || throw(DimensionMismatch(lazy"Size of the source $(_A.size) does not match the destination $(size(B))"))
+    check_nzpattern && MKLSparse.check_nzpattern(B, _A)
+    !isnothing(_A.nzval) && (pointer(B.nzval) != pointer(_A.nzval)) && copy!(B.nzval, _A.nzval)
+    return B
+end

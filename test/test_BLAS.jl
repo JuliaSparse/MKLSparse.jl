@@ -1,9 +1,12 @@
 using MKLSparse
 using Test, SparseArrays, LinearAlgebra
 
+ntries = 10 # how many random matrices to test
+max_el = 3  # maximal absolute value of matrix element
+
 @testset "MKLSparse.matdescra()" begin
-    sA = sprand(5, 5, 0.01)
-    sS = sA'sA
+    sA = sprand(5, 5, 0.1)
+    sS = sA' + sA
     sTl = tril(sS)
     sTu = triu(sS)
 
@@ -45,21 +48,42 @@ macro blas(ex)
     end
 end
 
+_clamp(x, min, max) = clamp(x, min, max)
+_clamp(x::Complex, min::Real, max::Real) =
+    typeof(x)(clamp(real(x), min, max), clamp(imag(x), min, max))
+
 # generate random sparse matrix of the specified type SPMT
 
-function sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: SparseMatrixCSC{Tv, Ti}} where {Tv, Ti}
-    spM = sprand(Tv, m, n, p)
+function sparserandn(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0;
+                     max_el::Real = max_el) where {SPMT <: SparseMatrixCSC{Tv, Ti}} where {Tv, Ti}
+    spM = sprandn(Tv, m, n, p)
     if diag != 0
         spM += convert(real(Tv), diag)*I
+    end
+    nzM = nonzeros(spM)
+    @inbounds for i in eachindex(nzM)
+        nzM[i] = _clamp(nzM[i], -max_el, max_el)
     end
     return convert(SPMT, spM)
 end
 
-sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCSR{Tv, Ti}} where {Tv, Ti} =
-    convert(MKLSparse.SparseMatrixCSR, transpose(sparserand(SparseMatrixCSC{Tv, Ti}, n, m, p, diag)))
+function denserandn(::Type{Tv}, sz...; max_el::Real = max_el) where {Tv}
+    M = randn(Tv, sz...)
+    if M isa AbstractArray
+        @inbounds for i in eachindex(M)
+            M[i] = _clamp(M[i], -max_el, max_el)
+        end
+    else
+        M = _clamp(M, -max_el, max_el)
+    end
+    return M
+end
 
-sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCOO{Tv, Ti}} where {Tv, Ti} =
-    convert(MKLSparse.SparseMatrixCOO, sparserand(SparseMatrixCSC{Tv, Ti}, m, n, p, diag))
+sparserandn(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCSR{Tv, Ti}} where {Tv, Ti} =
+    convert(MKLSparse.SparseMatrixCSR, transpose(sparserandn(SparseMatrixCSC{Tv, Ti}, n, m, p, diag)))
+
+sparserandn(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCOO{Tv, Ti}} where {Tv, Ti} =
+    convert(MKLSparse.SparseMatrixCOO, sparserandn(SparseMatrixCSC{Tv, Ti}, m, n, p, diag))
 
 # special matrix classes to test
 # and the function to create a matrix of that class from a random sparse matrix
@@ -72,6 +96,79 @@ matrix_classes = [
     UnitUpperTriangular => sp -> triu(sp, 1) + I,
 ]
 
+@testset "fastcopytri!(Matrix{$T})" for
+    T in (Float32, Float64, ComplexF32, ComplexF64)
+
+    for _ in 1:ntries
+        m, n = rand(10:100, 2)
+
+        if m != n
+            @test_throws DimensionMismatch MKLSparse.fastcopytri!(denserandn(T, m, n), 'L')
+        end
+
+        A = denserandn(T, m, m)
+        @test_throws ArgumentError MKLSparse.fastcopytri!(A, 'K')
+
+        AL = copy(A)
+        @test MKLSparse.fastcopytri!(AL, 'L') === AL
+
+        @test MKLSparse.fastcopytri!(copy(A), 'L') == LinearAlgebra.copytri!(copy(A), 'L')
+        @test MKLSparse.fastcopytri!(copy(A), 'U') == LinearAlgebra.copytri!(copy(A), 'U')
+
+        @test MKLSparse.fastcopytri!(copy(A), 'L', true) == LinearAlgebra.copytri!(copy(A), 'L', true)
+        @test MKLSparse.fastcopytri!(copy(A), 'U', true) == LinearAlgebra.copytri!(copy(A), 'U', true)
+
+        @test MKLSparse.fastcopytri!(copy(A), 'L', false) == LinearAlgebra.copytri!(copy(A), 'L', false)
+        @test MKLSparse.fastcopytri!(copy(A), 'U', false) == LinearAlgebra.copytri!(copy(A), 'U', false)
+    end
+end
+
+@testset "{$T, $IT} Sparse Matrices conversion" for
+    T in (Float32, Float64, ComplexF32, ComplexF64),
+    IT in (Base.USE_BLAS64 ? (Int32, Int64) : (Int32,))
+
+    @testset "$SPMT{$T, $IT}" for
+        SPMT in (SparseMatrixCSC, MKLSparse.SparseMatrixCSR,
+                 MKLSparse.SparseMatrixCOO)
+        for _ in 1:ntries
+            m, n = rand(10:50, 4)
+            spf = 0.1 + 0.8 * rand()
+            spA = sparserandn(SPMT{T,IT}, m, n, spf)
+
+            A = convert(Matrix, spA)
+            @test A isa Matrix{T}
+            @test size(A) == size(spA)
+            @test nnz(spA) == sum(!=(0), A)
+
+            AA = convert(Array, spA)
+            @test AA isa Matrix{T}
+            @test AA == A
+        end
+    end
+
+    for _ in 1:ntries
+        m, n = rand(10:50, 4)
+        spf = 0.1 + 0.8 * rand()
+        cscA = sparserandn(SparseMatrixCSC{T,IT}, m, n, spf)
+
+        csrA = convert(MKLSparse.SparseMatrixCSR{T,IT}, transpose(cscA))
+        @test csrA isa MKLSparse.SparseMatrixCSR{T,IT}
+        @test size(cscA) == reverse(size(csrA))
+        @test convert(Matrix, transpose(cscA)) == convert(Matrix, csrA)
+
+        csrB = sparserandn(MKLSparse.SparseMatrixCSR{T,IT}, m, n, spf)
+        cscB = convert(SparseMatrixCSC{T,IT}, transpose(csrB))
+        @test cscB isa SparseMatrixCSC{T,IT}
+        @test size(csrB) == reverse(size(cscB))
+        @test convert(Matrix, csrB) == convert(Matrix, transpose(cscB))
+
+        cooA = convert(MKLSparse.SparseMatrixCOO{T,IT}, cscA)
+        @test cooA isa MKLSparse.SparseMatrixCOO{T,IT}
+        @test size(cscA) == size(cooA)
+        @test convert(Matrix, cscA) == convert(Matrix, cooA)
+    end
+end
+
 @testset "BLAS for $SPMT{$T, $IT} matrices" for
     SPMT in (SparseMatrixCSC, MKLSparse.SparseMatrixCSR, MKLSparse.SparseMatrixCOO),
     T in (Float32, Float64, ComplexF32, ComplexF64),
@@ -79,10 +176,10 @@ matrix_classes = [
 
 local isCOO = SPMT <: MKLSparse.SparseMatrixCOO
 local isCOOorCSR = isCOO || SPMT <: MKLSparse.SparseMatrixCSR
-local atol::real(T) = 750*eps(real(one(T))) # absolute tolerance for SparseBLAS results
+local atol::real(T) = ifelse(T <: Complex, 1E+3, 1E+3) * eps(real(one(T))) # absolute tolerance for SparseBLAS results
 
 @testset "Describe $SPMT{$T, $IT} matrix" begin
-    spA = sparserand(SPMT{T, IT}, 10, 10, 0.25)
+    spA = sparserandn(SPMT{T, IT}, 10, 10, 0.25)
 
     @test MKLSparse.describe_and_unwrap(spA) == ('N', MKLSparse.matrix_descr('G','F','N'), spA)
     @test MKLSparse.describe_and_unwrap(transpose(spA)) == ('T', MKLSparse.matrix_descr('G','F','N'), spA)
@@ -125,7 +222,7 @@ local atol::real(T) = 750*eps(real(one(T))) # absolute tolerance for SparseBLAS 
 end
 
 @testset "Create MKLSparse matrix from $SPMT{$T, $IT} and export back" begin
-    spA = sparserand(SPMT{T, IT}, rand(10:50), rand(10:50), 0.25)
+    spA = sparserandn(SPMT{T, IT}, rand(10:50), rand(10:50), 0.25)
     mklA = MKLSparse.MKLSparseMatrix(spA)
 
     # test conversion to incompatible Julia types
@@ -147,12 +244,12 @@ end
 end
 
 @testset "$SPMT{$T,$IT} * Vector{$T}" begin
-    for _ in 1:10
+    for _ in 1:ntries
         m, n = rand(10:50, 2)
-        spA = sparserand(SPMT{T, IT}, m, n, 0.5)
+        spA = sparserandn(SPMT{T, IT}, m, n, 0.5)
         a = convert(Array, spA)
-        b = rand(T, n)
-        c = rand(T, m)
+        b = denserandn(T, n)
+        c = denserandn(T, m)
 
         @test @blas(spA*b) ≈ a*b atol=atol
         @test @blas(spA'*c) ≈ a'*c atol=atol
@@ -167,12 +264,12 @@ end
 end
 
 @testset "$trans(Vector{$T}) * $SPMT{$T,$IT}" for trans in (transpose, adjoint)
-    for _ in 1:10
+    for _ in 1:ntries
         m, n = rand(10:50, 2)
-        spA = sparserand(SPMT{T, IT}, m, n, 0.5)
+        spA = sparserandn(SPMT{T, IT}, m, n, 0.5)
         a = convert(Array, spA)
-        b = rand(T, m)
-        c = rand(T, n)
+        b = denserandn(T, m)
+        c = denserandn(T, n)
 
         @test @blas(trans(b)*spA) ≈ trans(b)*a atol=atol
         @test @blas(trans(c)*spA') ≈ trans(c)*a' atol=atol
@@ -191,15 +288,15 @@ end
 end
 
 @testset "$SPMT{$T,$IT} * Matrix{$T}" begin
-    for _ in 1:10
+    for _ in 1:ntries
         m, n, k, l = rand(10:50, 4)
-        spA = sparserand(SPMT{T,IT}, m, n, 0.5)
+        spA = sparserandn(SPMT{T,IT}, m, n, 0.5)
         a = convert(Array, spA)
-        b = rand(T, n, k)
-        c = rand(T, m, l)
-        ab = rand(T, m, k)
-        tac = rand(T, n, l)
-        α, β = rand(T, 2)
+        b = denserandn(T, n, k)
+        c = denserandn(T, m, l)
+        ab = denserandn(T, m, k)
+        tac = denserandn(T, n, l)
+        α, β = denserandn(T, 2)
 
         @test @blas(spA*b) ≈ a*b atol=atol
         @test @blas(spA'*c) ≈ a'*c atol=atol
@@ -226,15 +323,15 @@ end
 end
 
 @testset "Matrix{$T} * $SPMT{$T,$IT}" begin
-    for _ in 1:10
+    for _ in 1:ntries
         m, n, k, l = rand(10:50, 4)
-        spA = sparserand(SPMT{T,IT}, m, n, 0.5)
+        spA = sparserandn(SPMT{T,IT}, m, n, 0.5)
         a = convert(Array, spA)
-        b = rand(T, k, m)
-        c = rand(T, l, n)
-        ba = rand(T, k, n)
-        cta = rand(T, l, m)
-        α, β = rand(T, 2)
+        b = denserandn(T, k, m)
+        c = denserandn(T, l, n)
+        ba = denserandn(T, k, n)
+        cta = denserandn(T, l, m)
+        α, β = denserandn(T, 2)
 
         # COO and CSR is currently not supported
         # (MKLSparse does not support this combination of indexing, sparse and dense layouts)
@@ -262,6 +359,264 @@ end
     end
 end
 
+if SPMT <: Union{SparseMatrixCSC, MKLSparse.SparseMatrixCSR}
+
+# dense := sparse * sparse for generic matrices
+@testset "mul!(dense, $SPMT{$T}, $SPMT{$T})" begin
+    for _ in 1:ntries
+        m, n, k, l = rand(10:50, 4)
+        spf = 0.1 + 0.8 * rand()
+        spA = sparserandn(SPMT{T,IT}, m, n, spf)
+        spB = sparserandn(SPMT{T,IT}, n, k, spf)
+        spC = sparserandn(SPMT{T,IT}, m, l, spf)
+        spD = sparserandn(SPMT{T,IT}, k, n, spf)
+        spE = sparserandn(SPMT{T,IT}, l, m, spf)
+        A = convert(Array, spA)
+        B = convert(Array, spB)
+        C = convert(Array, spC)
+        D = convert(Array, spD)
+        E = convert(Array, spE)
+        AB = denserandn(T, m, k)
+        tAC = denserandn(T, n, l)
+        AtA = denserandn(T, m, m)
+        tAA = denserandn(T, n, n)
+        α, β = denserandn(T, 2)
+
+        if m != n
+            @test_throws DimensionMismatch mul!(denserandn(T, m, l), spA, spC)
+            @test_throws DimensionMismatch mul!(denserandn(T, n, n), transpose(spA), spB)
+            @test_throws DimensionMismatch mul!(denserandn(T, n, l), spA, spB)
+        end
+
+        @test @blas(mul!(randn(T, m, k), spA, spB)) ≈ A * B atol = atol
+        @test @blas(mul!(copy(AB), spA, spB, α, β)) ≈ α * A * B + β * AB atol = atol
+        @test @blas(mul!(copy(AB), spA, spB, 1, 1)) ≈ A * B + AB atol = atol
+
+        for trans in (transpose, adjoint)
+            if (T <: Complex) && (trans == adjoint)
+                # adjoint of complex matrices seems to be not implemented
+                @test_throws MKLSparseError mul!(similar(tAC), trans(spA), spC)
+                continue
+            end
+
+            @test @blas(mul!(randn(T, n, l), trans(spA), spC)) ≈ trans(A) * C atol = atol
+            @test @blas(mul!(randn(T, m, k), spA, trans(spD))) ≈ A * trans(D) atol = atol
+            @test @blas(mul!(randn(T, n, l), trans(spA), trans(spE))) ≈ trans(A) * trans(E) atol = atol
+
+            @test @blas(mul!(copy(tAC), trans(spA), spC, α, β)) ≈ α * trans(A) * C + β * tAC atol = atol
+            @test @blas(mul!(copy(AB), spA, trans(spD), α, β)) ≈ α * A * trans(D) + β * AB atol = atol
+            @test @blas(mul!(copy(tAC), trans(spA), trans(spE), α, β)) ≈ α * trans(A) * trans(E) + β * tAC atol = atol
+
+            @test @blas(mul!(copy(tAC), trans(spA), spC, 1, 1)) ≈ trans(A) * C + tAC atol = atol
+            @test @blas(mul!(copy(AB), spA, trans(spD), 1, 1)) ≈ A * trans(D) + AB atol = atol
+            @test @blas(mul!(copy(tAC), trans(spA), trans(spE), 1, 1)) ≈ trans(A) * trans(E) + tAC atol = atol
+
+            # matrix multiplication with itself (3-arg version uses syrk)
+            @test @blas(mul!(copy(AtA), spA, trans(spA))) ≈ A * trans(A) atol = atol
+            @test @blas(mul!(copy(tAA), trans(spA), spA)) ≈ trans(A) * A atol = atol
+            @test @blas(mul!(copy(AtA), spA, trans(spA), α, β)) ≈ α * A * trans(A) + β * AtA atol = atol
+            @test @blas(mul!(copy(tAA), trans(spA), spA, α, β)) ≈ α * trans(A) * A + β * tAA atol = atol
+        end
+    end
+end
+
+# sparse := sparse * sparse for generic matrices
+@testset "$SPMT{$T}: C := A * B and mul!(C, A, B)" begin
+    @testset "empty result" begin
+        A = convert(SPMT, sparse(IT[1], IT[2], ones(T, 1), 2, 2))
+        B = A * A
+        @test convert(Matrix, B) == zeros(T, 2, 2)
+        # in-place multiplication of the empty matrix
+        mul!(convert(SPMT, spzeros(T, IT, 2, 2)), A, A)
+    end
+
+    for _ in 1:ntries
+        m, n, k, l = rand(10:50, 4)
+        spf = 0.1 + 0.8 * rand()
+        spA = sparserandn(SPMT{T,IT}, m, n, spf)
+        spB = sparserandn(SPMT{T,IT}, n, k, spf)
+        spC = sparserandn(SPMT{T,IT}, m, l, spf)
+        spD = sparserandn(SPMT{T,IT}, k, n, spf)
+        spE = sparserandn(SPMT{T,IT}, l, m, spf)
+        A = convert(Matrix, spA)
+        B = convert(Matrix, spB)
+        C = convert(Matrix, spC)
+        D = convert(Matrix, spD)
+        E = convert(Matrix, spE)
+        # sparse result of the spA*spB
+        # cannot convert dense into sparse since it generates sorted rowvals,
+        # while MKLSparse generates non-sorted rowvals
+        # keep the sparsity pattern, but randomize the nzvalues
+        spAB = convert(SPMT{T,IT}, spA * spB)
+        nonzeros(spAB) .= randn(T, nnz(spAB))
+        sptAC = convert(SPMT{T,IT}, transpose(spA) * spC)
+        nonzeros(sptAC) .= randn(T, nnz(sptAC))
+        spAtD = convert(SPMT{T,IT}, spA * transpose(spD))
+        nonzeros(spAtD) .= randn(T, nnz(spAtD))
+        sptAtE = convert(SPMT{T,IT}, transpose(spA) * transpose(spE))
+        nonzeros(sptAtE) .= randn(T, nnz(sptAtE))
+        sptAA = convert(SPMT{T,IT}, transpose(spA) * spA)
+        nonzeros(sptAA) .= randn(T, nnz(sptAA))
+        spAtA = convert(SPMT{T,IT}, spA * transpose(spA))
+        nonzeros(spAtA) .= randn(T, nnz(spAtA))
+        α, β = denserandn(T, 2)
+
+        if m != n
+            @test_throws DimensionMismatch @blas(spA * spC)
+            @test_throws DimensionMismatch @blas(spA' * spB)
+            @test_throws DimensionMismatch @blas(transpose(spA) * spB)
+            @test_throws DimensionMismatch @blas(mul!(similar(sptAC), spA, spB))
+        end
+
+        @test @blas(spA * spB) isa SPMT{T,IT} # test that the result is sparse
+        @test convert(Matrix, @blas(spA * spB)) ≈ A * B atol=atol
+
+        @test convert(Matrix, @blas(mul!(copy(spAB), spA, spB))) ≈ A * B atol=atol
+        # 5-arg mul!() is not implemented
+
+        # cannot in-place multiply into the sparse matrix with the different sparsity pattern
+        @test_throws ErrorException mul!(sparserandn(SPMT{T, IT}, m, k, spf), spA, spB)
+
+        for trans in (transpose, adjoint)
+            @test convert(Matrix, @blas(spA * trans(spD))) ≈ A * trans(D) atol=atol
+            @test convert(Matrix, @blas(trans(spA) * spC)) ≈ trans(A) * C atol=atol
+            @test convert(Matrix, @blas(trans(spA) * trans(spE))) ≈ trans(A) * trans(E) atol=atol
+
+            @test convert(Matrix, @blas(mul!(copy(sptAC), trans(spA), spC))) ≈ trans(A) * C atol=atol
+            @test convert(Matrix, @blas(mul!(copy(spAtD), spA, trans(spD)))) ≈ A * trans(D) atol=atol
+            @test convert(Matrix, @blas(mul!(copy(sptAtE), trans(spA), trans(spE)))) ≈ trans(A) * trans(E) atol=atol
+
+            # 5-arg mul!() is not implemented
+
+            # matrix multiplication with itself
+            @test convert(Matrix, @blas(mul!(copy(spAtA), spA, trans(spA)))) ≈ A * trans(A) atol=atol
+            @test convert(Matrix, @blas(mul!(copy(sptAA), trans(spA), spA))) ≈ trans(A) * A atol=atol
+        end
+    end
+end
+
+@testset "A::$SPMT{$T}, Matrix{$T} := A * Aᵗ (syrkd!())" begin
+    for _ in 1:ntries
+        m, n = rand(10:100, 2)
+        spA = sparserandn(SPMT{T, IT}, m, n, 0.1 + 0.8 * rand())
+        A = convert(Matrix, spA)
+        C1 = denserandn(T, m, m)
+        C1 = convert(Matrix{T}, C1 + C1')
+        C2 = denserandn(T, n, n)
+        C2 = convert(Matrix{T}, C2 + C2')
+        # Complex case does not support non-real coefficients due to Hermitian requirement
+        α, β = T(real(rand(T))), T(real(rand(T)))
+
+        if T <: Complex && SPMT <: SparseMatrixCSC
+            @test_throws "syrkd!() wrapper does not support" @blas(MKLSparse.syrkd!('N', α, spA, β, copy(C2)))
+            break
+        end
+
+        if m != n
+            @test_throws DimensionMismatch @blas(MKLSparse.syrkd!('N', α, spA, β, copy(C2)))
+            @test_throws DimensionMismatch @blas(MKLSparse.syrkd!('T', α, spA, β, copy(C1)))
+        end
+
+        @test @blas(MKLSparse.syrkd!('N', α, spA, zero(T), copy(C1))) ≈ α * A * A' atol=3*atol
+        @test @blas(MKLSparse.syrkd!('T', α, spA, zero(T), copy(C2))) ≈ α * A' * A atol=3*atol
+        @test @blas(MKLSparse.syrkd!('C', α, spA, zero(T), copy(C2))) ≈ α * A' * A atol=3*atol
+
+        @test @blas(MKLSparse.syrkd!('N', α, spA, β, copy(C1))) ≈ α * A * A' + β * C1 atol=3*atol
+        @test @blas(MKLSparse.syrkd!('T', α, spA, β, copy(C2))) ≈ α * A' * A + β * C2 atol=3*atol
+        @test @blas(MKLSparse.syrkd!('C', α, spA, β, copy(C2))) ≈ α * A' * A + β * C2 atol=3*atol
+    end
+end
+
+@testset "A::$SPMT{$T}, $SPMT{$T} := A * Aᵗ (syrk())" begin
+    for _ in 1:ntries
+        m, n = rand(10:100, 2)
+        spA = sparserandn(SPMT{T, IT}, m, n, 0.1 + 0.8 * rand())
+        A = convert(Matrix, spA)
+
+        @test @blas(MKLSparse.syrk('N', spA)) isa SPMT{T}
+
+        # syrk() only returns the upper/lower triangle of the result,
+        # copytri!(sparse) is not done since it would change the matrix nonzero structure
+        tri = SPMT <: SparseMatrixCSC ? LowerTriangular :
+              SPMT <: MKLSparse.SparseMatrixCSR ? UpperTriangular :
+              error("unsupported sparse matrix type $SPMT")
+        @test convert(Matrix, @blas(MKLSparse.syrk('N', spA))) ≈ tri(A * A') atol=3*atol
+        @test convert(Matrix, @blas(MKLSparse.syrk('T', spA))) ≈ tri(A' * A) atol=3*atol
+        @test convert(Matrix, @blas(MKLSparse.syrk('C', spA))) ≈ tri(A' * A) atol=3*atol
+    end
+end
+
+@testset "A::$SPMT{$T}, B:Matrix{$T}: Matrix{$T} := A * B * Aᵗ (syprd!())" begin
+    for _ in 1:ntries
+        m, n = rand(10:100, 2)
+        spA = sparserandn(SPMT{T, IT}, m, n, 0.1 + 0.8 * rand())
+        A = convert(Matrix, spA)
+        B1 = denserandn(T, n, n)
+        B1 = B1 + B1'
+        B1 = convert(Matrix{T}, B1 / norm(B1))
+        B2 = denserandn(T, m, m)
+        B2 = B2 + B2'
+        B2 = convert(Matrix{T}, B2 / norm(B2))
+        C1 = denserandn(T, m, m)
+        C1 = convert(Matrix{T}, C1 + C1')
+        C2 = denserandn(T, n, n)
+        C2 = convert(Matrix{T}, C2 + C2')
+        # Complex case does not support non-real coefficients due to Hermitian requirement
+        α, β = T.(real.(denserandn(T, 2)))
+
+        if T <: Complex && SPMT <: SparseMatrixCSC
+            @test_throws "syprd!() wrapper does not support" @blas(MKLSparse.syprd!('N', α, spA, B1, zero(T), copy(C1)))
+            break
+        end
+
+        if m != n
+            @test_throws DimensionMismatch @blas(MKLSparse.syprd!('N', α, spA, B1, β, copy(C2)))
+            @test_throws DimensionMismatch @blas(MKLSparse.syprd!('N', α, spA, B2, β, copy(C1)))
+            @test_throws DimensionMismatch @blas(MKLSparse.syprd!('T', α, spA, B1, β, copy(C2)))
+            @test_throws DimensionMismatch @blas(MKLSparse.syprd!('T', α, spA, B2, β, copy(C1)))
+        end
+
+        # test with bigger atol since A*B*Aᵗ does more * and + than other routines
+        @test @blas(MKLSparse.syprd!('N', α, spA, B1, zero(T), copy(C1))) ≈ α * A * B1 * A' atol=3*atol
+        @test @blas(MKLSparse.syprd!('T', α, spA, B2, zero(T), copy(C2))) ≈ α * A' * B2 * A atol=3*atol
+        @test @blas(MKLSparse.syprd!('C', α, spA, B2, zero(T), copy(C2))) ≈ α * A' * B2 * A atol=3*atol
+
+        @test @blas(MKLSparse.syprd!('N', α, spA, B1, β, copy(C1))) ≈ α * A * B1 * A' + β * C1 atol=3*atol
+        @test @blas(MKLSparse.syprd!('T', α, spA, B2, β, copy(C2))) ≈ α * A' * B2 * A + β * C2 atol=3*atol
+        @test @blas(MKLSparse.syprd!('C', α, spA, B2, β, copy(C2))) ≈ α * A' * B2 * A + β * C2 atol=3*atol
+    end
+end
+
+else # COO
+
+@testset "A,B::$SPMT{$T}: A * B not supported" begin
+    m, n, k, l = rand(10:50, 4)
+    spf = 0.1 + 0.8 * rand()
+    spA = sparserandn(SPMT{T,IT}, m, n, spf)
+    spB = sparserandn(SPMT{T,IT}, n, k, spf)
+    AB = denserandn(T, m, k)
+    α, β = denserandn(T, 2)
+
+    @test_throws MKLSparseError @blas(mul!(AB, spA, spB, α, β))
+    @test_throws MKLSparseError @blas(spA * spB)
+end
+
+@testset "A::$SPMT{$T}: syrkd!(), syrk(), syprd!() not supported" begin
+    m, n = rand(10:100, 2)
+    spA = sparserandn(SPMT{T, IT}, m, n, 0.1 + 0.8 * rand())
+    A = convert(Matrix, spA)
+    B1 = denserandn(T, n, n)
+    B2 = denserandn(T, m, m)
+    C1 = denserandn(T, m, m)
+    α, β = denserandn(T, 2)
+
+    @test_throws MethodError @blas(MKLSparse.syrkd!('N', α, spA, β, copy(C1)))
+    @test_throws MethodError @blas(MKLSparse.syrk('N', spA))
+    @test_throws MethodError @blas(MKLSparse.syprd!('N', α, spA, B1, β, copy(C1)))
+end
+
+end # COO
+
 if SPMT <: SparseMatrixCSC # conversion to special matrices not implemented for CSR and COO
 
 @testset "$Aclass{$SPMT{$T}} * $trans($(ifelse(Bdim == 2, "Matrix", "Vector")){$T})" for Bdim in 1:2,
@@ -270,16 +625,18 @@ if SPMT <: SparseMatrixCSC # conversion to special matrices not implemented for 
 
     (Bdim == 1 && trans != identity) && continue # not valid
 
-    for _ in 1:10
+    for _ in 1:ntries
         n = rand(50:150)
-        spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
+        spf = 0.1 + 0.8 * rand()
+        spA = convert_to_class(sparserandn(SPMT{T,IT}, n, n, spf, sqrt(n)))
         A = convert(Array, spA)
         @test spA == A
-        B = Bdim == 2 ? rand(T, n, n) : rand(T, n)
-        α = rand(T)
+        B = Bdim == 2 ? denserandn(T, n, n) : denserandn(T, n)
+        C = denserandn(T, size(B))
+        α, β = denserandn(T, 2)
 
-        @test @blas(mul!(similar(B), Aclass(spA), trans(B), α, 0)) ≈ α * Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
-        @test @blas(mul!(similar(B), Aclass(spA), trans(B))) ≈ Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
+        @test @blas(mul!(copy(C), Aclass(spA), trans(B), α, β)) ≈ mul!(copy(C), Aclass(A), trans(B), α, β) skip=(Bdim==2 && trans!=identity)
+        @test @blas(mul!(copy(C), Aclass(spA), trans(B))) ≈ Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
         @test @blas(Aclass(spA) * trans(B)) ≈ Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
     end
 end
@@ -290,17 +647,134 @@ end
 
     (Bdim == 1 && trans == identity) && continue # not valid
 
-    for _ in 1:10
+    for _ in 1:ntries
         n = rand(50:150)
-        spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
+        spA = convert_to_class(sparserandn(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
         A = convert(Array, spA)
         @test spA == A
-        B = Bdim == 2 ? rand(T, n, n) : rand(T, n)
-        α = rand(T)
+        B = Bdim == 2 ? denserandn(T, n, n) : denserandn(T, n)
+        α = denserandn(T)
 
         @test @blas(mul!(similar(B), trans(B), Aclass(spA), α, 0)) ≈ α * trans(B) * Aclass(A) skip=trans!=identity
         @test @blas(mul!(similar(B), trans(B), Aclass(spA))) ≈ trans(B) * Aclass(A) skip=trans!=identity
         @test @blas(trans(B) * Aclass(spA)) ≈ trans(B) * Aclass(A) skip=(Bdim==2 && trans!=identity)
+    end
+end
+
+# dense := sparse * sparse for special matrices
+@testset "mul!(dense, $Aclass{$SPMT{$T}}, $Bclass{$SPMT{$T}})" for
+        (Aclass, convert_to_Aclass) in matrix_classes,
+        (Bclass, convert_to_Bclass) in matrix_classes
+
+    # Tests for dense := sparse * sparse (sp2md!())
+    for _ in 1:ntries
+        n = rand(50:150)
+        spf = 0.1 + 0.8 * rand()
+        spA = convert_to_Aclass(sparserandn(SPMT{T, IT}, n, n, spf))
+        spB = convert_to_Bclass(sparserandn(SPMT{T, IT}, n, n, spf))
+        A = convert(Matrix, spA)
+        B = convert(Matrix, spB)
+        C = denserandn(T, (n, n))
+        α, β = denserandn(T, 2)
+
+        # 5-arg
+        @test @blas(mul!(copy(C), Aclass(spA), Bclass(spB), α, β)) ≈ mul!(copy(C), A, B, α, β)
+
+        @test @blas(mul!(copy(C), transpose(Aclass(spA)), Bclass(spB), α, β)) ≈ mul!(copy(C), transpose(A), B, α, β)
+        @test @blas(mul!(copy(C), Aclass(spA), transpose(Bclass(spB)), α, β)) ≈ mul!(copy(C), A, transpose(B), α, β)
+        @test @blas(mul!(copy(C), transpose(Aclass(spA)), transpose(Bclass(spB)), α, β)) ≈ mul!(copy(C), transpose(A), transpose(B), α, β)
+
+        # 3-arg
+        @test @blas(mul!(copy(C), Aclass(spA), Bclass(spB))) ≈ A * B
+
+        @test @blas(mul!(copy(C), transpose(Aclass(spA)), Bclass(spB))) ≈ transpose(A) * B
+        @test @blas(mul!(copy(C), Aclass(spA), transpose(Bclass(spB)))) ≈ A * transpose(B)
+        @test @blas(mul!(copy(C), transpose(Aclass(spA)), transpose(Bclass(spB)))) ≈ transpose(A) * transpose(B)
+
+        # adjoint of symmetric/triangular complex matrices seems to be not implemented
+        if (T <: Complex) && (
+            (Aclass <: LinearAlgebra.AbstractTriangular) || (Aclass <: Symmetric))
+            @test_throws MKLSparseError mul!(copy(C), Aclass(spA)', Bclass(spB), α, β)
+        else
+            @test @blas(mul!(copy(C), Aclass(spA)', Bclass(spB), α, β)) ≈ mul!(copy(C), A', B, α, β)
+            @test @blas(mul!(copy(C), Aclass(spA)', Bclass(spB))) ≈ A' * B
+        end
+
+        if (T <: Complex) && (
+            (Bclass <: LinearAlgebra.AbstractTriangular) || (Bclass <: Symmetric))
+            @test_throws MKLSparseError mul!(copy(C), Aclass(spA), Bclass(spB)', α, β)
+        else
+            @test @blas(mul!(copy(C), Aclass(spA), Bclass(spB)', α, β)) ≈ mul!(copy(C), A, B', α, β)
+            @test @blas(mul!(copy(C), Aclass(spA), Bclass(spB)')) ≈ A * B'
+        end
+
+        if (T <: Complex) && (
+            (Aclass <: LinearAlgebra.AbstractTriangular) || (Aclass <: Symmetric) ||
+            (Bclass <: LinearAlgebra.AbstractTriangular) || (Bclass <: Symmetric))
+            @test_throws MKLSparseError mul!(copy(C), Aclass(spA)', Bclass(spB)', α, β)
+        else
+            @test @blas(mul!(copy(C), Aclass(spA)', Bclass(spB)', α, β)) ≈ mul!(copy(C), A', B', α, β)
+            @test @blas(mul!(copy(C), Aclass(spA)', Bclass(spB)')) ≈ A' * B'
+        end
+    end
+end
+
+# sparse := sparse * sparse for special matrices
+@testset "mul!(sparse, $Aclass{$SPMT{$T}}, $Bclass{$SPMT{$T}})" for
+        (Aclass, convert_to_Aclass) in matrix_classes,
+        (Bclass, convert_to_Bclass) in matrix_classes
+
+    for _ in 1:ntries
+        n = rand(10:50)
+        spf = 0.1 + 0.8 * rand()
+
+        spA = convert_to_Aclass(sparserandn(SPMT{T, IT}, n, n, spf))
+        spB = convert_to_Bclass(sparserandn(SPMT{T, IT}, n, n, spf))
+        A = convert(Matrix, spA)
+        B = convert(Matrix, spB)
+
+        # sparse result of the spA*spB
+        # cannot convert dense into sparse since it generates sorted rowvals,
+        # while MKLSparse generates non-sorted rowvals
+        # keep the sparsity pattern, but randomize the nzvalues
+        spAB = convert(SPMT{T,IT}, spA * spB)
+        nonzeros(spAB) .= randn(T, nnz(spAB))
+        sptAB = convert(SPMT{T,IT}, transpose(spA) * spB)
+        nonzeros(sptAB) .= randn(T, nnz(sptAB))
+        spAtB = convert(SPMT{T,IT}, spA * transpose(spB))
+        nonzeros(spAtB) .= randn(T, nnz(spAtB))
+        sptAtB = convert(SPMT{T,IT}, transpose(spA) * transpose(spB))
+        nonzeros(sptAtB) .= randn(T, nnz(sptAtB))
+        spAtA = convert(SPMT{T,IT}, spA * transpose(spA))
+        nonzeros(spAtA) .= randn(T, nnz(spAtA))
+        sptAA = convert(SPMT{T,IT}, transpose(spA) * spA)
+        nonzeros(sptAA) .= randn(T, nnz(sptAA))
+        α, β = denserandn(T, 2)
+
+        @test @blas(spA * spB) isa SPMT{T,IT} # test that the result is sparse
+        @test convert(Matrix, @blas(spA * spB)) ≈ A * B atol=3*atol
+        @test convert(Matrix, @blas(mul!(copy(spAB), spA, spB))) ≈ A * B atol=3*atol
+
+        # 5-arg mul!() is not implemented
+
+        # cannot in-place multiply into the sparse matrix with the different sparsity pattern
+        @test_throws ErrorException mul!(sparserandn(SPMT{T, IT}, n, n, spf), spA, spB)
+
+        for trans in (transpose, adjoint)
+            @test convert(Matrix, @blas(spA * trans(spB))) ≈ A * trans(B) atol=3*atol
+            @test convert(Matrix, @blas(trans(spA) * spB)) ≈ trans(A) * B atol=3*atol
+            @test convert(Matrix, @blas(trans(spA) * trans(spB))) ≈ trans(A) * trans(B) atol=3*atol
+
+            @test convert(Matrix, @blas(mul!(copy(sptAB), trans(spA), spB))) ≈ trans(A) * B atol=3*atol
+            @test convert(Matrix, @blas(mul!(copy(spAtB), spA, trans(spB)))) ≈ A * trans(B) atol=3*atol
+            @test convert(Matrix, @blas(mul!(copy(sptAtB), trans(spA), trans(spB)))) ≈ trans(A) * trans(B) atol=3*atol
+
+            # 5-arg mul!() is not implemented
+
+            # matrix multiplication with itself
+            @test convert(Matrix, @blas(mul!(copy(spAtA), spA, trans(spA)))) ≈ A * trans(A) atol=3*atol
+            @test convert(Matrix, @blas(mul!(copy(sptAA), trans(spA), spA))) ≈ trans(A) * A atol=3*atol
+        end
     end
 end
 
@@ -309,13 +783,13 @@ end
 
     (Aclass == Symmetric || Aclass == Hermitian) && continue # not implemented in MKLSparse
 
-    for _ in 1:10
+    for _ in 1:ntries
         n = rand(50:150)
-        spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
+        spA = convert_to_class(sparserandn(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
         A = convert(Array, spA)
-        B = Bdim == 2 ? rand(T, n, rand(50:150)) : rand(T, n)
+        B = Bdim == 2 ? denserandn(T, n, rand(50:150)) : denserandn(T, n)
         spAclass = Aclass(spA)
-        α = rand(T)
+        α = denserandn(T)
 
         @test @blas(ldiv!(similar(B), Aclass(spA), B, α)) ≈ α * (Aclass(A) \ B)
         @test @blas(ldiv!(similar(B), Aclass(spA), B)) ≈ Aclass(A) \ B
@@ -323,7 +797,6 @@ end
     end
 end
 
-end
+end # SPMT <: MKLSparse.SparseMatrixCSC
 
 end
-

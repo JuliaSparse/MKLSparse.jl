@@ -24,7 +24,7 @@ function wrapper(name::String, headers::Vector{String}, optimized::Bool=false)
 
   args = get_default_args()
   push!(args, "-I$include_dir")
-  
+
   ctx = create_context(headers, args, options)
   build!(ctx)
 
