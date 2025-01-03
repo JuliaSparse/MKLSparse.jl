@@ -215,24 +215,33 @@ end
 check_nzpattern(dest::S, src::MKLSparseMatrix{S}) where S <: AbstractSparseMatrix =
     check_nzpattern(dest, extract_data(src))
 
-function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSC}
+function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSC{Tv, Ti}} where {Tv, Ti}
     _A = extract_data(A)
-    Ti = eltype(_A.minor_val)
-    rowval = _A.index_base == SPARSE_INDEX_BASE_ZERO ?
-        _A.minor_val .+ one(Ti) : # convert to 1-based (rowval is copied)
-        copy(_A.minor_val)
-    return S(_A.size..., copy(_A.major_starts), rowval, copy(_A.nzval))
+    colptr = !isnothing(_A.major_starts) ?
+        Vector{Ti}(_A.major_starts) :
+        fill(one(Ti), _A.size[2] + 1)
+    rowval = !isnothing(_A.minor_val) ?
+        _A.index_base == SPARSE_INDEX_BASE_ZERO ?
+        [Ti(v) + one(Ti) for v in _A.minor_val] : # convert to 1-based
+        Vector{Ti}(_A.minor_val) :
+        Ti[]
+    nzval = !isnothing(_A.nzval) ? Vector{Tv}(_A.nzval) : Tv[]
+    return S(_A.size..., colptr, rowval, nzval)
 end
 
 # converter for the default SparseMatrixCSC storage type
 Base.convert(::Type{SparseMatrixCSC}, A::MKLSparseMatrix{SparseMatrixCSC{Tv, Ti}}) where {Tv, Ti} =
     convert(SparseMatrixCSC{Tv, Ti}, A)
 
-function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSR}
+function Base.convert(::Type{S}, A::MKLSparseMatrix{S}) where {S <: SparseMatrixCSR{Tv, Ti}} where {Tv, Ti}
     _A = extract_data(A)
+    rowptr = !isnothing(_A.major_starts) ?
+        Vector{Ti}(_A.major_starts) :
+        fill(one(Ti), _A.size[1] + 1)
     # not converting the col indices depending on index_base
-    @show length(_A.nzval)
-    return S(_A.size..., copy(_A.major_starts), copy(_A.minor_val), copy(_A.nzval))
+    colval = !isnothing(_A.minor_val) ? Vector{Ti}(_A.minor_val) : Ti[]
+    nzval = !isnothing(_A.nzval) ? Vector{Tv}(_A.nzval) : Tv[]
+    return S(_A.size..., rowptr, colval, nzval)
 end
 
 Base.convert(::Type{SparseMatrixCSR}, A::MKLSparseMatrix{SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
