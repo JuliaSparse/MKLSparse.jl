@@ -5,8 +5,8 @@ ntries = 10 # how many random matrices to test
 max_el = 3  # maximal absolute value of matrix element
 
 @testset "MKLSparse.matdescra()" begin
-    sA = sprand(5, 5, 0.01)
-    sS = sA'sA
+    sA = sprand(5, 5, 0.1)
+    sS = sA' + sA
     sTl = tril(sS)
     sTu = triu(sS)
 
