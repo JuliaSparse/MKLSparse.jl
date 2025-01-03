@@ -2,6 +2,7 @@ using MKLSparse
 using Test, SparseArrays, LinearAlgebra
 
 ntries = 10 # how many random matrices to test
+max_el = 3  # maximal absolute value of matrix element
 
 @testset "MKLSparse.matdescra()" begin
     sA = sprand(5, 5, 0.01)
@@ -47,21 +48,42 @@ macro blas(ex)
     end
 end
 
+_clamp(x, min, max) = clamp(x, min, max)
+_clamp(x::Complex, min::Real, max::Real) =
+    typeof(x)(clamp(real(x), min, max), clamp(imag(x), min, max))
+
 # generate random sparse matrix of the specified type SPMT
 
-function sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: SparseMatrixCSC{Tv, Ti}} where {Tv, Ti}
-    spM = sprand(Tv, m, n, p)
+function sparserandn(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0;
+                     max_el::Real = max_el) where {SPMT <: SparseMatrixCSC{Tv, Ti}} where {Tv, Ti}
+    spM = sprandn(Tv, m, n, p)
     if diag != 0
         spM += convert(real(Tv), diag)*I
+    end
+    nzM = nonzeros(spM)
+    @inbounds for i in eachindex(nzM)
+        nzM[i] = _clamp(nzM[i], -max_el, max_el)
     end
     return convert(SPMT, spM)
 end
 
-sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCSR{Tv, Ti}} where {Tv, Ti} =
-    convert(MKLSparse.SparseMatrixCSR, transpose(sparserand(SparseMatrixCSC{Tv, Ti}, n, m, p, diag)))
+function denserandn(::Type{Tv}, sz...; max_el::Real = max_el) where {Tv}
+    M = randn(Tv, sz...)
+    if M isa AbstractArray
+        @inbounds for i in eachindex(M)
+            M[i] = _clamp(M[i], -max_el, max_el)
+        end
+    else
+        M = _clamp(M, -max_el, max_el)
+    end
+    return M
+end
 
-sparserand(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCOO{Tv, Ti}} where {Tv, Ti} =
-    convert(MKLSparse.SparseMatrixCOO, sparserand(SparseMatrixCSC{Tv, Ti}, m, n, p, diag))
+sparserandn(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCSR{Tv, Ti}} where {Tv, Ti} =
+    convert(MKLSparse.SparseMatrixCSR, transpose(sparserandn(SparseMatrixCSC{Tv, Ti}, n, m, p, diag)))
+
+sparserandn(::Type{SPMT}, m::Integer, n::Integer, p::Real, diag::Real = 0) where {SPMT <: MKLSparse.SparseMatrixCOO{Tv, Ti}} where {Tv, Ti} =
+    convert(MKLSparse.SparseMatrixCOO, sparserandn(SparseMatrixCSC{Tv, Ti}, m, n, p, diag))
 
 # special matrix classes to test
 # and the function to create a matrix of that class from a random sparse matrix
@@ -84,7 +106,7 @@ local isCOOorCSR = isCOO || SPMT <: MKLSparse.SparseMatrixCSR
 local atol::real(T) = 750*eps(real(one(T))) # absolute tolerance for SparseBLAS results
 
 @testset "Describe $SPMT{$T, $IT} matrix" begin
-    spA = sparserand(SPMT{T, IT}, 10, 10, 0.25)
+    spA = sparserandn(SPMT{T, IT}, 10, 10, 0.25)
 
     @test MKLSparse.describe_and_unwrap(spA) == ('N', MKLSparse.matrix_descr('G','F','N'), spA)
     @test MKLSparse.describe_and_unwrap(transpose(spA)) == ('T', MKLSparse.matrix_descr('G','F','N'), spA)
@@ -127,7 +149,7 @@ local atol::real(T) = 750*eps(real(one(T))) # absolute tolerance for SparseBLAS 
 end
 
 @testset "Create MKLSparse matrix from $SPMT{$T, $IT} and export back" begin
-    spA = sparserand(SPMT{T, IT}, rand(10:50), rand(10:50), 0.25)
+    spA = sparserandn(SPMT{T, IT}, rand(10:50), rand(10:50), 0.25)
     mklA = MKLSparse.MKLSparseMatrix(spA)
 
     # test conversion to incompatible Julia types
@@ -151,10 +173,10 @@ end
 @testset "$SPMT{$T,$IT} * Vector{$T}" begin
     for _ in 1:ntries
         m, n = rand(10:50, 2)
-        spA = sparserand(SPMT{T, IT}, m, n, 0.5)
+        spA = sparserandn(SPMT{T, IT}, m, n, 0.5)
         a = convert(Array, spA)
-        b = rand(T, n)
-        c = rand(T, m)
+        b = denserandn(T, n)
+        c = denserandn(T, m)
 
         @test @blas(spA*b) ≈ a*b atol=atol
         @test @blas(spA'*c) ≈ a'*c atol=atol
@@ -171,10 +193,10 @@ end
 @testset "$trans(Vector{$T}) * $SPMT{$T,$IT}" for trans in (transpose, adjoint)
     for _ in 1:ntries
         m, n = rand(10:50, 2)
-        spA = sparserand(SPMT{T, IT}, m, n, 0.5)
+        spA = sparserandn(SPMT{T, IT}, m, n, 0.5)
         a = convert(Array, spA)
-        b = rand(T, m)
-        c = rand(T, n)
+        b = denserandn(T, m)
+        c = denserandn(T, n)
 
         @test @blas(trans(b)*spA) ≈ trans(b)*a atol=atol
         @test @blas(trans(c)*spA') ≈ trans(c)*a' atol=atol
@@ -195,13 +217,13 @@ end
 @testset "$SPMT{$T,$IT} * Matrix{$T}" begin
     for _ in 1:ntries
         m, n, k, l = rand(10:50, 4)
-        spA = sparserand(SPMT{T,IT}, m, n, 0.5)
+        spA = sparserandn(SPMT{T,IT}, m, n, 0.5)
         a = convert(Array, spA)
-        b = rand(T, n, k)
-        c = rand(T, m, l)
-        ab = rand(T, m, k)
-        tac = rand(T, n, l)
-        α, β = rand(T, 2)
+        b = denserandn(T, n, k)
+        c = denserandn(T, m, l)
+        ab = denserandn(T, m, k)
+        tac = denserandn(T, n, l)
+        α, β = denserandn(T, 2)
 
         @test @blas(spA*b) ≈ a*b atol=atol
         @test @blas(spA'*c) ≈ a'*c atol=atol
@@ -230,13 +252,13 @@ end
 @testset "Matrix{$T} * $SPMT{$T,$IT}" begin
     for _ in 1:ntries
         m, n, k, l = rand(10:50, 4)
-        spA = sparserand(SPMT{T,IT}, m, n, 0.5)
+        spA = sparserandn(SPMT{T,IT}, m, n, 0.5)
         a = convert(Array, spA)
-        b = rand(T, k, m)
-        c = rand(T, l, n)
-        ba = rand(T, k, n)
-        cta = rand(T, l, m)
-        α, β = rand(T, 2)
+        b = denserandn(T, k, m)
+        c = denserandn(T, l, n)
+        ba = denserandn(T, k, n)
+        cta = denserandn(T, l, m)
+        α, β = denserandn(T, 2)
 
         # COO and CSR is currently not supported
         # (MKLSparse does not support this combination of indexing, sparse and dense layouts)
@@ -274,14 +296,16 @@ if SPMT <: SparseMatrixCSC # conversion to special matrices not implemented for 
 
     for _ in 1:ntries
         n = rand(50:150)
-        spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
+        spf = 0.1 + 0.8 * rand()
+        spA = convert_to_class(sparserandn(SPMT{T,IT}, n, n, spf, sqrt(n)))
         A = convert(Array, spA)
         @test spA == A
-        B = Bdim == 2 ? rand(T, n, n) : rand(T, n)
-        α = rand(T)
+        B = Bdim == 2 ? denserandn(T, n, n) : denserandn(T, n)
+        C = denserandn(T, size(B))
+        α, β = denserandn(T, 2)
 
-        @test @blas(mul!(similar(B), Aclass(spA), trans(B), α, 0)) ≈ α * Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
-        @test @blas(mul!(similar(B), Aclass(spA), trans(B))) ≈ Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
+        @test @blas(mul!(copy(C), Aclass(spA), trans(B), α, β)) ≈ mul!(copy(C), Aclass(A), trans(B), α, β) skip=(Bdim==2 && trans!=identity)
+        @test @blas(mul!(copy(C), Aclass(spA), trans(B))) ≈ Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
         @test @blas(Aclass(spA) * trans(B)) ≈ Aclass(A) * trans(B) skip=(Bdim==2 && trans!=identity)
     end
 end
@@ -294,11 +318,11 @@ end
 
     for _ in 1:ntries
         n = rand(50:150)
-        spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
+        spA = convert_to_class(sparserandn(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
         A = convert(Array, spA)
         @test spA == A
-        B = Bdim == 2 ? rand(T, n, n) : rand(T, n)
-        α = rand(T)
+        B = Bdim == 2 ? denserandn(T, n, n) : denserandn(T, n)
+        α = denserandn(T)
 
         @test @blas(mul!(similar(B), trans(B), Aclass(spA), α, 0)) ≈ α * trans(B) * Aclass(A) skip=trans!=identity
         @test @blas(mul!(similar(B), trans(B), Aclass(spA))) ≈ trans(B) * Aclass(A) skip=trans!=identity
@@ -313,11 +337,11 @@ end
 
     for _ in 1:ntries
         n = rand(50:150)
-        spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
+        spA = convert_to_class(sparserandn(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
         A = convert(Array, spA)
-        B = Bdim == 2 ? rand(T, n, rand(50:150)) : rand(T, n)
+        B = Bdim == 2 ? denserandn(T, n, rand(50:150)) : denserandn(T, n)
         spAclass = Aclass(spA)
-        α = rand(T)
+        α = denserandn(T)
 
         @test @blas(ldiv!(similar(B), Aclass(spA), B, α)) ≈ α * (Aclass(A) \ B)
         @test @blas(ldiv!(similar(B), Aclass(spA), B)) ≈ Aclass(A) \ B
