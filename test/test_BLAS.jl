@@ -1,6 +1,8 @@
 using MKLSparse
 using Test, SparseArrays, LinearAlgebra
 
+ntries = 10 # how many random matrices to test
+
 @testset "MKLSparse.matdescra()" begin
     sA = sprand(5, 5, 0.01)
     sS = sA'sA
@@ -147,7 +149,7 @@ end
 end
 
 @testset "$SPMT{$T,$IT} * Vector{$T}" begin
-    for _ in 1:10
+    for _ in 1:ntries
         m, n = rand(10:50, 2)
         spA = sparserand(SPMT{T, IT}, m, n, 0.5)
         a = convert(Array, spA)
@@ -167,7 +169,7 @@ end
 end
 
 @testset "$trans(Vector{$T}) * $SPMT{$T,$IT}" for trans in (transpose, adjoint)
-    for _ in 1:10
+    for _ in 1:ntries
         m, n = rand(10:50, 2)
         spA = sparserand(SPMT{T, IT}, m, n, 0.5)
         a = convert(Array, spA)
@@ -191,7 +193,7 @@ end
 end
 
 @testset "$SPMT{$T,$IT} * Matrix{$T}" begin
-    for _ in 1:10
+    for _ in 1:ntries
         m, n, k, l = rand(10:50, 4)
         spA = sparserand(SPMT{T,IT}, m, n, 0.5)
         a = convert(Array, spA)
@@ -226,7 +228,7 @@ end
 end
 
 @testset "Matrix{$T} * $SPMT{$T,$IT}" begin
-    for _ in 1:10
+    for _ in 1:ntries
         m, n, k, l = rand(10:50, 4)
         spA = sparserand(SPMT{T,IT}, m, n, 0.5)
         a = convert(Array, spA)
@@ -270,7 +272,7 @@ if SPMT <: SparseMatrixCSC # conversion to special matrices not implemented for 
 
     (Bdim == 1 && trans != identity) && continue # not valid
 
-    for _ in 1:10
+    for _ in 1:ntries
         n = rand(50:150)
         spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
         A = convert(Array, spA)
@@ -290,7 +292,7 @@ end
 
     (Bdim == 1 && trans == identity) && continue # not valid
 
-    for _ in 1:10
+    for _ in 1:ntries
         n = rand(50:150)
         spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
         A = convert(Array, spA)
@@ -309,7 +311,7 @@ end
 
     (Aclass == Symmetric || Aclass == Hermitian) && continue # not implemented in MKLSparse
 
-    for _ in 1:10
+    for _ in 1:ntries
         n = rand(50:150)
         spA = convert_to_class(sparserand(SPMT{T,IT}, n, n, 0.5, sqrt(n)))
         A = convert(Array, spA)
