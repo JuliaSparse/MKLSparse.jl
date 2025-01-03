@@ -527,6 +527,25 @@ end
     end
 end
 
+@testset "A::$SPMT{$T}, $SPMT{$T} := A * Aᵗ (syrk())" begin
+    for _ in 1:ntries
+        m, n = rand(10:100, 2)
+        spA = sparserandn(SPMT{T, IT}, m, n, 0.1 + 0.8 * rand())
+        A = convert(Matrix, spA)
+
+        @test @blas(MKLSparse.syrk('N', spA)) isa SPMT{T}
+
+        # syrk() only returns the upper/lower triangle of the result,
+        # copytri!(sparse) is not done since it would change the matrix nonzero structure
+        tri = SPMT <: SparseMatrixCSC ? LowerTriangular :
+              SPMT <: MKLSparse.SparseMatrixCSR ? UpperTriangular :
+              error("unsupported sparse matrix type $SPMT")
+        @test convert(Matrix, @blas(MKLSparse.syrk('N', spA))) ≈ tri(A * A') atol=3*atol
+        @test convert(Matrix, @blas(MKLSparse.syrk('T', spA))) ≈ tri(A' * A) atol=3*atol
+        @test convert(Matrix, @blas(MKLSparse.syrk('C', spA))) ≈ tri(A' * A) atol=3*atol
+    end
+end
+
 else # COO
 
 @testset "A,B::$SPMT{$T}: A * B not supported" begin
@@ -541,7 +560,7 @@ else # COO
     @test_throws MKLSparseError @blas(spA * spB)
 end
 
-@testset "A::$SPMT{$T}: syrkd!() not supported" begin
+@testset "A::$SPMT{$T}: syrkd!(), syrk() not supported" begin
     m, n = rand(10:100, 2)
     spA = sparserandn(SPMT{T, IT}, m, n, 0.1 + 0.8 * rand())
     A = convert(Matrix, spA)
@@ -551,6 +570,7 @@ end
     α, β = denserandn(T, 2)
 
     @test_throws MethodError @blas(MKLSparse.syrkd!('N', α, spA, β, copy(C1)))
+    @test_throws MethodError @blas(MKLSparse.syrk('N', spA))
 end
 
 end # COO

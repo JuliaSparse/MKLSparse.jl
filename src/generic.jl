@@ -167,6 +167,33 @@ function sp2md!(transA::Char, alpha::T, A::S, descrA::matrix_descr,
 end
 
 # C := A * op(A), or
+# C := op(A) * A, where C is sparse
+# note: only the upper triangular part of C is computed
+function syrk(transA::Char, A::SparseMatrixCSR; copytri::Bool = false)
+    copytri && error("syrk() wrapper does not implement copytri=true")
+    check_trans(transA)
+    Cout = Ref{sparse_matrix_t}()
+    hA = MKLSparseMatrix(A)
+    res = mkl_call(Val{:mkl_sparse_syrkI}(), typeof(A),
+                   transA, hA, Cout)
+    destroy(hA)
+    check_status(res)
+    # NOTE: we are guessing what is the storage format of C
+    hC = MKLSparseMatrix{typeof(A)}(Cout[])
+    C = convert(typeof(A), hC)
+    destroy(hC)
+    return C
+end
+
+# CSC is not supported by SparseMKL directly, so treat A as Aᵀ in CSR format
+# note: only the lower triangular part of C is computed (lower CSC = upper CSR)
+function syrk(transA::Char, A::SparseMatrixCSC{T}; kwargs...) where T
+    C = syrk(dual_opcode(T, transA),
+             convert(SparseMatrixCSR, transpose(A)); kwargs...)
+    return convert(typeof(A), transpose(C))
+end
+
+# C := A * op(A), or
 # C := op(A) * A, where C is dense
 # note: only the upper triangular part of C is computed
 function syrkd!(transA::Char, alpha::T, A::SparseMatrixCSR{T}, beta::T,
