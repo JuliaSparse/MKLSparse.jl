@@ -151,14 +151,40 @@ function (*)(x::Transpose{T, <:StridedVector{T}}, B::Adjoint{T, <:SimpleOrSpecia
                   zero(T), y))
 end
 
-function (\)(A::SimpleOrSpecialOrAdjMat{T, S}, x::StridedVector{T}) where {T <: BlasFloat, S <: SparseMat{T}}
+if VERSION < v"1.11" # in 1.11 these wrappers are already defined in LinearAlgebra
+
+function (\)(A::Union{S, AdjOrTranspMat{T, S}}, x::StridedVector{T}) where {T <: BlasFloat, S <: SparseMat{T}}
     n = length(x)
     y = Vector{T}(undef, n)
     return ldiv!(y, A, x)
 end
 
-function (\)(A::SimpleOrSpecialOrAdjMat{T, S}, B::StridedMatrix{T}) where {T <: BlasFloat, S <: SparseMat{T}}
+function (\)(A::Union{S, AdjOrTranspMat{T, S}}, B::StridedMatrix{T}) where {T <: BlasFloat, S <: SparseMat{T}}
     m, n = size(B)
     C = Matrix{T}(undef, m, n)
     return ldiv!(C, A, B)
+end
+
+for mat in (LowerTriangular, UpperTriangular,
+            UnitLowerTriangular, UnitUpperTriangular,
+            Symmetric, Hermitian)
+
+@eval function (\)(A::Union{$mat{T, S}, AdjOrTranspMat{T, $mat{T, S}}, $mat{T, <:AdjOrTranspMat{T, S}}},
+                   x::StridedVector{T}
+) where {T <: BlasFloat, S <: SparseMat{T}}
+    n = length(x)
+    y = Vector{T}(undef, n)
+    return ldiv!(y, A, x)
+end
+
+@eval function (\)(A::Union{$mat{T, S}, AdjOrTranspMat{T, $mat{T, S}}, $mat{T, <:AdjOrTranspMat{T, S}}},
+                   B::StridedMatrix{T}
+) where {T <: BlasFloat, S <: SparseMat{T}}
+    m, n = size(B)
+    C = Matrix{T}(undef, m, n)
+    return ldiv!(C, A, B)
+end
+
+end
+
 end
