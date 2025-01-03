@@ -420,6 +420,81 @@ if SPMT <: Union{SparseMatrixCSC, MKLSparse.SparseMatrixCSR}
     end
 end
 
+# sparse := sparse * sparse for generic matrices
+@testset "$SPMT{$T}: C := A * B and mul!(C, A, B)" begin
+    @testset "empty result" begin
+        A = convert(SPMT, sparse(IT[1], IT[2], ones(T, 1), 2, 2))
+        B = A * A
+        @test convert(Matrix, B) == zeros(T, 2, 2)
+        # in-place multiplication of the empty matrix
+        mul!(convert(SPMT, spzeros(T, IT, 2, 2)), A, A)
+    end
+
+    for _ in 1:ntries
+        m, n, k, l = rand(10:50, 4)
+        spf = 0.1 + 0.8 * rand()
+        spA = sparserandn(SPMT{T,IT}, m, n, spf)
+        spB = sparserandn(SPMT{T,IT}, n, k, spf)
+        spC = sparserandn(SPMT{T,IT}, m, l, spf)
+        spD = sparserandn(SPMT{T,IT}, k, n, spf)
+        spE = sparserandn(SPMT{T,IT}, l, m, spf)
+        A = convert(Matrix, spA)
+        B = convert(Matrix, spB)
+        C = convert(Matrix, spC)
+        D = convert(Matrix, spD)
+        E = convert(Matrix, spE)
+        # sparse result of the spA*spB
+        # cannot convert dense into sparse since it generates sorted rowvals,
+        # while MKLSparse generates non-sorted rowvals
+        # keep the sparsity pattern, but randomize the nzvalues
+        spAB = convert(SPMT{T,IT}, spA * spB)
+        nonzeros(spAB) .= randn(T, nnz(spAB))
+        sptAC = convert(SPMT{T,IT}, transpose(spA) * spC)
+        nonzeros(sptAC) .= randn(T, nnz(sptAC))
+        spAtD = convert(SPMT{T,IT}, spA * transpose(spD))
+        nonzeros(spAtD) .= randn(T, nnz(spAtD))
+        sptAtE = convert(SPMT{T,IT}, transpose(spA) * transpose(spE))
+        nonzeros(sptAtE) .= randn(T, nnz(sptAtE))
+        sptAA = convert(SPMT{T,IT}, transpose(spA) * spA)
+        nonzeros(sptAA) .= randn(T, nnz(sptAA))
+        spAtA = convert(SPMT{T,IT}, spA * transpose(spA))
+        nonzeros(spAtA) .= randn(T, nnz(spAtA))
+        α, β = denserandn(T, 2)
+
+        if m != n
+            @test_throws DimensionMismatch @blas(spA * spC)
+            @test_throws DimensionMismatch @blas(spA' * spB)
+            @test_throws DimensionMismatch @blas(transpose(spA) * spB)
+            @test_throws DimensionMismatch @blas(mul!(similar(sptAC), spA, spB))
+        end
+
+        @test @blas(spA * spB) isa SPMT{T,IT} # test that the result is sparse
+        @test convert(Matrix, @blas(spA * spB)) ≈ A * B atol=atol
+
+        @test convert(Matrix, @blas(mul!(copy(spAB), spA, spB))) ≈ A * B atol=atol
+        # 5-arg mul!() is not implemented
+
+        # cannot in-place multiply into the sparse matrix with the different sparsity pattern
+        @test_throws ErrorException mul!(sparserandn(SPMT{T, IT}, m, k, spf), spA, spB)
+
+        for trans in (transpose, adjoint)
+            @test convert(Matrix, @blas(spA * trans(spD))) ≈ A * trans(D) atol=atol
+            @test convert(Matrix, @blas(trans(spA) * spC)) ≈ trans(A) * C atol=atol
+            @test convert(Matrix, @blas(trans(spA) * trans(spE))) ≈ trans(A) * trans(E) atol=atol
+
+            @test convert(Matrix, @blas(mul!(copy(sptAC), trans(spA), spC))) ≈ trans(A) * C atol=atol
+            @test convert(Matrix, @blas(mul!(copy(spAtD), spA, trans(spD)))) ≈ A * trans(D) atol=atol
+            @test convert(Matrix, @blas(mul!(copy(sptAtE), trans(spA), trans(spE)))) ≈ trans(A) * trans(E) atol=atol
+
+            # 5-arg mul!() is not implemented
+
+            # matrix multiplication with itself
+            @test convert(Matrix, @blas(mul!(copy(spAtA), spA, trans(spA)))) ≈ A * trans(A) atol=atol
+            @test convert(Matrix, @blas(mul!(copy(sptAA), trans(spA), spA))) ≈ trans(A) * A atol=atol
+        end
+    end
+end
+
 else # COO
 
 @testset "A,B::$SPMT{$T}: A * B not supported" begin
@@ -431,6 +506,7 @@ else # COO
     α, β = denserandn(T, 2)
 
     @test_throws MKLSparseError @blas(mul!(AB, spA, spB, α, β))
+    @test_throws MKLSparseError @blas(spA * spB)
 end
 
 end # COO
@@ -533,6 +609,65 @@ end
         else
             @test @blas(mul!(copy(C), Aclass(spA)', Bclass(spB)', α, β)) ≈ mul!(copy(C), A', B', α, β)
             @test @blas(mul!(copy(C), Aclass(spA)', Bclass(spB)')) ≈ A' * B'
+        end
+    end
+end
+
+# sparse := sparse * sparse for special matrices
+@testset "mul!(sparse, $Aclass{$SPMT{$T}}, $Bclass{$SPMT{$T}})" for
+        (Aclass, convert_to_Aclass) in matrix_classes,
+        (Bclass, convert_to_Bclass) in matrix_classes
+
+    for _ in 1:ntries
+        n = rand(10:50)
+        spf = 0.1 + 0.8 * rand()
+
+        spA = convert_to_Aclass(sparserandn(SPMT{T, IT}, n, n, spf))
+        spB = convert_to_Bclass(sparserandn(SPMT{T, IT}, n, n, spf))
+        A = convert(Matrix, spA)
+        B = convert(Matrix, spB)
+
+        # sparse result of the spA*spB
+        # cannot convert dense into sparse since it generates sorted rowvals,
+        # while MKLSparse generates non-sorted rowvals
+        # keep the sparsity pattern, but randomize the nzvalues
+        spAB = convert(SPMT{T,IT}, spA * spB)
+        nonzeros(spAB) .= randn(T, nnz(spAB))
+        sptAB = convert(SPMT{T,IT}, transpose(spA) * spB)
+        nonzeros(sptAB) .= randn(T, nnz(sptAB))
+        spAtB = convert(SPMT{T,IT}, spA * transpose(spB))
+        nonzeros(spAtB) .= randn(T, nnz(spAtB))
+        sptAtB = convert(SPMT{T,IT}, transpose(spA) * transpose(spB))
+        nonzeros(sptAtB) .= randn(T, nnz(sptAtB))
+        spAtA = convert(SPMT{T,IT}, spA * transpose(spA))
+        nonzeros(spAtA) .= randn(T, nnz(spAtA))
+        sptAA = convert(SPMT{T,IT}, transpose(spA) * spA)
+        nonzeros(sptAA) .= randn(T, nnz(sptAA))
+        α, β = denserandn(T, 2)
+
+        @test @blas(spA * spB) isa SPMT{T,IT} # test that the result is sparse
+        @test convert(Matrix, @blas(spA * spB)) ≈ A * B atol=3*atol
+        @test convert(Matrix, @blas(mul!(copy(spAB), spA, spB))) ≈ A * B atol=3*atol
+
+        # 5-arg mul!() is not implemented
+
+        # cannot in-place multiply into the sparse matrix with the different sparsity pattern
+        @test_throws ErrorException mul!(sparserandn(SPMT{T, IT}, n, n, spf), spA, spB)
+
+        for trans in (transpose, adjoint)
+            @test convert(Matrix, @blas(spA * trans(spB))) ≈ A * trans(B) atol=3*atol
+            @test convert(Matrix, @blas(trans(spA) * spB)) ≈ trans(A) * B atol=3*atol
+            @test convert(Matrix, @blas(trans(spA) * trans(spB))) ≈ trans(A) * trans(B) atol=3*atol
+
+            @test convert(Matrix, @blas(mul!(copy(sptAB), trans(spA), spB))) ≈ trans(A) * B atol=3*atol
+            @test convert(Matrix, @blas(mul!(copy(spAtB), spA, trans(spB)))) ≈ A * trans(B) atol=3*atol
+            @test convert(Matrix, @blas(mul!(copy(sptAtB), trans(spA), trans(spB)))) ≈ trans(A) * trans(B) atol=3*atol
+
+            # 5-arg mul!() is not implemented
+
+            # matrix multiplication with itself
+            @test convert(Matrix, @blas(mul!(copy(spAtA), spA, trans(spA)))) ≈ A * trans(A) atol=3*atol
+            @test convert(Matrix, @blas(mul!(copy(sptAA), trans(spA), spA))) ≈ trans(A) * A atol=3*atol
         end
     end
 end

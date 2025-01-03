@@ -116,6 +116,29 @@ mul!(C::StridedMatrix{T}, A::SimpleOrSpecialOrAdjMat{T, S},
 ) where {T <: BlasFloat, S <: SparseMat{T}} =
     mul!(C, A, B, one(T), zero(T))
 
+# unsafe_mul!(sparse, sparse, sparse) (calls sp2m!())
+# it allows disabling the check of the result's non-zero pattern
+function unsafe_mul!(C::SparseMat{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+                     B::SimpleOrSpecialOrAdjMat{T, S};
+                     check_nzpattern::Bool = true
+) where {T <: BlasFloat, S <: SparseMat{T}}
+    transA, descrA, unwrapA = describe_and_unwrap(A)
+    transB, descrB, unwrapB = describe_and_unwrap(B)
+    # FIXME only general matrices are supported by sp2m in MKL SparseBLAS
+    #       should the elements of the special matrices be fixed?
+    descrA = matrix_descr(descrA, type = SPARSE_MATRIX_TYPE_GENERAL)
+    descrB = matrix_descr(descrB, type = SPARSE_MATRIX_TYPE_GENERAL)
+    sp2m!(transA, unwrapA, descrA,
+          transB, unwrapB, descrB,
+          parent(C); check_nzpattern)
+end
+
+# mul!(sparse, sparse, sparse) (calls sp2m!())
+mul!(C::SparseMat{T}, A::SimpleOrSpecialOrAdjMat{T, S},
+     B::SimpleOrSpecialOrAdjMat{T, S}
+) where {T <: BlasFloat, S <: SparseMat{T}} =
+    unsafe_mul!(C, A, B; check_nzpattern = true)
+
 # define 4-arg ldiv!(C, A, B, a) (C := alpha*inv(A)*B) that is not present in standard LinearAlgrebra
 # redefine 3-arg ldiv!(C, A, B) using 4-arg ldiv!(C, A, B, 1)
 function ldiv!(y::StridedVector{T}, A::SimpleOrSpecialOrAdjMat{T, S},
@@ -171,6 +194,42 @@ function (*)(x::Transpose{T, <:StridedVector{T}}, B::Adjoint{T, <:SimpleOrSpecia
     transpose(mv!('C', one(T), lazypermutedims(unwrapB), lazypermutedims(descrB), parent(x),
                   zero(T), y))
 end
+
+# sparse := sparse * sparse (calls sp2m())
+function spmatmul_sparse(A, B)
+    transA, descrA, unwrapA = describe_and_unwrap(A)
+    transB, descrB, unwrapB = describe_and_unwrap(B)
+    # FIXME only general matrices are supported by sp2m in MKL SparseBLAS
+    #       should the elements of the special matrices be fixed?
+    descrA = matrix_descr(descrA, type = SPARSE_MATRIX_TYPE_GENERAL)
+    descrB = matrix_descr(descrB, type = SPARSE_MATRIX_TYPE_GENERAL)
+    # use syrk for self-multiplication disabled, because it does not support CSC
+    # and only fills the upper triangle of C
+    if false && unwrapA === unwrapB &&
+       (transA == 'N' && transB == ifelse(eltype(unwrapB) <: Complex, 'H', 'T') ||
+        transB == 'N' && transA == ifelse(eltype(unwrapA) <: Complex, 'H', 'T'))
+        C = syrk(transA, unwrapA)
+    else
+        C = sp2m(transA, unwrapA, descrA,
+                 transB, unwrapB, descrB)
+    end
+    return C
+end
+
+# sparse * sparse overloads, have to be more specific than
+# the ones in SparseArrays.jl to avoid ambiguity
+
+(*)(A::SparseMat{T}, B::SparseMat{T}) where T =
+    spmatmul_sparse(A, B)
+
+(*)(A::AdjOrTranspMat{T, S}, B::S) where {T <: BlasFloat, S <: SparseMat{T}} =
+    spmatmul_sparse(A, B)
+
+(*)(A::S, B::AdjOrTranspMat{T, S}) where {T <: BlasFloat, S <: SparseMat{T}} =
+    spmatmul_sparse(A, B)
+
+(*)(A::AdjOrTranspMat{T, S}, B::AdjOrTranspMat{T, S}) where {T <: BlasFloat, S <: SparseMat{T}} =
+    spmatmul_sparse(A, B)
 
 if VERSION < v"1.11" # in 1.11 these wrappers are already defined in LinearAlgebra
 
