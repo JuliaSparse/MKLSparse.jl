@@ -192,10 +192,11 @@ function check_mat_op_sizes(C, A, tA, B, tB;
 
     mA, nA = mklsize(A, tA)
     mB, nB = mklsize(B, tB)
-    mC, nC = mklsize(C, 'N')
+    mC, nC = !isnothing(C) ? mklsize(C, 'N') : (mA, nB)
     if nA != mB || mC != mA || nC != nB
         str = string("arrays had inconsistent dimensions for C = A", opsym(tA), " * B", opsym(tB), ": ",
-                     sizestr(C), " = ", sizestr(A), opsym(tA), " * ", sizestr(B), opsym(tB))
+                     (isnothing(C) ? "" : (sizestr(C) * " = ")),
+                     sizestr(A), opsym(tA), " * ", sizestr(B), opsym(tB))
         throw(DimensionMismatch(str))
     end
 end
