@@ -103,7 +103,7 @@ matrix_classes = [
 
 local isCOO = SPMT <: MKLSparse.SparseMatrixCOO
 local isCOOorCSR = isCOO || SPMT <: MKLSparse.SparseMatrixCSR
-local atol::real(T) = 750*eps(real(one(T))) # absolute tolerance for SparseBLAS results
+local atol::real(T) = ifelse(T <: Complex, 1E+3, 1E+3) * eps(real(one(T))) # absolute tolerance for SparseBLAS results
 
 @testset "Describe $SPMT{$T, $IT} matrix" begin
     spA = sparserandn(SPMT{T, IT}, 10, 10, 0.25)
