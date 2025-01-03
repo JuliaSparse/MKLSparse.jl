@@ -21,20 +21,31 @@ end
 mkl_storagetype_specifier(::Type{<:SparseMatrixCOO}) = "coo"
 mkl_storagetype_specifier(::Type{<:SparseMatrixCSR}) = "csr"
 
-Base.size(A::MKLSparse.SparseMatrixCOO) = (A.m, A.n)
-Base.size(A::MKLSparse.SparseMatrixCSR) = (A.m, A.n)
+Base.size(A::SparseMatrixCOO) = (A.m, A.n)
+Base.size(A::SparseMatrixCSR) = (A.m, A.n)
 
-SparseArrays.nnz(A::MKLSparse.SparseMatrixCOO) = length(A.vals)
-SparseArrays.nnz(A::MKLSparse.SparseMatrixCSR) = length(A.nzval)
+SparseArrays.nonzeros(A::SparseMatrixCOO) = A.vals
+SparseArrays.nonzeros(A::SparseMatrixCSR) = A.nzval
 
-matrix_descr(A::MKLSparse.SparseMatrixCSR) = matrix_descr('G', 'F', 'N')
-matrix_descr(A::MKLSparse.SparseMatrixCOO) = matrix_descr('G', 'F', 'N')
+SparseArrays.nnz(A::SparseMatrixCOO) = length(A.vals)
+SparseArrays.nnz(A::SparseMatrixCSR) = length(A.nzval)
 
-Base.:(==)(A::MKLSparse.SparseMatrixCOO, B::MKLSparse.SparseMatrixCOO) =
+matrix_descr(A::SparseMatrixCSR) = matrix_descr('G', 'F', 'N')
+matrix_descr(A::SparseMatrixCOO) = matrix_descr('G', 'F', 'N')
+
+Base.copy(A::SparseMatrixCOO) = SparseMatrixCOO(A.m, A.n, copy(A.rows), copy(A.cols), copy(A.vals))
+Base.copy(A::SparseMatrixCSR) = SparseMatrixCSR(A.m, A.n, copy(A.rowptr), copy(A.colval), copy(A.nzval))
+
+Base.:(==)(A::SparseMatrixCOO, B::SparseMatrixCOO) =
     A.m == B.m && A.n == B.n && A.rows == B.rows && A.cols == B.cols && A.vals == B.vals
 
-Base.:(==)(A::MKLSparse.SparseMatrixCSR, B::MKLSparse.SparseMatrixCSR) =
+Base.:(==)(A::SparseMatrixCSR, B::SparseMatrixCSR) =
     A.m == B.m && A.n == B.n && A.rowptr == B.rowptr && A.colval == B.colval && A.nzval == B.nzval
+
+# for the unit tests
+LinearAlgebra.isapprox(A::Union{SparseMatrixCOO, SparseMatrixCSR},
+                       B::StridedMatrix; kwargs...) =
+    isapprox(convert(Matrix, A), B; kwargs...)
 
 Base.convert(::Type{SparseMatrixCSR{Tv, Ti}}, tA::Transpose{Tv, SparseMatrixCSC{Tv, Ti}}) where {Tv, Ti} =
     SparseMatrixCSR{Tv, Ti}(size(tA)..., parent(tA).colptr, rowvals(parent(tA)), nonzeros(parent(tA)))
@@ -43,7 +54,7 @@ Base.convert(::Type{SparseMatrixCSR}, tA::Transpose{Tv, SparseMatrixCSC{Tv, Ti}}
     convert(SparseMatrixCSR{Tv, Ti}, tA)
 
 Base.convert(::Type{SparseMatrixCSC{Tv, Ti}}, tA::Transpose{Tv, SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
-    SparseMatrixCSC{Tv, Ti}(size(tA)..., parent(tA).rowptr, parent(tA).colval, parent(tA).nzval)
+    SparseMatrixCSC{Tv, Ti}(size(tA)..., parent(tA).rowptr, parent(tA).colval, nonzeros(parent(tA)))
 
 Base.convert(::Type{SparseMatrixCSC}, tA::Transpose{Tv, SparseMatrixCSR{Tv, Ti}}) where {Tv, Ti} =
     convert(SparseMatrixCSC{Tv, Ti}, tA)
