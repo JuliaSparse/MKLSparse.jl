@@ -24,6 +24,10 @@ SimpleOrSpecialOrAdjMat{T, M} = Union{M,
                                       AdjOrTranspMat{T, <:SpecialMat{T,<:M}},
                                       SpecialMat{T,<:AdjOrTranspMat{T,<:M}}}
 
+SpecialMatrices = (LowerTriangular, UpperTriangular,
+                   UnitLowerTriangular, UnitUpperTriangular,
+                   Symmetric, Hermitian)
+
 # unwraps matrix A from Adjoint/Transpose transform
 unwrap_trans(A::AbstractMatrix) = A
 unwrap_trans(A::Union{Adjoint, Transpose}) = unwrap_trans(parent(A))
@@ -245,9 +249,7 @@ function (\)(A::Union{S, AdjOrTranspMat{T, S}}, B::StridedMatrix{T}) where {T <:
     return ldiv!(C, A, B)
 end
 
-for mat in (LowerTriangular, UpperTriangular,
-            UnitLowerTriangular, UnitUpperTriangular,
-            Symmetric, Hermitian)
+for mat in SpecialMatrices
 
 @eval function (\)(A::Union{$mat{T, S}, AdjOrTranspMat{T, $mat{T, S}}, $mat{T, <:AdjOrTranspMat{T, S}}},
                    x::StridedVector{T}
