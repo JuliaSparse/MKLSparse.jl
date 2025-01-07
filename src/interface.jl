@@ -219,7 +219,7 @@ end
 # sparse * sparse overloads, have to be more specific than
 # the ones in SparseArrays.jl to avoid ambiguity
 
-(*)(A::SparseMat{T}, B::SparseMat{T}) where T =
+(*)(A::SparseMat{T}, B::SparseMat{T}) where T <: BlasFloat =
     spmatmul_sparse(A, B)
 
 (*)(A::AdjOrTranspMat{T, S}, B::S) where {T <: BlasFloat, S <: SparseMat{T}} =
