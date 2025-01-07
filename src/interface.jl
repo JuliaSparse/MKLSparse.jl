@@ -24,7 +24,7 @@ SimpleOrSpecialOrAdjMat{T, M} = Union{M,
                                       AdjOrTranspMat{T, <:SpecialMat{T,<:M}},
                                       SpecialMat{T,<:AdjOrTranspMat{T,<:M}}}
 
-SpecialMatrices = (LowerTriangular, UpperTriangular,
+const SpecialMatrices = (LowerTriangular, UpperTriangular,
                    UnitLowerTriangular, UnitUpperTriangular,
                    Symmetric, Hermitian)
 
