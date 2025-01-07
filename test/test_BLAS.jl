@@ -728,8 +728,8 @@ end
         n = rand(10:50)
         spf = 0.1 + 0.8 * rand()
 
-        spA = convert_to_Aclass(sparserandn(SPMT{T, IT}, n, n, spf))
-        spB = convert_to_Bclass(sparserandn(SPMT{T, IT}, n, n, spf))
+        spA = Aclass(convert_to_Aclass(sparserandn(SPMT{T, IT}, n, n, spf)))
+        spB = Bclass(convert_to_Bclass(sparserandn(SPMT{T, IT}, n, n, spf)))
         A = convert(Matrix, spA)
         B = convert(Matrix, spB)
 
