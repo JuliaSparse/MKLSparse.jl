@@ -1,6 +1,6 @@
 name = "MKLSparse"
 uuid = "0c723cd3-b8cd-5d40-b370-ba682dde9aae"
-version = "2.1.0"
+version = "2.1.1"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
